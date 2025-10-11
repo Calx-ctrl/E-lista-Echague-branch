@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:background="#F6FAFB"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <!-- RecyclerView showing categories -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/categoryRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="8dp"/>
+
+    <!-- Buttons section -->
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp">
+
+        <Button
+            android:id="@+id/btnAddCategory"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="Add Category"
+            android:textAllCaps="false"
+            android:textColor="@color/green_primary"
+            android:background="@drawable/btn_outline_green"
+            android:layout_marginBottom="8dp"/>
+
+        <Button
+            android:id="@+id/btnRemoveCategory"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="Remove Category"
+            android:textAllCaps="false"
+            android:backgroundTint="@color/green_primary"
+            android:textColor="@android:color/white"/>
+    </LinearLayout>
+</LinearLayout>
