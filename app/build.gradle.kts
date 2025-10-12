@@ -2,9 +2,9 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.gms.google-services")
     id("kotlin-parcelize")
 }
-
 
 android {
     namespace = "com.example.e_lista"
@@ -38,6 +38,17 @@ android {
 
 
 dependencies {
+
+    //dinagdag ni Rainier para sa Accounts and Database and others
+    // Firebase BOM (manages versions automatically)
+    implementation(platform("com.google.firebase:firebase-bom:34.3.0"))
+
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-database")
+    implementation("com.firebaseui:firebase-ui-database:8.0.2")
+    implementation("com.google.android.gms:play-services-auth:21.1.1")
+
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
