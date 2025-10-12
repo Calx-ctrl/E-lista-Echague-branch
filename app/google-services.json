@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1019913863145",
+    "firebase_url": "https://e-lista-be9af-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "e-lista-be9af",
+    "storage_bucket": "e-lista-be9af.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1019913863145:android:ba21a1e734adf7159bd578",
+        "android_client_info": {
+          "package_name": "com.example.e_lista"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1019913863145-bbsijpij1v827sml7v1at6ns6e9te007.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.e_lista",
+            "certificate_hash": "7282c02bba87130e5f4365ec6fee137338da7b49"
+          }
+        },
+        {
+          "client_id": "1019913863145-c4mundsiruj6ikoukr6q6o5r9dtaifvc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCuhUVsQ3AKO8cx78eiK82hKol7qmcH6d8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1019913863145-c4mundsiruj6ikoukr6q6o5r9dtaifvc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
