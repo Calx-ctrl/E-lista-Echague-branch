@@ -2,6 +2,7 @@
 <androidx.cardview.widget.CardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="16dp"
@@ -10,7 +11,8 @@
     app:cardElevation="5dp"
     android:clickable="true"
     android:focusable="true"
-    android:foreground="?attr/selectableItemBackground">
+    android:foreground="?attr/selectableItemBackground"
+    tools:ignore="UseCompoundDrawables">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -26,10 +28,12 @@
             android:layout_width="42dp"
             android:layout_height="42dp"
             android:layout_marginEnd="12dp"
-            android:contentDescription="@string/expense_category_icon"
+            android:padding="6dp"
             android:src="@drawable/ic_category_placeholder"
             android:background="@drawable/icon_background_circle"
-            android:padding="6dp" />
+            android:contentDescription="@string/expense_category_icon"
+            android:scaleType="centerInside"
+            app:tint="@color/black" />
 
         <!-- Expense Details -->
         <LinearLayout
@@ -43,20 +47,22 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Category Name"
+                android:textColor="#222222"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="#222222"
                 android:maxLines="1"
-                android:ellipsize="end" />
+                android:ellipsize="end"
+                tools:text="Groceries" />
 
             <TextView
                 android:id="@+id/expenseDateTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
                 android:text="Oct 10, 2025"
-                android:textSize="13sp"
                 android:textColor="#777777"
-                android:layout_marginTop="2dp" />
+                android:textSize="13sp"
+                tools:text="Oct 12, 2025" />
         </LinearLayout>
 
         <!-- Expense Amount -->
@@ -64,12 +70,12 @@
             android:id="@+id/amountTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:minWidth="60dp"
+            android:gravity="end"
             android:text="₱0.00"
+            android:textColor="#16a085"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:textColor="#16a085"
-            android:gravity="end"
-            android:minWidth="60dp" />
+            tools:text="₱150.00" />
     </LinearLayout>
 </androidx.cardview.widget.CardView>
-
