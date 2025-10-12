@@ -21,7 +21,7 @@ class SignupActivity : AppCompatActivity() {
     private lateinit var mPass: EditText
     private lateinit var confirmmPass: EditText
     private lateinit var signUpButton: Button
-    val googleButton = findViewById<Button>(R.id.googleSignUpButton)
+    //val googleButton = findViewById<Button>(R.id.googleSignUpButton)
     //Dialog
     private var mDialog: ProgressDialog ?= null
 
