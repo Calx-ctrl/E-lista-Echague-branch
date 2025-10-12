@@ -2,6 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F6FAFB">
@@ -42,69 +43,63 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.43"
         app:layout_constraintStart_toEndOf="@id/backButton"
-        app:layout_constraintTop_toTopOf="@id/backButton"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintTop_toTopOf="@id/backButton" />
 
-    <!-- Filter Row (Daily, Weekly, Monthly) -->
+    <!-- Filter Row -->
     <LinearLayout
         android:id="@+id/filterRow"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center"
+        android:gravity="center_vertical"
         android:layout_marginHorizontal="16dp"
         android:layout_marginTop="8dp"
         app:layout_constraintTop_toBottomOf="@id/headerBackground"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chipDaily"
-            style="@style/Widget.MaterialComponents.Chip.Choice"
-            android:text="Daily"
-            android:textColor="@android:color/white"
-            app:chipBackgroundColor="@color/green_primary"
-            android:paddingHorizontal="12dp"
+        <!-- Dropdown Menu (Daily / Weekly / Monthly) -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/dropdownLayout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:hint="Select Period"
+            app:boxStrokeColor="@color/green_primary"
+            app:endIconMode="dropdown_menu">
 
-        <Space
-            android:layout_width="8dp"
-            android:layout_height="wrap_content"/>
+            <AutoCompleteTextView
+                android:id="@+id/periodDropdown"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:inputType="none"
+                android:text="Weekly"
+                android:textColor="@android:color/black"
+                android:paddingHorizontal="12dp" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chipWeekly"
-            style="@style/Widget.MaterialComponents.Chip.Choice"
-            android:text="Weekly"
+        <TextView
+            android:id="@+id/expensesHeader"
+            android:layout_width="213dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/rounded_green_dark"
+            android:paddingHorizontal="20dp"
+            android:paddingVertical="6dp"
+            android:text="Expenses"
             android:textColor="@android:color/white"
-            app:chipBackgroundColor="@color/green_primary"
-            android:paddingHorizontal="12dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:textStyle="bold" />
 
-        <Space
-            android:layout_width="8dp"
-            android:layout_height="wrap_content"/>
-
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chipMonthly"
-            style="@style/Widget.MaterialComponents.Chip.Choice"
-            android:text="Monthly"
-            android:textColor="@android:color/white"
-            app:chipBackgroundColor="@color/green_primary"
-            android:paddingHorizontal="12dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
     </LinearLayout>
 
-    <!-- Scrollable List -->
+    <!-- Scrollable Expense List -->
     <ScrollView
         android:id="@+id/scrollContainer"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:fillViewport="true"
         app:layout_constraintTop_toBottomOf="@id/filterRow"
-        app:layout_constraintBottom_toTopOf="@id/btnAddExpense"
+        app:layout_constraintBottom_toTopOf="@id/fabCamera"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -121,24 +116,33 @@
             <include layout="@layout/item_expense" />
             <include layout="@layout/item_expense" />
 
+            <Button
+                android:id="@+id/btnAddExpense"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="Edit Expenses"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                android:background="@drawable/rounded_green"
+                android:fontFamily="sans-serif-medium"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="24dp" />
         </LinearLayout>
     </ScrollView>
 
-    <!-- Moved Edit Expenses Button -->
-    <Button
-        android:id="@+id/btnAddExpense"
-        android:layout_width="0dp"
-        android:layout_height="48dp"
-        android:text="Edit Expenses"
-        android:textAllCaps="false"
-        android:textColor="@android:color/white"
-        android:background="@drawable/rounded_green"
-        android:fontFamily="sans-serif-medium"
-        android:layout_marginHorizontal="40dp"
-        android:layout_marginBottom="12dp"
+    <!-- Floating Camera Button -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabCamera"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:src="@drawable/ic_camera_alt"
+        android:contentDescription="Camera"
+        app:backgroundTint="#16a085"
+        app:tint="@android:color/white"
         app:layout_constraintBottom_toTopOf="@id/bottomNavigationView"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="12dp" />
 
     <!-- Bottom Navigation -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
