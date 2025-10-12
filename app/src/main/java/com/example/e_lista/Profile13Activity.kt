@@ -15,6 +15,9 @@ class Profile13Activity : AppCompatActivity() {
         binding = ActivityProfile13Binding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // 🔹 Highlight the "Profile" tab when this screen is open
+        binding.bottomNavigationView.selectedItemId = R.id.nav_profile
+
         // 🔙 Back button
         binding.backButton.setOnClickListener {
             onBackPressedDispatcher.onBackPressed()
@@ -40,14 +43,17 @@ class Profile13Activity : AppCompatActivity() {
             when (item.itemId) {
                 R.id.nav_home -> {
                     startActivity(Intent(this, Home9Activity::class.java))
+                    overridePendingTransition(0, 0)
                     true
                 }
                 R.id.nav_stats -> {
                     startActivity(Intent(this, ChartDesign10Activity::class.java))
+                    overridePendingTransition(0, 0)
                     true
                 }
                 R.id.nav_wallet -> {
                     startActivity(Intent(this, Expenses12Activity::class.java))
+                    overridePendingTransition(0, 0)
                     true
                 }
                 R.id.nav_profile -> true // already here

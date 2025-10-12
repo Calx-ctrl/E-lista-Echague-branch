@@ -6,8 +6,10 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import java.text.SimpleDateFormat
+import java.util.*
 
-class ExpenseAdapter(private val expenseList: List<Expense>) :
+class ExpenseAdapter(private val expenseList: MutableList<Expense>) :
     RecyclerView.Adapter<ExpenseAdapter.ExpenseViewHolder>() {
 
     class ExpenseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -25,11 +27,34 @@ class ExpenseAdapter(private val expenseList: List<Expense>) :
 
     override fun onBindViewHolder(holder: ExpenseViewHolder, position: Int) {
         val expense = expenseList[position]
+
+        // ✅ Set values
         holder.icon.setImageResource(expense.iconResId)
         holder.title.text = expense.title
-        holder.date.text = expense.date
-        holder.amount.text = "₱${expense.amount}" // converted to String + formatted
+
+        // Use provided date, or current date if empty
+        val formattedDate = if (expense.date.isNotEmpty()) {
+            expense.date
+        } else {
+            SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(Date())
+        }
+        holder.date.text = formattedDate
+
+        holder.amount.text = "₱%.2f".format(expense.amount)
     }
 
     override fun getItemCount() = expenseList.size
+
+    // ✅ Add new expense dynamically
+    fun addExpense(expense: Expense) {
+        expenseList.add(0, expense)
+        notifyItemInserted(0)
+    }
+
+    // ✅ Optionally replace entire list
+    fun updateExpenses(newList: List<Expense>) {
+        expenseList.clear()
+        expenseList.addAll(newList)
+        notifyDataSetChanged()
+    }
 }

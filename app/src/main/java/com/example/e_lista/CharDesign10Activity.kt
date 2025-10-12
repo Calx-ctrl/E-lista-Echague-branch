@@ -1,5 +1,6 @@
 package com.example.e_lista
 
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -19,46 +20,92 @@ class ChartDesign10Activity : AppCompatActivity() {
         binding = ActivityChartDesign10Binding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setupPieChart(binding.pieChart)
+        // Highlight current tab
+        binding.bottomNavigationView.selectedItemId = R.id.nav_stats
+
+        // Back button
+        binding.backButton.setOnClickListener {
+            onBackPressedDispatcher.onBackPressed()
+        }
+
+        // Navigation
+        binding.bottomNavigationView.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_home -> {
+                    startActivity(Intent(this, Home9Activity::class.java))
+                    overridePendingTransition(0, 0)
+                    true
+                }
+
+                R.id.nav_stats -> true // Already here
+
+                R.id.nav_wallet -> {
+                    startActivity(Intent(this, Expenses12Activity::class.java))
+                    overridePendingTransition(0, 0)
+                    true
+                }
+
+                R.id.nav_profile -> {
+                    startActivity(Intent(this, Profile13Activity::class.java))
+                    overridePendingTransition(0, 0)
+                    true
+                }
+
+                else -> false
+            }
+        }
+
+        // Get expense data from intent (default to 0 if none)
+        val food = intent.getFloatExtra("food", 0f)
+        val transport = intent.getFloatExtra("transport", 0f)
+        val bills = intent.getFloatExtra("bills", 0f)
+        val others = intent.getFloatExtra("others", 0f)
+
+        setupPieChart(binding.pieChart, food, transport, bills, others)
     }
 
-    private fun setupPieChart(pieChart: PieChart) {
-        val entries = ArrayList<PieEntry>()
-        entries.add(PieEntry(40f, "Food"))
-        entries.add(PieEntry(25f, "Transport"))
-        entries.add(PieEntry(20f, "Bills"))
-        entries.add(PieEntry(15f, "Others"))
+    private fun setupPieChart(pieChart: PieChart, food: Float, transport: Float, bills: Float, others: Float) {
+        val entries = arrayListOf<PieEntry>()
 
-        val dataSet = PieDataSet(entries, "Expense Breakdown")
-        dataSet.colors = listOf(
-            Color.parseColor("#16a085"),
-            Color.parseColor("#27ae60"),
-            Color.parseColor("#2ecc71"),
-            Color.parseColor("#1abc9c")
-        )
-        dataSet.sliceSpace = 3f
-        dataSet.valueTextColor = Color.WHITE
-        dataSet.valueTextSize = 14f
+        if (food > 0) entries.add(PieEntry(food, "Food"))
+        if (transport > 0) entries.add(PieEntry(transport, "Transport"))
+        if (bills > 0) entries.add(PieEntry(bills, "Bills"))
+        if (others > 0) entries.add(PieEntry(others, "Others"))
+
+        val dataSet = PieDataSet(entries, "Expense Breakdown").apply {
+            colors = listOf(
+                Color.parseColor("#16a085"),
+                Color.parseColor("#27ae60"),
+                Color.parseColor("#2ecc71"),
+                Color.parseColor("#1abc9c")
+            )
+            sliceSpace = 3f
+            valueTextColor = Color.WHITE
+            valueTextSize = 14f
+        }
 
         val data = PieData(dataSet)
 
-        pieChart.data = data
-        pieChart.setUsePercentValues(true)
-        pieChart.setDrawHoleEnabled(true)
-        pieChart.holeRadius = 35f
-        pieChart.transparentCircleRadius = 40f
-        pieChart.centerText = "Spending"
-        pieChart.setCenterTextSize(18f)
-        pieChart.description.isEnabled = false
+        pieChart.apply {
+            this.data = data
+            setUsePercentValues(true)
+            setDrawHoleEnabled(true)
+            holeRadius = 35f
+            transparentCircleRadius = 40f
+            centerText = "Spending"
+            setCenterTextSize(18f)
+            description.isEnabled = false
 
-        val legend = pieChart.legend
-        legend.orientation = Legend.LegendOrientation.HORIZONTAL
-        legend.horizontalAlignment = Legend.LegendHorizontalAlignment.CENTER
-        legend.verticalAlignment = Legend.LegendVerticalAlignment.BOTTOM
-        legend.textSize = 12f
-        legend.form = Legend.LegendForm.CIRCLE
+            legend.apply {
+                orientation = Legend.LegendOrientation.HORIZONTAL
+                horizontalAlignment = Legend.LegendHorizontalAlignment.CENTER
+                verticalAlignment = Legend.LegendVerticalAlignment.BOTTOM
+                textSize = 12f
+                form = Legend.LegendForm.CIRCLE
+            }
 
-        pieChart.animateY(1400)
-        pieChart.invalidate()
+            animateY(1400)
+            invalidate()
+        }
     }
 }
