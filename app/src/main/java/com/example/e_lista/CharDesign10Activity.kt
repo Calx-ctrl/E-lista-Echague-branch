@@ -23,6 +23,11 @@ class ChartDesign10Activity : AppCompatActivity() {
         // Highlight current tab
         binding.bottomNavigationView.selectedItemId = R.id.nav_stats
 
+        // 📸 Floating camera button → CameraActivity
+        binding.fabCamera.setOnClickListener {
+            val intent = Intent(this, Camera11Activity::class.java)
+            startActivity(intent)
+        }
         // Back button
         binding.backButton.setOnClickListener {
             onBackPressedDispatcher.onBackPressed()
