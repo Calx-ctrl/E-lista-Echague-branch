@@ -14,16 +14,12 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.GoogleAuthProvider
+import com.example.e_lista.databinding.ActivitySignUp4Binding
 
 class SignupActivity : AppCompatActivity() {
 
-    // UI elements
-    private lateinit var mEmail: EditText
-    private lateinit var mPass: EditText
-    private lateinit var confirmmPass: EditText
-    private lateinit var signUpButton: Button
-    private lateinit var googleButton: LinearLayout
-    private lateinit var facebookButton: LinearLayout
+    // Binding variable for the layout
+    private lateinit var binding: ActivitySignUp4Binding
 
     // Dialog
     private var mDialog: ProgressDialog? = null
@@ -37,7 +33,14 @@ class SignupActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_sign_up_4)
+        // Inflate the layout using View Binding
+        binding = ActivitySignUp4Binding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        // 🔙 Back button
+        binding.backButton.setOnClickListener {
+            onBackPressedDispatcher.onBackPressed()
+        }
 
         // Initialize Firebase
         mAuth = FirebaseAuth.getInstance()
@@ -49,21 +52,14 @@ class SignupActivity : AppCompatActivity() {
             .build()
         googleSignInClient = GoogleSignIn.getClient(this, gso)
 
-
-        // Initialize views
-        mEmail = findViewById(R.id.emailEditText)
-        mPass = findViewById(R.id.passwordEditText)
-        confirmmPass = findViewById(R.id.confirmPasswordEditText)
-        signUpButton = findViewById(R.id.signUpButton)
-        googleButton = findViewById(R.id.googleButton)
-        facebookButton = findViewById(R.id.facebookButton)
+        // Initialize ProgressDialog
         mDialog = ProgressDialog(this)
 
         // Handle sign-up button click
-        signUpButton.setOnClickListener { performEmailSignUp() }
+        binding.signUpButton.setOnClickListener { performEmailSignUp() }
 
         // Handle Google sign-up
-        googleButton.setOnClickListener {
+        binding.googleButton.setOnClickListener {
             // ✅ Force Google to forget the previous sign-in
             googleSignInClient.revokeAccess().addOnCompleteListener {
                 // After revoking, always show the chooser
@@ -73,7 +69,7 @@ class SignupActivity : AppCompatActivity() {
         }
 
         // Handle Facebook sign-up
-        facebookButton.setOnClickListener {
+        binding.facebookButton.setOnClickListener {
             startFacebookSignUp()
             Snackbar.make(it, "Facebook Sign-Up coming soon!", Snackbar.LENGTH_SHORT).show()
         }
@@ -129,30 +125,30 @@ class SignupActivity : AppCompatActivity() {
     }
 
     private fun performEmailSignUp() {
-        val email = mEmail.text.toString().trim()
-        val pass = mPass.text.toString().trim()
-        val confirmpass = confirmmPass.text.toString().trim()
+        val email = binding.emailEditText.text.toString().trim()
+        val pass = binding.passwordEditText.text.toString().trim()
+        val confirmpass = binding.confirmPasswordEditText.text.toString().trim()
 
         // Validation
         when {
             email.isEmpty() -> {
-                mEmail.error = "Email Required"
+                binding.emailEditText.error = "Email Required"
                 return
             }
             !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
-                mEmail.error = "Enter a valid email address"
+                binding.emailEditText.error = "Enter a valid email address"
                 return
             }
             pass.isEmpty() -> {
-                mPass.error = "Password Required"
+                binding.passwordEditText.error = "Password Required"
                 return
             }
             !isValidPassword(pass) -> {
-                mPass.error = "Password must be at least 8 chars, with upper, lower, and number"
+                binding.passwordEditText.error = "Password must be at least 8 chars, with upper, lower, and number"
                 return
             }
             confirmpass != pass -> {
-                confirmmPass.error = "Passwords don't match"
+                binding.confirmPasswordEditText.error = "Passwords don't match"
                 return
             }
         }
@@ -173,7 +169,7 @@ class SignupActivity : AppCompatActivity() {
                     try {
                         throw task.exception ?: Exception("Unknown error")
                     } catch (e: FirebaseAuthUserCollisionException) {
-                        mEmail.error = "This email is already registered"
+                        binding.emailEditText.error = "This email is already registered"
                     } catch (e: Exception) {
                         Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
                     }

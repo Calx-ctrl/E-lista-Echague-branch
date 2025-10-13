@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F0F4F8"
-    tools:context=".WelcomeActivity">
+    tools:context=".LoginActivity">
 
     <!-- Back Arrow -->
     <ImageButton
@@ -70,7 +70,7 @@
         android:layout_height="50dp"
         android:layout_marginTop="16dp"
         android:background="@drawable/edit_text_background"
-        android:drawableEnd="@drawable/ic_arrow_back"
+        android:drawableEnd="@drawable/edit_text_background"
         android:hint="Password"
         android:inputType="textPassword"
         android:paddingStart="20dp"
@@ -102,9 +102,9 @@
         android:layout_marginTop="32dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        app:layout_constraintEnd_toEndOf="@id/loginButton"
-        app:layout_constraintStart_toStartOf="@id/loginButton"
-        app:layout_constraintTop_toBottomOf="@id/loginButton">
+        app:layout_constraintEnd_toEndOf="@id/loginBtn"
+        app:layout_constraintStart_toStartOf="@id/loginBtn"
+        app:layout_constraintTop_toBottomOf="@id/loginBtn">
 
         <View
             android:layout_width="0dp"
@@ -139,8 +139,60 @@
         app:layout_constraintTop_toBottomOf="@id/dividerLayout">
 
         <!-- Google Button -->
+        <LinearLayout
+            android:id="@+id/googleButton"
+            android:layout_width="0dp"
+            android:layout_height="55dp"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:background="@drawable/social_button_background"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/google_logo" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="Google"
+                android:textColor="@android:color/black"
+                android:textStyle="bold" />
+        </LinearLayout>
 
         <!-- Facebook Button -->
+        <LinearLayout
+            android:id="@+id/facebookButton"
+            android:layout_width="0dp"
+            android:layout_height="55dp"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:background="@drawable/social_button_background"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/fb_logo" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="Facebook"
+                android:textColor="@android:color/black"
+                android:textStyle="bold" />
+        </LinearLayout>
     </LinearLayout>
 
     <!-- "Don't have an account?" Text -->
@@ -164,59 +216,11 @@
             android:id="@+id/signupBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:padding="0dp"
             android:text="Sign up"
             android:textColor="#16a085"
             android:textSize="14sp"
-            android:textStyle="bold"
-            android:background="@android:color/transparent"
-            android:padding="0dp" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="163dp"
-        android:layout_height="53dp"
-        android:layout_weight="1"
-        android:background="@drawable/social_button_background"
-        android:gravity="center"
-        android:orientation="horizontal"
-        tools:layout_editor_absoluteX="16dp"
-        tools:layout_editor_absoluteY="596dp">
-
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/google_logo" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:text="Google"
-            android:textColor="@android:color/black"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="160dp"
-        android:layout_height="50dp"
-        android:layout_weight="1"
-        android:background="@drawable/social_button_background"
-        android:gravity="center"
-        android:orientation="horizontal"
-        tools:layout_editor_absoluteX="219dp"
-        tools:layout_editor_absoluteY="596dp">
-
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/fb_logo" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:text="Facebook"
-            android:textColor="@android:color/black"
             android:textStyle="bold" />
     </LinearLayout>
 
