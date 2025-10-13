@@ -6,11 +6,14 @@ import android.os.Bundle
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.auth.GoogleAuthProvider
 
 class SignupActivity : AppCompatActivity() {
 
@@ -46,6 +49,7 @@ class SignupActivity : AppCompatActivity() {
             .build()
         googleSignInClient = GoogleSignIn.getClient(this, gso)
 
+
         // Initialize views
         mEmail = findViewById(R.id.emailEditText)
         mPass = findViewById(R.id.passwordEditText)
@@ -60,14 +64,68 @@ class SignupActivity : AppCompatActivity() {
 
         // Handle Google sign-up
         googleButton.setOnClickListener {
-            Snackbar.make(it, "Google Sign-Up coming soon!", Snackbar.LENGTH_SHORT).show()
-            // TODO: Replace with startGoogleSignIn() when implementing full sign-in flow
+            // ✅ Force Google to forget the previous sign-in
+            googleSignInClient.revokeAccess().addOnCompleteListener {
+                // After revoking, always show the chooser
+                val signInIntent = googleSignInClient.signInIntent
+                startActivityForResult(signInIntent, RC_SIGN_IN)
+            }
         }
 
         // Handle Facebook sign-up
         facebookButton.setOnClickListener {
+            startFacebookSignUp()
             Snackbar.make(it, "Facebook Sign-Up coming soon!", Snackbar.LENGTH_SHORT).show()
         }
+    }
+
+    private fun startFacebookSignUp() {
+        TODO("Not yet implemented")
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == RC_SIGN_IN) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+            try {
+                val account = task.getResult(ApiException::class.java)!!
+                handleGoogleAccount(account)
+            } catch (e: ApiException) {
+                Toast.makeText(this, "Google sign-in failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    /**
+     * ✅ This handles both sign-up and sign-in automatically:
+     * - If the email exists → sign in
+     * - If it's new → sign up
+     */
+    private fun handleGoogleAccount(account: GoogleSignInAccount) {
+        val idToken = account.idToken ?: return
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+
+        mAuth.signInWithCredential(credential)
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    val isNewUser = task.result?.additionalUserInfo?.isNewUser == true
+                    val user = mAuth.currentUser
+
+                    if (isNewUser) {
+                        Toast.makeText(this, "Welcome, new user: ${user?.email}", Toast.LENGTH_SHORT).show()
+                        // ✅ Optional: save user to Firestore or Realtime Database here
+                    } else {
+                        Toast.makeText(this, "Welcome back, ${user?.email}", Toast.LENGTH_SHORT).show()
+                    }
+
+                    startActivity(Intent(this, Home9Activity::class.java))
+                    finish()
+                } else {
+                    Toast.makeText(this, "Firebase Auth failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
     }
 
     private fun performEmailSignUp() {
