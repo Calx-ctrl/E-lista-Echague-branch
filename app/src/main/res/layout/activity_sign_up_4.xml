@@ -186,6 +186,7 @@
             </LinearLayout>
 
             <!-- Facebook Button -->
+
             <LinearLayout
                 android:id="@+id/facebookButton"
                 android:layout_width="0dp"

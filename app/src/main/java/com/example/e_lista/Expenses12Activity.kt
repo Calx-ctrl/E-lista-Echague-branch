@@ -151,7 +151,7 @@ class Expenses12Activity : AppCompatActivity() {
 
         val scrollView = dialog.findViewById<ScrollView>(R.id.scrollView)
         val rootLayout = scrollView?.getChildAt(0) as? LinearLayout
-
+        /*
         rootLayout?.let {
             for (i in 0 until it.childCount) {
                 val view = it.getChildAt(i)
@@ -171,9 +171,9 @@ class Expenses12Activity : AppCompatActivity() {
                     }
                 }
             }
-        }
+        }*/
     }
-
+/*
     private fun getIconForCategory(category: String): Int {
         return when {
             category.contains("Rent", true) || category.contains("Grocer", true) || category.contains("Fuel", true) ->
@@ -192,7 +192,7 @@ class Expenses12Activity : AppCompatActivity() {
                 R.drawable.ic_misc
             else -> R.drawable.ic_palette
         }
-    }
+    }*/
 
     // Dynamically add expense to your expense list UI
     private fun addExpenseToView(expense: Expense) {

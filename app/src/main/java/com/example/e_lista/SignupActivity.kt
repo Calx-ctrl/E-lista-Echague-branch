@@ -3,6 +3,7 @@ package com.example.e_lista
 import android.app.ProgressDialog
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -15,6 +16,16 @@ import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.GoogleAuthProvider
 import com.example.e_lista.databinding.ActivitySignUp4Binding
+import com.facebook.AccessToken
+import com.facebook.CallbackManager
+import com.facebook.FacebookCallback
+import com.facebook.FacebookException
+import com.facebook.FacebookSdk;
+import com.facebook.appevents.AppEventsLogger;
+import com.facebook.login.LoginManager
+import com.facebook.login.LoginResult
+import com.google.firebase.auth.FacebookAuthProvider
+
 
 class SignupActivity : AppCompatActivity() {
 
@@ -27,9 +38,13 @@ class SignupActivity : AppCompatActivity() {
     // Firebase
     private lateinit var mAuth: FirebaseAuth
 
-    // Google sign-in
+    // Google sign-up
     private lateinit var googleSignInClient: GoogleSignInClient
     private val RC_SIGN_IN = 1001
+
+    //FB sign up
+    private lateinit var callbackManager: CallbackManager
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,6 +67,13 @@ class SignupActivity : AppCompatActivity() {
             .build()
         googleSignInClient = GoogleSignIn.getClient(this, gso)
 
+        //Config FB sign-in
+        FacebookSdk.sdkInitialize(applicationContext)
+        AppEventsLogger.activateApp(application)
+
+        callbackManager = CallbackManager.Factory.create()
+
+
         // Initialize ProgressDialog
         mDialog = ProgressDialog(this)
 
@@ -71,12 +93,82 @@ class SignupActivity : AppCompatActivity() {
         // Handle Facebook sign-up
         binding.facebookButton.setOnClickListener {
             startFacebookSignUp()
-            Snackbar.make(it, "Facebook Sign-Up coming soon!", Snackbar.LENGTH_SHORT).show()
         }
     }
 
     private fun startFacebookSignUp() {
-        TODO("Not yet implemented")
+        // ✅ Always show account chooser (forces re-login)
+        LoginManager.getInstance().logOut()
+
+        LoginManager.getInstance().logInWithReadPermissions(
+            this,
+            listOf("email", "public_profile")
+        )
+
+        LoginManager.getInstance().registerCallback(callbackManager,
+            object : FacebookCallback<LoginResult> {
+                override fun onSuccess(result: LoginResult) {
+                    handleFacebookAccessToken(result.accessToken)
+                }
+
+                override fun onCancel() {
+                    Toast.makeText(this@SignupActivity, "Facebook login cancelled", Toast.LENGTH_SHORT).show()
+                }
+
+                override fun onError(error: FacebookException) {
+                    Toast.makeText(this@SignupActivity, "Facebook login failed: ${error.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
+    }
+    private fun handleFacebookAccessToken(token: AccessToken) {
+        val credential = FacebookAuthProvider.getCredential(token.token)
+
+        mAuth.signInWithCredential(credential)
+            .addOnCompleteListener(this@SignupActivity) { task ->
+                if (task.isSuccessful) {
+                    val isNewUser = task.result?.additionalUserInfo?.isNewUser == true
+                    val user = mAuth.currentUser
+
+                    if (isNewUser) {
+                        Toast.makeText(
+                            this@SignupActivity,
+                            "Welcome new user: ${user?.displayName}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        // Optionally save user info to Firebase DB here
+                    } else {
+                        Toast.makeText(
+                            this@SignupActivity,
+                            "Welcome back: ${user?.displayName}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+
+                    startActivity(Intent(this@SignupActivity, Home9Activity::class.java))
+                    finish()
+                } else {
+                    val exception = task.exception
+                    when (exception) {
+                        is FirebaseAuthUserCollisionException -> {
+                            // ⚠️ Email already used by another sign-in method
+                            Toast.makeText(
+                                this@SignupActivity,
+                                "This Facebook email is already registered with another sign-in method.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                            Log.w("FacebookAuth", "Email already exists: ${exception.message}")
+                        }
+                        else -> {
+                            Toast.makeText(
+                                this@SignupActivity,
+                                "Firebase Auth failed: ${exception?.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            Log.e("FacebookAuth", "Auth failed", exception)
+                        }
+                    }
+                }
+            }
     }
 
     @Deprecated("Deprecated in Java")
@@ -91,6 +183,9 @@ class SignupActivity : AppCompatActivity() {
             } catch (e: ApiException) {
                 Toast.makeText(this, "Google sign-in failed: ${e.message}", Toast.LENGTH_SHORT).show()
             }
+        }else {
+            // ✅ Pass other results (like Facebook) to their handler
+            callbackManager.onActivityResult(requestCode, resultCode, data)
         }
     }
 
