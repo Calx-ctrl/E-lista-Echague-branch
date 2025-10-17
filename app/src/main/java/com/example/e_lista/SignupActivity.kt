@@ -31,7 +31,6 @@ class SignupActivity : AppCompatActivity() {
 
     // Binding variable for the layout
     private lateinit var binding: ActivitySignUp4Binding
-
     // Dialog
     private var mDialog: ProgressDialog? = null
 
@@ -80,6 +79,9 @@ class SignupActivity : AppCompatActivity() {
         // Handle sign-up button click
         binding.signUpButton.setOnClickListener { performEmailSignUp() }
 
+        binding.signinBtn.setOnClickListener {
+            startActivity(Intent(this, LoginActivity::class.java))
+        }
         // Handle Google sign-up
         binding.googleButton.setOnClickListener {
             // ✅ Force Google to forget the previous sign-in

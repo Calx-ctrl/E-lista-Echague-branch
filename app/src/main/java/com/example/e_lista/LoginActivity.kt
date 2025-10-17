@@ -69,7 +69,9 @@ class LoginActivity : AppCompatActivity() {
 
         // 🔹 Google Login
         googleButton.setOnClickListener {
+            // ✅ Force Google to forget the previous sign-in
             googleSignInClient.revokeAccess().addOnCompleteListener {
+                // After revoking, always show the chooser
                 val signInIntent = googleSignInClient.signInIntent
                 startActivityForResult(signInIntent, RC_SIGN_IN)
             }
@@ -77,8 +79,6 @@ class LoginActivity : AppCompatActivity() {
 
         // 🔹 Facebook Login
         facebookButton.setOnClickListener {
-            startFacebookLogin()
-            Snackbar.make(it, "Facebook Login coming soon!", Snackbar.LENGTH_SHORT).show()
         }
     }
 
@@ -115,9 +115,6 @@ class LoginActivity : AppCompatActivity() {
             }
     }
 
-    private fun startFacebookLogin() {
-        TODO("Not yet implemented")
-    }
 
     // 🔹 Google Sign-In result
     @Deprecated("Deprecated in Java")
@@ -128,27 +125,44 @@ class LoginActivity : AppCompatActivity() {
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             try {
                 val account = task.getResult(ApiException::class.java)!!
-                handleGoogleAccount(account)
+                handleGoogleSignIn(account)
             } catch (e: ApiException) {
                 Toast.makeText(this, "Google sign-in failed: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    private fun handleGoogleAccount(account: GoogleSignInAccount) {
+    private fun handleGoogleSignIn(account: GoogleSignInAccount) {
         val idToken = account.idToken ?: return
         val credential = GoogleAuthProvider.getCredential(idToken, null)
 
         mAuth.signInWithCredential(credential)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
+                    val result = task.result
+                    val isNewUser = result?.additionalUserInfo?.isNewUser == true
                     val user = mAuth.currentUser
-                    Toast.makeText(this, "Welcome, ${user?.email}", Toast.LENGTH_SHORT).show()
-                    startActivity(Intent(this, Home9Activity::class.java))
-                    finish()
+
+                    if (isNewUser) {
+                        // ❌ User doesn’t exist — delete the auto-created account
+                        user?.delete()
+                        mAuth.signOut()
+                        googleSignInClient.signOut()
+                        Toast.makeText(
+                            this,
+                            "This Google account is not associated with an E-Lista account.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    } else {
+                        // ✅ Existing account — log in
+                        Toast.makeText(this, "Welcome back, ${user?.email}", Toast.LENGTH_SHORT).show()
+                        startActivity(Intent(this, Home9Activity::class.java))
+                        finish()
+                    }
                 } else {
-                    Toast.makeText(this, "Firebase Auth failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Google Sign-In failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
                 }
             }
     }
+
 }
