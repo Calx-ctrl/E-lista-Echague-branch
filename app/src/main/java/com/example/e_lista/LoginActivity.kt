@@ -18,6 +18,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
 import com.google.android.gms.common.api.ApiException
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.FirebaseNetworkException
@@ -282,9 +283,27 @@ class LoginActivity : AppCompatActivity() {
                 val account = task.getResult(ApiException::class.java)!!
                 handleGoogleSignIn(account)
             } catch (e: ApiException) {
-                Toast.makeText(this, "Google sign-in failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                when (e.statusCode) {
+                    GoogleSignInStatusCodes.SIGN_IN_CANCELLED,
+                    GoogleSignInStatusCodes.SIGN_IN_CURRENTLY_IN_PROGRESS,
+                    12501 -> {
+                        // 👇 User cancelled the sign-in, ignore silently
+                        Log.i("GoogleSignIn", "User cancelled Google Sign-In")
+                    }
+                    GoogleSignInStatusCodes.NETWORK_ERROR,
+                    7 -> {
+                        // 👇 No internet connection or network issue
+                        Toast.makeText(this, "Network error. Please check your connection", Toast.LENGTH_SHORT).show()
+                        Log.w("GoogleSignIn", "Network error during sign-in", e)
+                    }
+                    else -> {
+                        // 👇 Other real errors
+                        Toast.makeText(this, "Google Sign-In failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                        Log.e("GoogleSignIn", "Error during sign-in", e)
+                    }
+                }
             }
-        }else {
+        } else {
             // ✅ Pass other results (like Facebook) to their handler
             callbackManager.onActivityResult(requestCode, resultCode, data)
         }
@@ -292,35 +311,71 @@ class LoginActivity : AppCompatActivity() {
 
     private fun handleGoogleSignIn(account: GoogleSignInAccount) {
         val idToken = account.idToken ?: return
-        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        val email = account.email ?: return
 
-        mAuth.signInWithCredential(credential)
-            .addOnCompleteListener(this) { task ->
-                if (task.isSuccessful) {
-                    val result = task.result
-                    val isNewUser = result?.additionalUserInfo?.isNewUser == true
-                    val user = mAuth.currentUser
+        // Step 1: Check if email exists and what provider was used
+        mAuth.fetchSignInMethodsForEmail(email)
+            .addOnCompleteListener { methodTask ->
+                if (methodTask.isSuccessful) {
+                    val methods = methodTask.result?.signInMethods ?: emptyList()
 
-                    if (isNewUser) {
-                        // ❌ User doesn’t exist — delete the auto-created account
-                        user?.delete()
-                        mAuth.signOut()
-                        googleSignInClient.signOut()
+                    if (methods.isEmpty()) {
+                        // ❌ No account found with this email
                         Toast.makeText(
                             this,
                             "This Google account is not associated with an E-Lista account.",
                             Toast.LENGTH_LONG
                         ).show()
-                    } else {
-                        // ✅ Existing account — log in
-                        Toast.makeText(this, "Welcome back, ${user?.email}", Toast.LENGTH_SHORT).show()
-                        startActivity(Intent(this, Home9Activity::class.java))
-                        finish()
+                        googleSignInClient.signOut()
+                        mAuth.signOut()
+                        return@addOnCompleteListener
                     }
+
+                    if (!methods.contains("google.com")) {
+                        // ❌ Email exists, but registered via another method
+                        Toast.makeText(
+                            this,
+                            "This email is registered with a different sign-in method.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        Log.w("GoogleAuth", "Existing provider: $methods")
+                        googleSignInClient.signOut()
+                        mAuth.signOut()
+                        return@addOnCompleteListener
+                    }
+
+                    // ✅ Email exists and registered via Google → proceed
+                    val credential = GoogleAuthProvider.getCredential(idToken, null)
+                    mAuth.signInWithCredential(credential)
+                        .addOnCompleteListener(this) { task ->
+                            if (task.isSuccessful) {
+                                val user = mAuth.currentUser
+                                Toast.makeText(
+                                    this,
+                                    "Welcome back, ${user?.email}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                startActivity(Intent(this, Home9Activity::class.java))
+                                finish()
+                            } else {
+                                Toast.makeText(
+                                    this,
+                                    "Google Sign-In failed: ${task.exception?.message}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                Log.e("GoogleAuth", "Sign-In failed", task.exception)
+                            }
+                        }
                 } else {
-                    Toast.makeText(this, "Google Sign-In failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this,
+                        "Failed to verify email: ${methodTask.exception?.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    Log.e("GoogleAuth", "fetchSignInMethodsForEmail failed", methodTask.exception)
                 }
             }
     }
+
 
 }
