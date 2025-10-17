@@ -20,9 +20,12 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.GoogleAuthProvider
 
@@ -224,19 +227,48 @@ class LoginActivity : AppCompatActivity() {
         mAuth.signInWithEmailAndPassword(email, pass)
             .addOnCompleteListener { task ->
                 progressDialog?.dismiss()
+
                 if (task.isSuccessful) {
                     Toast.makeText(this, "Welcome back!", Toast.LENGTH_SHORT).show()
                     startActivity(Intent(this, Home9Activity::class.java))
                     finish()
                 } else {
-                    Toast.makeText(
-                        this,
-                        "Login failed: ${task.exception?.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    val exception = task.exception
+                    Log.w("EmailLogin", "Sign-in failed", exception)
+
+                    when (exception) {
+                        is FirebaseNetworkException -> {
+                            Toast.makeText(
+                                this,
+                                "Network error. Please check your connection.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+
+                        is FirebaseAuthInvalidCredentialsException,
+                        is FirebaseAuthInvalidUserException -> {
+                            // ✅ Covers wrong password OR non-existent email
+                            Toast.makeText(
+                                this,
+                                "Invalid email or password.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+
+                        else -> {
+                            Toast.makeText(
+                                this,
+                                "Login failed: ${exception?.localizedMessage ?: "Unknown error"}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
                 }
             }
     }
+
+
+
 
 
     // 🔹 Google Sign-In result
