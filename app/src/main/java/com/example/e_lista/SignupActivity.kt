@@ -21,6 +21,7 @@ import com.facebook.CallbackManager
 import com.facebook.FacebookCallback
 import com.facebook.FacebookException
 import com.facebook.FacebookSdk;
+import com.facebook.GraphRequest
 import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginManager
 import com.facebook.login.LoginResult
@@ -118,63 +119,120 @@ class SignupActivity : AppCompatActivity() {
                 }
 
                 override fun onCancel() {
-                    Toast.makeText(this@SignupActivity, "Facebook signup cancelled", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@SignupActivity,
+                        "Facebook signup cancelled",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
 
                 override fun onError(error: FacebookException) {
-                    Toast.makeText(this@SignupActivity, "Facebook singup failed: ${error.message}", Toast.LENGTH_SHORT).show()
-                }
-            })
-    }
-    private fun handleFacebookAccessToken(token: AccessToken) {
-        val credential = FacebookAuthProvider.getCredential(token.token)
+                    val message = error.message ?: "Unknown error"
 
-        mAuth.signInWithCredential(credential)
-            .addOnCompleteListener(this@SignupActivity) { task ->
-                if (task.isSuccessful) {
-                    val isNewUser = task.result?.additionalUserInfo?.isNewUser == true
-                    val user = mAuth.currentUser
-
-                    if (isNewUser) {
+                    // ✅ Network error handling
+                    if (message.contains("CONNECTION_FAILURE", true) ||
+                        message.contains("NETWORK_ERROR", true) ||
+                        message.contains("Failed to connect", true)
+                    ) {
                         Toast.makeText(
                             this@SignupActivity,
-                            "Welcome new user: ${user?.displayName}",
-                            Toast.LENGTH_SHORT
+                            "Network error. Please check your connection.",
+                            Toast.LENGTH_LONG
                         ).show()
-                        // Optionally save user info to Firebase DB here
                     } else {
                         Toast.makeText(
                             this@SignupActivity,
-                            "Welcome back: ${user?.displayName}",
+                            "Facebook signup failed: $message",
                             Toast.LENGTH_SHORT
                         ).show()
                     }
+                }
+            })
+    }
 
-                    startActivity(Intent(this@SignupActivity, Home9Activity::class.java))
-                    finish()
-                } else {
-                    val exception = task.exception
-                    when (exception) {
-                        is FirebaseAuthUserCollisionException -> {
-                            // ⚠️ Email already used by another sign-in method
-                            Toast.makeText(
-                                this@SignupActivity,
-                                "This Facebook email is already registered with another sign-in method.",
-                                Toast.LENGTH_LONG
-                            ).show()
-                            Log.w("FacebookAuth", "Email already exists: ${exception.message}")
+    private fun handleFacebookAccessToken(token: AccessToken) {
+        val credential = FacebookAuthProvider.getCredential(token.token)
+
+        // ✅ Step 1: Get the email associated with the Facebook account
+        val request = GraphRequest.newMeRequest(token) { obj, _ ->
+            val email = obj?.getString("email")
+
+            if (email == null) {
+                Toast.makeText(
+                    this@SignupActivity,
+                    "Unable to retrieve Facebook email. Please try again.",
+                    Toast.LENGTH_LONG
+                ).show()
+                return@newMeRequest
+            }
+
+            // ✅ Step 2: Check if the email already exists in Firebase Auth
+            mAuth.fetchSignInMethodsForEmail(email)
+                .addOnCompleteListener { methodTask ->
+                    if (methodTask.isSuccessful) {
+                        val methods = methodTask.result?.signInMethods ?: emptyList()
+
+                        when {
+                            // ⚠️ Already registered via Facebook
+                            methods.contains("facebook.com") -> {
+                                Toast.makeText(
+                                    this@SignupActivity,
+                                    "This Facebook account is already registered.",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                                LoginManager.getInstance().logOut()
+                            }
+
+                            // ⚠️ Registered via another provider (Google/Email)
+                            methods.isNotEmpty() -> {
+                                Toast.makeText(
+                                    this@SignupActivity,
+                                    "This Facebook email is already registered with another sign-in method.",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                                Log.w("FacebookAuth", "Email already exists with $methods")
+                                LoginManager.getInstance().logOut()
+                            }
+
+                            // ✅ Not registered yet → proceed with Facebook sign-up
+                            else -> {
+                                mAuth.signInWithCredential(credential)
+                                    .addOnCompleteListener(this@SignupActivity) { task ->
+                                        if (task.isSuccessful) {
+                                            val user = mAuth.currentUser
+                                            Toast.makeText(
+                                                this@SignupActivity,
+                                                "Welcome new user: ${user?.displayName}",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            startActivity(Intent(this@SignupActivity, Home9Activity::class.java))
+                                            finish()
+                                        } else {
+                                            Toast.makeText(
+                                                this@SignupActivity,
+                                                "Firebase Auth failed: ${task.exception?.message}",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            Log.e("FacebookAuth", "Auth failed", task.exception)
+                                        }
+                                    }
+                            }
                         }
-                        else -> {
-                            Toast.makeText(
-                                this@SignupActivity,
-                                "Firebase Auth failed: ${exception?.message}",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            Log.e("FacebookAuth", "Auth failed", exception)
-                        }
+                    } else {
+                        Toast.makeText(
+                            this@SignupActivity,
+                            "Failed to verify Facebook email: ${methodTask.exception?.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        Log.e("FacebookAuth", "Email check failed", methodTask.exception)
                     }
                 }
-            }
+        }
+
+        val parameters = Bundle()
+        parameters.putString("fields", "id,name,email")
+        request.parameters = parameters
+        request.executeAsync()
     }
 
     @Deprecated("Deprecated in Java")
