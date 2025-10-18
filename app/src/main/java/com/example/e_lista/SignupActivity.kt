@@ -205,7 +205,8 @@ class SignupActivity : AppCompatActivity() {
                                                 "Welcome new user: ${user?.displayName}",
                                                 Toast.LENGTH_SHORT
                                             ).show()
-                                            startActivity(Intent(this@SignupActivity, Home9Activity::class.java))
+                                            startActivity(Intent(this@SignupActivity,
+                                                AllSetActivity::class.java))
                                             finish()
                                         } else {
                                             Toast.makeText(
@@ -308,7 +309,7 @@ class SignupActivity : AppCompatActivity() {
                                     Toast.LENGTH_SHORT
                                 ).show()
 
-                                startActivity(Intent(this, Home9Activity::class.java))
+                                startActivity(Intent(this, AllSetActivity::class.java))
                                 finish()
                             } else {
                                 Toast.makeText(
