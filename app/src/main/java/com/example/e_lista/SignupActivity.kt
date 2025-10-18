@@ -24,14 +24,17 @@ import com.facebook.FacebookSdk;
 import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginManager
 import com.facebook.login.LoginResult
+import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
+import com.google.firebase.FirebaseApp
+import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FacebookAuthProvider
+import java.util.Locale
 
 
 class SignupActivity : AppCompatActivity() {
 
     // Binding variable for the layout
     private lateinit var binding: ActivitySignUp4Binding
-
     // Dialog
     private var mDialog: ProgressDialog? = null
 
@@ -80,6 +83,9 @@ class SignupActivity : AppCompatActivity() {
         // Handle sign-up button click
         binding.signUpButton.setOnClickListener { performEmailSignUp() }
 
+        binding.signinBtn.setOnClickListener {
+            startActivity(Intent(this, LoginActivity::class.java))
+        }
         // Handle Google sign-up
         binding.googleButton.setOnClickListener {
             // ✅ Force Google to forget the previous sign-in
@@ -112,11 +118,11 @@ class SignupActivity : AppCompatActivity() {
                 }
 
                 override fun onCancel() {
-                    Toast.makeText(this@SignupActivity, "Facebook login cancelled", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@SignupActivity, "Facebook signup cancelled", Toast.LENGTH_SHORT).show()
                 }
 
                 override fun onError(error: FacebookException) {
-                    Toast.makeText(this@SignupActivity, "Facebook login failed: ${error.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@SignupActivity, "Facebook singup failed: ${error.message}", Toast.LENGTH_SHORT).show()
                 }
             })
     }
@@ -179,48 +185,97 @@ class SignupActivity : AppCompatActivity() {
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             try {
                 val account = task.getResult(ApiException::class.java)!!
-                handleGoogleAccount(account)
+                handleGoogleSignUp(account)
             } catch (e: ApiException) {
-                Toast.makeText(this, "Google sign-in failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                when (e.statusCode) {
+                    GoogleSignInStatusCodes.SIGN_IN_CANCELLED,
+                    GoogleSignInStatusCodes.SIGN_IN_CURRENTLY_IN_PROGRESS,
+                    12501 -> {
+                        // 👇 User cancelled the sign-in, ignore silently
+                        Log.i("GoogleSignUp", "User cancelled Google Sign-up")
+                    }
+                    GoogleSignInStatusCodes.NETWORK_ERROR,
+                    7 -> {
+                        // 👇 No internet connection or network issue
+                        Toast.makeText(this, "Network error. Please check your connection", Toast.LENGTH_SHORT).show()
+                        Log.w("GoogleSignUp", "Network error during sign-up", e)
+                    }
+                    else -> {
+                        // 👇 Other real errors
+                        Toast.makeText(this, "Google Sign-Up failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                        Log.e("GoogleSignIn", "Error during sign-in", e)
+                    }
+                }
             }
-        }else {
+        } else {
             // ✅ Pass other results (like Facebook) to their handler
             callbackManager.onActivityResult(requestCode, resultCode, data)
         }
     }
 
-    /**
-     * ✅ This handles both sign-up and sign-in automatically:
-     * - If the email exists → sign in
-     * - If it's new → sign up
-     */
-    private fun handleGoogleAccount(account: GoogleSignInAccount) {
+    private fun handleGoogleSignUp(account: GoogleSignInAccount) {
         val idToken = account.idToken ?: return
-        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        val email = account.email ?: return
 
-        mAuth.signInWithCredential(credential)
-            .addOnCompleteListener(this) { task ->
-                if (task.isSuccessful) {
-                    val isNewUser = task.result?.additionalUserInfo?.isNewUser == true
-                    val user = mAuth.currentUser
+        // 🔹 Step 1: Check if the email already exists in Firebase Auth
+        mAuth.fetchSignInMethodsForEmail(email)
+            .addOnCompleteListener { methodTask ->
+                if (methodTask.isSuccessful) {
+                    val methods = methodTask.result?.signInMethods ?: emptyList()
 
-                    if (isNewUser) {
-                        Toast.makeText(this, "Welcome, new user: ${user?.email}", Toast.LENGTH_SHORT).show()
-                        // ✅ Optional: save user to Firestore or Realtime Database here
-                    } else {
-                        Toast.makeText(this, "Welcome back, ${user?.email}", Toast.LENGTH_SHORT).show()
+                    if (methods.isNotEmpty()) {
+                        // ✅ Email already registered — don't create or sign in
+                        Toast.makeText(
+                            this,
+                            "This email is already registered.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        Log.w("GoogleAuth", "Email already exists: $email")
+
+                        // Force Google to forget previous sign-in
+                        googleSignInClient.signOut()
+                        mAuth.signOut()
+                        return@addOnCompleteListener
                     }
 
-                    startActivity(Intent(this, Home9Activity::class.java))
-                    finish()
+                    // 🔹 Step 2: Proceed with Google sign-up
+                    val credential = GoogleAuthProvider.getCredential(idToken, null)
+                    mAuth.signInWithCredential(credential)
+                        .addOnCompleteListener(this) { authTask ->
+                            if (authTask.isSuccessful) {
+                                val user = mAuth.currentUser
+                                Toast.makeText(
+                                    this,
+                                    "Welcome, new user: ${user?.email}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+
+                                startActivity(Intent(this, Home9Activity::class.java))
+                                finish()
+                            } else {
+                                Toast.makeText(
+                                    this,
+                                    "Firebase Auth failed: ${authTask.exception?.message}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                Log.e("GoogleAuth", "Auth failed", authTask.exception)
+                            }
+                        }
                 } else {
-                    Toast.makeText(this, "Firebase Auth failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this,
+                        "Failed to check email: ${methodTask.exception?.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    Log.e("GoogleAuth", "Email check failed", methodTask.exception)
                 }
             }
     }
 
+
+
     private fun performEmailSignUp() {
-        val email = binding.emailEditText.text.toString().trim()
+        val email = binding.emailEditText.text.toString().trim().lowercase()
         val pass = binding.passwordEditText.text.toString().trim()
         val confirmpass = binding.confirmPasswordEditText.text.toString().trim()
 
@@ -265,6 +320,9 @@ class SignupActivity : AppCompatActivity() {
                         throw task.exception ?: Exception("Unknown error")
                     } catch (e: FirebaseAuthUserCollisionException) {
                         binding.emailEditText.error = "This email is already registered"
+                    } catch (e: FirebaseNetworkException) {
+                        // ✅ Handle no internet connection
+                        Toast.makeText(this, "Network error. Please check your connection", Toast.LENGTH_LONG).show()
                     } catch (e: Exception) {
                         Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
                     }
