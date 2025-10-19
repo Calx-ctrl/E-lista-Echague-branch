@@ -230,9 +230,21 @@ class LoginActivity : AppCompatActivity() {
                 progressDialog?.dismiss()
 
                 if (task.isSuccessful) {
-                    Toast.makeText(this, "Welcome back!", Toast.LENGTH_SHORT).show()
-                    startActivity(Intent(this, Home9Activity::class.java))
-                    finish()
+                    val user = mAuth.currentUser
+
+                    if (user != null && user.isEmailVerified) {
+                        Toast.makeText(this, "Welcome back!", Toast.LENGTH_SHORT).show()
+                        startActivity(Intent(this, Home9Activity::class.java))
+                        finish()
+                    } else {
+                        // ❌ Not verified yet
+                        mAuth.signOut()
+                        Toast.makeText(
+                            this,
+                            "Verify your email before logging in.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
                 } else {
                     val exception = task.exception
                     Log.w("EmailLogin", "Sign-in failed", exception)
@@ -248,7 +260,6 @@ class LoginActivity : AppCompatActivity() {
 
                         is FirebaseAuthInvalidCredentialsException,
                         is FirebaseAuthInvalidUserException -> {
-                            // ✅ Covers wrong password OR non-existent email
                             Toast.makeText(
                                 this,
                                 "Invalid email or password.",
