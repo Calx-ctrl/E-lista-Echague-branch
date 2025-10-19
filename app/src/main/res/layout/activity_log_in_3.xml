@@ -94,6 +94,30 @@
         app:layout_constraintStart_toStartOf="@id/passwordEditText"
         app:layout_constraintTop_toBottomOf="@id/passwordEditText" />
 
+    <!-- Email Verification Notice -->
+    <TextView
+        android:id="@+id/verifyNoticeText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Your email is not verified."
+        android:textColor="@android:color/holo_red_dark"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/signuppart"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/socialLoginLayout" />
+
+    <Button
+        android:id="@+id/resendVerificationBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Resend Verification Email"
+        android:enabled="true"
+        android:visibility="gone"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/verifyNoticeText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
     <!-- "Or Log in with" Divider -->
     <LinearLayout
         android:id="@+id/dividerLayout"
@@ -197,6 +221,7 @@
 
     <!-- "Don't have an account?" Text -->
     <LinearLayout
+        android:id="@+id/signuppart"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="32dp"

@@ -3,9 +3,12 @@ package com.example.e_lista
 import android.app.ProgressDialog
 import android.content.Intent
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.util.Log
+import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.addTextChangedListener
 import com.facebook.AccessToken
 import com.facebook.CallbackManager
 import com.facebook.FacebookCallback
@@ -28,17 +31,21 @@ import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 
 class LoginActivity : AppCompatActivity() {
 
     // UI
     private lateinit var emailEditText: EditText
+
     private lateinit var passwordEditText: EditText
     private lateinit var loginBtn: Button
     private lateinit var signupBtn: TextView
     private lateinit var googleButton: LinearLayout
     private lateinit var facebookButton: LinearLayout
+    private lateinit var resendVerificationBtn: Button
+    private lateinit var verifyNoticeText: TextView
 
     // Firebase
     private lateinit var mAuth: FirebaseAuth
@@ -51,6 +58,13 @@ class LoginActivity : AppCompatActivity() {
 
     //FB sign up
     private lateinit var callbackManager: CallbackManager
+
+    //para sa verificatoi
+    private var unverifiedUserEmail: String? = null
+
+    // Timer
+    private var resendTimer: CountDownTimer? = null
+    private var canResend = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,44 +83,59 @@ class LoginActivity : AppCompatActivity() {
         //Config FB sign-in
         FacebookSdk.sdkInitialize(applicationContext)
         AppEventsLogger.activateApp(application)
-
         callbackManager = CallbackManager.Factory.create()
 
         // Initialize Views
         emailEditText = findViewById(R.id.emailEditText)
         passwordEditText = findViewById(R.id.passwordEditText)
+        val passedEmail = intent.getStringExtra("USER_EMAIL")
+        if (!passedEmail.isNullOrEmpty()) {
+            emailEditText.setText(passedEmail)
+            passwordEditText.requestFocus()
+        }
         loginBtn = findViewById(R.id.loginBtn)
         signupBtn = findViewById(R.id.signupBtn)
         googleButton = findViewById(R.id.googleButton)
         facebookButton = findViewById(R.id.facebookButton)
-
         progressDialog = ProgressDialog(this)
 
-        // 🔹 Email Login
+        // 🔹 Add these two UI elements in your XML
+        resendVerificationBtn = findViewById(R.id.resendVerificationBtn)
+        verifyNoticeText = findViewById(R.id.verifyNoticeText)
+
+        // Hide initially
+        resendVerificationBtn.visibility = View.GONE
+        verifyNoticeText.visibility = View.GONE
+
         loginBtn.setOnClickListener {
             performEmailLogin()
         }
 
-        // 🔹 Go to Signup
         signupBtn.setOnClickListener {
             startActivity(Intent(this, SignupActivity::class.java))
         }
 
-        // 🔹 Google Login
         googleButton.setOnClickListener {
-            // ✅ Force Google to forget the previous sign-in
             googleSignInClient.revokeAccess().addOnCompleteListener {
-                // After revoking, always show the chooser
                 val signInIntent = googleSignInClient.signInIntent
                 startActivityForResult(signInIntent, RC_SIGN_IN)
             }
         }
 
-        // 🔹 Facebook Login
         facebookButton.setOnClickListener {
             startFacebookSignIn()
         }
+
+        resendVerificationBtn.setOnClickListener {
+            resendVerificationEmail()
+        }
+
+        // When user changes email → hide verification section
+        emailEditText.addTextChangedListener {
+            if (resendVerificationBtn.visibility == View.VISIBLE)hideVerificationSection()
+        }
     }
+
 
     private fun startFacebookSignIn() {
         // Always show account chooser (forces re-login)
@@ -234,49 +263,108 @@ class LoginActivity : AppCompatActivity() {
 
                     if (user != null && user.isEmailVerified) {
                         Toast.makeText(this, "Welcome back!", Toast.LENGTH_SHORT).show()
-                        startActivity(Intent(this, Home9Activity::class.java))
+                        val intent = Intent(this, Home9Activity::class.java)
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        startActivity(intent)
                         finish()
                     } else {
                         // ❌ Not verified yet
+                        unverifiedUserEmail = user?.email
+                        showVerificationSection(user)
                         mAuth.signOut()
-                        Toast.makeText(
-                            this,
-                            "Verify your email before logging in.",
-                            Toast.LENGTH_LONG
-                        ).show()
                     }
+
                 } else {
                     val exception = task.exception
                     Log.w("EmailLogin", "Sign-in failed", exception)
 
                     when (exception) {
                         is FirebaseNetworkException -> {
-                            Toast.makeText(
-                                this,
-                                "Network error. Please check your connection.",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            Toast.makeText(this, "Network error. Please check your connection.", Toast.LENGTH_SHORT).show()
                         }
-
                         is FirebaseAuthInvalidCredentialsException,
                         is FirebaseAuthInvalidUserException -> {
-                            Toast.makeText(
-                                this,
-                                "Invalid email or password.",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            Toast.makeText(this, "Invalid email or password.", Toast.LENGTH_SHORT).show()
                         }
-
                         else -> {
-                            Toast.makeText(
-                                this,
-                                "Login failed: ${exception?.localizedMessage ?: "Unknown error"}",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            Toast.makeText(this, "Login failed: ${exception?.localizedMessage ?: "Unknown error"}", Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
             }
+    }
+
+    private fun showVerificationSection(user: FirebaseUser?) {
+        verifyNoticeText.visibility = View.VISIBLE
+        verifyNoticeText.text = "Your email is not verified. Please verify to continue."
+        resendVerificationBtn.visibility = View.VISIBLE
+        resendVerificationBtn.isEnabled = canResend
+    }
+
+    private fun hideVerificationSection() {
+        verifyNoticeText.visibility = View.GONE
+        resendVerificationBtn.visibility = View.GONE
+        resendVerificationBtn.text = "Resend Verification Email"
+        resendTimer?.cancel()
+        canResend = true
+    }
+
+    private fun resendVerificationEmail() {
+        if (!canResend) return
+
+        val email = unverifiedUserEmail ?: emailEditText.text.toString().trim()
+        if (email.isEmpty()) return
+
+        progressDialog?.setMessage("Sending verification email...")
+        progressDialog?.show()
+
+        // 🔹 Re-sign in temporarily to send the verification email
+        val pass = passwordEditText.text.toString().trim()
+        mAuth.signInWithEmailAndPassword(email, pass)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val user = mAuth.currentUser
+                    user?.sendEmailVerification()
+                        ?.addOnCompleteListener { sendTask ->
+                            progressDialog?.dismiss()
+                            if (sendTask.isSuccessful) {
+                                Toast.makeText(this, "Verification email sent to $email", Toast.LENGTH_SHORT).show()
+                                startResendCooldown()
+                            } else {
+                                Toast.makeText(this, "Failed to send: ${sendTask.exception?.message}", Toast.LENGTH_SHORT).show()
+                            }
+                            mAuth.signOut() // sign out again after sending
+                        }
+                } else {
+                    progressDialog?.dismiss()
+                    Toast.makeText(this, "Failed to re-authenticate: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+    }
+
+    private fun startResendCooldown() {
+        canResend = false
+        resendVerificationBtn.isEnabled = false
+
+        resendTimer = object : CountDownTimer(180000, 1000) { // 3 minutes = 180000 ms
+            override fun onTick(millisUntilFinished: Long) {
+                val seconds = millisUntilFinished / 1000
+                val minutes = seconds / 60
+                val remainingSeconds = seconds % 60
+                resendVerificationBtn.text = String.format("Resend in %02d:%02d", minutes, remainingSeconds)
+            }
+
+            override fun onFinish() {
+                canResend = true
+                resendVerificationBtn.isEnabled = true
+                resendVerificationBtn.text = "Resend Verification Email"
+            }
+        }.start()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        resendTimer?.cancel()
     }
 
 
