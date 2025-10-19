@@ -377,7 +377,6 @@ class SignupActivity : AppCompatActivity() {
                                 val intent = Intent(this, EmailSentActivity::class.java)
                                 intent.putExtra("USER_EMAIL", user.email)
                                 startActivity(intent)
-                                mAuth.signOut()
                                 finish()
                             } else {
                                 Toast.makeText(

@@ -65,6 +65,8 @@ class LoginActivity : AppCompatActivity() {
     // Timer
     private var resendTimer: CountDownTimer? = null
     private var canResend = true
+    private val RESEND_PREFS = "ResendPrefs"
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -267,6 +269,7 @@ class LoginActivity : AppCompatActivity() {
                         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                         startActivity(intent)
                         finish()
+                        getSharedPreferences(RESEND_PREFS, MODE_PRIVATE).edit().clear().apply()
                     } else {
                         // ❌ Not verified yet
                         unverifiedUserEmail = user?.email
@@ -294,11 +297,65 @@ class LoginActivity : AppCompatActivity() {
             }
     }
 
+    private fun startResendTimer(durationMillis: Long) {
+        resendVerificationBtn.isEnabled = false
+
+        resendTimer?.cancel()
+        resendTimer = object : CountDownTimer(durationMillis, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                val seconds = millisUntilFinished / 1000
+                resendVerificationBtn.text = "Resend in ${seconds}s"
+            }
+
+            override fun onFinish() {
+                resendVerificationBtn.text = "Resend verification email"
+                resendVerificationBtn.isEnabled = true
+
+                // Clear timer state from SharedPreferences
+                getSharedPreferences(RESEND_PREFS, MODE_PRIVATE).edit().clear().apply()
+            }
+        }.start()
+    }
+
+    private fun saveResendTimer(email: String) {
+        val prefs = getSharedPreferences(RESEND_PREFS, MODE_PRIVATE)
+        val expireTime = System.currentTimeMillis() + 3 * 60 * 1000 // 3 minutes
+        prefs.edit()
+            .putString("lastEmail", email)
+            .putLong("expireTime", expireTime)
+            .apply()
+    }
+
+    private fun checkAndResumeResendTimer(email: String) {
+        val prefs = getSharedPreferences(RESEND_PREFS, MODE_PRIVATE)
+        val lastEmail = prefs.getString("lastEmail", null)
+        val expireTime = prefs.getLong("expireTime", 0)
+        val currentTime = System.currentTimeMillis()
+
+        if (lastEmail == email && currentTime < expireTime) {
+            val millisLeft = expireTime - currentTime
+            startResendTimer(millisLeft)
+        } else {
+            resendVerificationBtn.text = "Resend verification email"
+            resendVerificationBtn.isEnabled = true
+        }
+    }
+
+
     private fun showVerificationSection(user: FirebaseUser?) {
         verifyNoticeText.visibility = View.VISIBLE
         verifyNoticeText.text = "Your email is not verified. Please verify to continue."
         resendVerificationBtn.visibility = View.VISIBLE
-        resendVerificationBtn.isEnabled = canResend
+
+        val email = user?.email ?: emailEditText.text.toString().trim()
+
+        // Remember which account the cooldown belongs to
+        unverifiedUserEmail = email
+        checkAndResumeResendTimer(email)
+
+        resendVerificationBtn.setOnClickListener {
+            resendVerificationEmail()
+        }
     }
 
     private fun hideVerificationSection() {
@@ -310,56 +367,50 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun resendVerificationEmail() {
-        if (!canResend) return
-
         val email = unverifiedUserEmail ?: emailEditText.text.toString().trim()
-        if (email.isEmpty()) return
-
-        progressDialog?.setMessage("Sending verification email...")
-        progressDialog?.show()
-
-        // 🔹 Re-sign in temporarily to send the verification email
         val pass = passwordEditText.text.toString().trim()
+
+        if (email.isEmpty() || pass.isEmpty()) {
+            Toast.makeText(this, "Enter email and password first", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val prefs = getSharedPreferences(RESEND_PREFS, MODE_PRIVATE)
+        val lastEmail = prefs.getString("lastEmail", null)
+        val expireTime = prefs.getLong("expireTime", 0)
+
+        // 🕒 Check if timer still active for this email
+        if (lastEmail == email && System.currentTimeMillis() < expireTime) {
+            val millisLeft = expireTime - System.currentTimeMillis()
+            startResendTimer(millisLeft)
+            return
+        }
+
+        // 🔐 Silent sign-in (ensures user is available)
         mAuth.signInWithEmailAndPassword(email, pass)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val user = mAuth.currentUser
-                    user?.sendEmailVerification()
-                        ?.addOnCompleteListener { sendTask ->
-                            progressDialog?.dismiss()
-                            if (sendTask.isSuccessful) {
+            .addOnSuccessListener {
+                val user = mAuth.currentUser
+                if (user != null && !user.isEmailVerified) {
+                    user.sendEmailVerification()
+                        .addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
                                 Toast.makeText(this, "Verification email sent to $email", Toast.LENGTH_SHORT).show()
-                                startResendCooldown()
+                                saveResendTimer(email)
+                                startResendTimer(3 * 60 * 1000)
                             } else {
-                                Toast.makeText(this, "Failed to send: ${sendTask.exception?.message}", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this, "Failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
                             }
-                            mAuth.signOut() // sign out again after sending
                         }
                 } else {
-                    progressDialog?.dismiss()
-                    Toast.makeText(this, "Failed to re-authenticate: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Your email is already verified.", Toast.LENGTH_SHORT).show()
                 }
-            }
-    }
 
-    private fun startResendCooldown() {
-        canResend = false
-        resendVerificationBtn.isEnabled = false
-
-        resendTimer = object : CountDownTimer(180000, 1000) { // 3 minutes = 180000 ms
-            override fun onTick(millisUntilFinished: Long) {
-                val seconds = millisUntilFinished / 1000
-                val minutes = seconds / 60
-                val remainingSeconds = seconds % 60
-                resendVerificationBtn.text = String.format("Resend in %02d:%02d", minutes, remainingSeconds)
+                // Sign out again after sending, so login state stays clean
+                mAuth.signOut()
             }
-
-            override fun onFinish() {
-                canResend = true
-                resendVerificationBtn.isEnabled = true
-                resendVerificationBtn.text = "Resend Verification Email"
+            .addOnFailureListener {
+                Toast.makeText(this, "Re-authentication failed: ${it.message}", Toast.LENGTH_SHORT).show()
             }
-        }.start()
     }
 
     override fun onDestroy() {
