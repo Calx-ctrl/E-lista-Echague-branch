@@ -17,19 +17,23 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Back button -->
-    <ImageView
-        android:id="@+id/backButton"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:src="@drawable/ic_arrow_back"
-        android:contentDescription="Back"
-        android:layout_margin="16dp"
-        app:layout_constraintTop_toTopOf="@id/headerBackground"
-        app:layout_constraintStart_toStartOf="parent" />
 
     <!-- Title -->
 
     <!-- Filter Chips -->
+
+    <ImageView
+        android:id="@+id/backButton"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_margin="16dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="56dp"
+        android:contentDescription="Back"
+        android:src="@drawable/arrowleft"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/headerBackground" />
+
     <TextView
         android:id="@+id/titleText"
         android:layout_width="wrap_content"
@@ -43,7 +47,7 @@
         app:layout_constraintHorizontal_bias="0.428"
         app:layout_constraintStart_toEndOf="@id/backButton"
         app:layout_constraintTop_toTopOf="@id/backButton"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintVertical_bias="0.0" />
 
     <com.google.android.material.chip.ChipGroup
         android:id="@+id/filterGroup"

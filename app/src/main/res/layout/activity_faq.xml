@@ -61,16 +61,29 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
+            android:justificationMode="inter_word"
             android:textAlignment="center"
             android:lineSpacingExtra="4dp"
             android:textColor="#333333"
             android:textSize="14sp"
-            android:text="Lorem ipsum dolor sit amet consectetur. Feugiat sodales urna ac turpis cras.
-Turpis fermentum elementum turpis libero tristique turpis. Diam justo nunc iaculis tincidunt posuere at consequat morbi.
-Scelerisque sed risus magna egestas adipiscing. Quam enim vestibulum in risus blandit.
-Fermentum consectetur bibendum sed molestie netus.
-Sed in risus sit faucibus purus amet morbi.
-Purus turpis diam felis ac quam mauris aliquam. Donec donec ac sed facilisi leo tempus id."/>
+            android:text="1. What is E-Lista?
+E-Lista is an easy-to-use expense tracker that helps you record, organize, and understand your daily spending. \n
+
+2. Is it free?
+Yes! E-Lista is free to use, with premium features coming soon.\n
+
+3. Can I customize categories?
+Definitely. You can add, edit, or remove categories to match your lifestyle.\n
+
+4. Does it work offline?
+Yes. You can log expenses anytime—your data syncs when you’re back online.\n
+
+5. Is my data safe?
+Your privacy matters. E-Lista encrypts your data and keeps it secure.\n
+
+6. How can I contact support?
+Email us at support@e-lista.app
+ — we’re happy to help!"/>
     </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

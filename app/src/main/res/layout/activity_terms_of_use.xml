@@ -62,16 +62,25 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
+            android:justificationMode="inter_word"
             android:textAlignment="center"
             android:lineSpacingExtra="4dp"
             android:textColor="#333333"
             android:textSize="14sp"
-            android:text="Lorem ipsum dolor sit amet consectetur. Feugiat sodales urna ac turpis cras.
-Turpis fermentum elementum turpis libero tristique turpis. Diam justo nunc iaculis tincidunt posuere at consequat morbi.
-Scelerisque sed risus magna egestas adipiscing. Quam enim vestibulum in risus blandit.
-Fermentum consectetur bibendum sed molestie netus.
-Sed in risus sit faucibus purus amet morbi.
-Purus turpis diam felis ac quam mauris aliquam. Donec donec ac sed facilisi leo tempus id."/>
+            android:text="Welcome to E-Lista! By using our app, you agree to follow these simple terms:\n
+
+Use E-Lista only for personal and lawful purposes.\n
+
+You are responsible for the accuracy of the information you enter.\n
+
+Don’t attempt to copy, modify, or misuse the app’s features or data.\n
+
+We may update or change the app at any time to improve your experience.\n
+
+E-Lista is not responsible for any loss caused by inaccurate or incomplete data you provide.\n
+
+By continuing to use E-Lista, you accept these terms. If you have any questions, contact us at support@e-lista.app
+."/>
     </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

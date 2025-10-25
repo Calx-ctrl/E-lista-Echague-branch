@@ -22,7 +22,7 @@
         android:id="@+id/backButton"
         android:layout_width="24dp"
         android:layout_height="24dp"
-        android:src="@drawable/ic_arrow_back"
+        android:src="@drawable/arrowleft"
         android:contentDescription="Back"
         android:layout_margin="16dp"
         app:layout_constraintTop_toTopOf="@id/headerBackground"
@@ -79,11 +79,15 @@
                 android:lineSpacingExtra="4dp"
                 android:textColor="#333333"
                 android:textSize="14sp"
-                android:text="Lorem ipsum dolor sit amet consectetur. Feugiat sodales urna ac turpis cras.
-Turpis fermentum elementum turpis libero tristique turpis. Diam justo nunc iaculis tincidunt posuere at consequat morbi.
-Scelerisque sed risus magna egestas adipiscing. Quam enim vestibulum in risus blandit.
-Fermentum consectetur bibendum sed molestie netus. Sed in risus sit faucibus purus amet morbi.
-Purus turpis diam felis ac quam mauris aliquam. Donec donec ac sed facilisi leo tempus id." />
+                android:text="At E-Lista, we believe that financial clarity should be simple, smart, and stress-free.
+Born from the idea that managing expenses shouldn’t feel like a chore, E-Lista helps you take full control of your spending—one list at a time.
+
+Our mission is to empower individuals to make confident financial decisions by giving them the tools to track, organize, and understand where their money goes. Whether you’re budgeting for school, managing family expenses, or simply keeping tabs on daily spending, E-Lista makes it effortless to stay on track.
+
+With an intuitive design, insightful analytics, and customizable categories, E-Lista transforms your expense tracking into a clear picture of your financial habits. No more guessing where your money went—just easy lists, smart insights, and peace of mind.
+
+We’re not just building an app—we’re building a financial companion for everyone who wants to take charge of their future.
+Because at E-Lista, every peso counts, and every list tells your story." />
         </LinearLayout>
     </ScrollView>
 
