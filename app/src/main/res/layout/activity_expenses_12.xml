@@ -2,7 +2,6 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F6FAFB">
@@ -23,12 +22,12 @@
         android:id="@+id/backButton"
         android:layout_width="24dp"
         android:layout_height="24dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="56dp"
-        android:contentDescription="Back"
         android:src="@drawable/ic_arrow_back"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:contentDescription="Back"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <!-- Title -->
     <TextView
@@ -40,10 +39,9 @@
         android:textSize="20sp"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="@id/backButton"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.43"
         app:layout_constraintStart_toEndOf="@id/backButton"
-        app:layout_constraintTop_toTopOf="@id/backButton" />
+        app:layout_constraintTop_toTopOf="@id/backButton"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Filter Row -->
     <LinearLayout
@@ -58,38 +56,30 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Dropdown Menu (Daily / Weekly / Monthly) -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/dropdownLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chipFilter"
+            style="@style/Widget.MaterialComponents.Chip.Choice"
+            android:text="Week"
+            android:textColor="@android:color/white"
+            app:chipBackgroundColor="@color/green_primary"
+            android:paddingHorizontal="12dp"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:hint="Select Period"
-            app:boxStrokeColor="@color/green_primary"
-            app:endIconMode="dropdown_menu">
+            android:layout_height="wrap_content"/>
 
-            <AutoCompleteTextView
-                android:id="@+id/periodDropdown"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:inputType="none"
-                android:text="Weekly"
-                android:textColor="@android:color/black"
-                android:paddingHorizontal="12dp" />
-        </com.google.android.material.textfield.TextInputLayout>
+        <Space
+            android:layout_width="8dp"
+            android:layout_height="wrap_content"/>
 
         <TextView
             android:id="@+id/expensesHeader"
-            android:layout_width="213dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="Expenses"
+            android:textStyle="bold"
+            android:textColor="@android:color/white"
             android:background="@drawable/rounded_green_dark"
             android:paddingHorizontal="20dp"
-            android:paddingVertical="6dp"
-            android:text="Expenses"
-            android:textColor="@android:color/white"
-            android:textStyle="bold" />
-
+            android:paddingVertical="6dp"/>
     </LinearLayout>
 
     <!-- Scrollable Expense List -->
@@ -104,29 +94,26 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <LinearLayout
+            android:id="@+id/expenseListContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingHorizontal="20dp"
             android:paddingVertical="12dp">
 
-            <include layout="@layout/item_expense" />
-            <include layout="@layout/item_expense" />
-            <include layout="@layout/item_expense" />
-            <include layout="@layout/item_expense" />
-            <include layout="@layout/item_expense" />
+            <!-- Dynamic list goes here -->
 
             <Button
                 android:id="@+id/btnAddExpense"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:text="Edit Expenses"
+                android:text="Manually Add Expense"
                 android:textAllCaps="false"
                 android:textColor="@android:color/white"
                 android:background="@drawable/rounded_green"
                 android:fontFamily="sans-serif-medium"
                 android:layout_marginTop="16dp"
-                android:layout_marginBottom="24dp" />
+                android:layout_marginBottom="24dp"/>
         </LinearLayout>
     </ScrollView>
 
