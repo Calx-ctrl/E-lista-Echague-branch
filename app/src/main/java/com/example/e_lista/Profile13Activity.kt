@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import com.example.e_lista.databinding.ActivityProfile13Binding
+import com.google.firebase.auth.FirebaseAuth
 
 class Profile13Activity : AppCompatActivity() {
 
@@ -24,9 +25,17 @@ class Profile13Activity : AppCompatActivity() {
         }
 
         // 📸 Floating Camera button
-        binding.fabCamera.setOnClickListener {
-            val intent = Intent(this, Camera11Activity::class.java)
+        //binding.fabCamera.setOnClickListener {
+        //    val intent = Intent(this, Camera11Activity::class.java)
+        //    startActivity(intent)
+        //}
+
+        binding.logoutBtn.setOnClickListener {
+            FirebaseAuth.getInstance().signOut()
+            val intent = Intent(this, WelcomeActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
+            finish()
         }
 
         // 🌙 Dark Mode Toggle

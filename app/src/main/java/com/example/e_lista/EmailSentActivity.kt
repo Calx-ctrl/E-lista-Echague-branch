@@ -11,6 +11,7 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.facebook.login.Login
 
 class EmailSentActivity : AppCompatActivity() {
 
@@ -22,15 +23,16 @@ class EmailSentActivity : AppCompatActivity() {
         val nextButton: Button = findViewById(R.id.nextButton) // make sure this exists in your XML
 
         // Get the email passed from the previous activity
-        val userEmail = intent.getStringExtra("USER_EMAIL") ?: "your.email@example.com"
+        val userEmail = intent.getStringExtra("USER_EMAIL")
 
         // Create the full message string
-        val fullMessage = "Check your email, we've sent a code to $userEmail. To verify your email, enter the six-digit passcode on the next page."
+        val email = userEmail ?: "unknown@example.com"
+        val fullMessage = "Check your inbox, we've sent an email $email to verify your email"
 
         // Make the email address bold and blue
         val spannableString = SpannableString(fullMessage)
-        val emailStartIndex = fullMessage.indexOf(userEmail)
-        val emailEndIndex = emailStartIndex + userEmail.length
+        val emailStartIndex = fullMessage.indexOf(email)
+        val emailEndIndex = emailStartIndex + email.length
 
         if (emailStartIndex != -1) {
             val blueColor = ContextCompat.getColor(this, android.R.color.holo_blue_dark)
@@ -43,7 +45,7 @@ class EmailSentActivity : AppCompatActivity() {
 
         // 🟢 Handle Next Button → Go to OTP Activity
         nextButton.setOnClickListener {
-            val intent = Intent(this, OtpActivity::class.java)
+            val intent = Intent(this, LoginActivity::class.java)
             intent.putExtra("USER_EMAIL", userEmail)
             startActivity(intent)
         }

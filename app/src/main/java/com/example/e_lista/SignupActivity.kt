@@ -52,52 +52,46 @@ class SignupActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Inflate the layout using View Binding
         binding = ActivitySignUp4Binding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // 🔙 Back button
+        // Back button
         binding.backButton.setOnClickListener {
             onBackPressedDispatcher.onBackPressed()
         }
 
-        // Initialize Firebase
+        // Firebase
         mAuth = FirebaseAuth.getInstance()
 
-        // Configure Google Sign-In
+        // Google Sign-In
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(getString(R.string.default_web_client_id)) // from google-services.json
+            .requestIdToken(getString(R.string.default_web_client_id))
             .requestEmail()
             .build()
         googleSignInClient = GoogleSignIn.getClient(this, gso)
 
-        //Config FB sign-in
+        // Facebook Sign-In
         FacebookSdk.sdkInitialize(applicationContext)
         AppEventsLogger.activateApp(application)
-
         callbackManager = CallbackManager.Factory.create()
 
-
-        // Initialize ProgressDialog
         mDialog = ProgressDialog(this)
 
-        // Handle sign-up button click
         binding.signUpButton.setOnClickListener { performEmailSignUp() }
 
         binding.signinBtn.setOnClickListener {
             startActivity(Intent(this, LoginActivity::class.java))
         }
-        // Handle Google sign-up
+
+        // Google sign-up
         binding.googleButton.setOnClickListener {
-            // ✅ Force Google to forget the previous sign-in
             googleSignInClient.revokeAccess().addOnCompleteListener {
-                // After revoking, always show the chooser
                 val signInIntent = googleSignInClient.signInIntent
                 startActivityForResult(signInIntent, RC_SIGN_IN)
             }
         }
 
-        // Handle Facebook sign-up
+        // Facebook sign-up
         binding.facebookButton.setOnClickListener {
             startFacebookSignUp()
         }
@@ -205,7 +199,8 @@ class SignupActivity : AppCompatActivity() {
                                                 "Welcome new user: ${user?.displayName}",
                                                 Toast.LENGTH_SHORT
                                             ).show()
-                                            startActivity(Intent(this@SignupActivity, Home9Activity::class.java))
+                                            startActivity(Intent(this@SignupActivity,
+                                                AllSetActivity::class.java))
                                             finish()
                                         } else {
                                             Toast.makeText(
@@ -308,7 +303,7 @@ class SignupActivity : AppCompatActivity() {
                                     Toast.LENGTH_SHORT
                                 ).show()
 
-                                startActivity(Intent(this, Home9Activity::class.java))
+                                startActivity(Intent(this, AllSetActivity::class.java))
                                 finish()
                             } else {
                                 Toast.makeText(
@@ -362,24 +357,41 @@ class SignupActivity : AppCompatActivity() {
         }
 
         // Proceed with Firebase sign-up
-        mDialog?.setMessage("Processing...")
+        mDialog?.setMessage("Creating account...")
         mDialog?.show()
 
         mAuth.createUserWithEmailAndPassword(email, pass)
             .addOnCompleteListener { task ->
                 mDialog?.dismiss()
                 if (task.isSuccessful) {
-                    Toast.makeText(this, "Registration Complete", Toast.LENGTH_SHORT).show()
-                    startActivity(Intent(this, EmailSentActivity::class.java).apply {
-                        putExtra("USER_EMAIL", email)
-                    })
+                    val user = mAuth.currentUser
+                    user?.sendEmailVerification()
+                        ?.addOnCompleteListener { verifyTask ->
+                            if (verifyTask.isSuccessful) {
+                                //Toast.makeText(
+                                 //   this,
+                                //    "Verification email sent to $email. Please check your inbox.",
+                                //    Toast.LENGTH_LONG
+                                //).show()
+
+                                val intent = Intent(this, EmailSentActivity::class.java)
+                                intent.putExtra("USER_EMAIL", user.email)
+                                startActivity(intent)
+                                finish()
+                            } else {
+                                Toast.makeText(
+                                    this,
+                                    "Failed to send verification email: ${verifyTask.exception?.message}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
                 } else {
                     try {
                         throw task.exception ?: Exception("Unknown error")
                     } catch (e: FirebaseAuthUserCollisionException) {
                         binding.emailEditText.error = "This email is already registered"
                     } catch (e: FirebaseNetworkException) {
-                        // ✅ Handle no internet connection
                         Toast.makeText(this, "Network error. Please check your connection", Toast.LENGTH_LONG).show()
                     } catch (e: Exception) {
                         Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
