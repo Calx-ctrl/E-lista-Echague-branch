@@ -72,6 +72,21 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_log_in_3)
 
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser != null) {
+            if (currentUser.isEmailVerified) {
+                // ✅ Email verified, skip login screen
+                startActivity(Intent(this, Home9Activity::class.java))
+                finish()
+                return
+            } else {
+                // ⚠️ Email not verified, show verification UI
+                unverifiedUserEmail = currentUser.email
+                showVerificationSection(currentUser)
+                mAuth.signOut()
+            }
+        }
+
         // Firebase
         mAuth = FirebaseAuth.getInstance()
 
