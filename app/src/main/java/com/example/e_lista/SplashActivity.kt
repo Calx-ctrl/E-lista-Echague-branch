@@ -16,7 +16,7 @@ class SplashActivity : AppCompatActivity() {
         // Theme is already set to SplashTheme in the manifest
 
         lifecycleScope.launch {
-            delay(2000) // 2-second splash delay
+            delay(500) // 0.5-second splash delay
 
             val auth = FirebaseAuth.getInstance()
             val currentUser = auth.currentUser
