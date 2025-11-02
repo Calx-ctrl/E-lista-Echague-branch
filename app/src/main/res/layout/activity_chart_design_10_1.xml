@@ -118,7 +118,7 @@
         android:id="@+id/fabCamera"
         android:layout_width="64dp"
         android:layout_height="64dp"
-        android:src="@drawable/camera"
+        android:src="@drawable/ic_camera"
         android:contentDescription="Camera"
         app:backgroundTint="@color/green_primary"
         app:tint="@android:color/white"

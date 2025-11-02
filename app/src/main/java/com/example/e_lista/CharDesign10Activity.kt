@@ -37,28 +37,50 @@ class ChartDesign10Activity : AppCompatActivity() {
         binding.bottomNavigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_home -> {
-                    startActivity(Intent(this, Home9Activity::class.java))
-                    overridePendingTransition(0, 0)
+                    if (this !is Home9Activity) {
+                        startActivity(Intent(this, Home9Activity::class.java))
+                        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+                        finish()
+                    }
                     true
                 }
 
-                R.id.nav_stats -> true // Already here
-
                 R.id.nav_wallet -> {
-                    startActivity(Intent(this, Expenses12Activity::class.java))
-                    overridePendingTransition(0, 0)
+                    if (this !is Expenses12Activity) {
+                        startActivity(Intent(this, Expenses12Activity::class.java))
+                        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                        finish()
+                    }
+                    true
+                }
+
+                R.id.nav_camera_placeholder -> {
+                    if (this !is Camera11Activity) {
+                        startActivity(Intent(this, Camera11Activity::class.java))
+                        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                        finish()
+                    }
+                    true
+                }
+
+                R.id.nav_stats -> {
                     true
                 }
 
                 R.id.nav_profile -> {
-                    startActivity(Intent(this, Profile13Activity::class.java))
-                    overridePendingTransition(0, 0)
+                    if (this !is Profile13Activity) {
+                        startActivity(Intent(this, Profile13Activity::class.java))
+                        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                        finish()
+                    }
                     true
                 }
 
                 else -> false
             }
         }
+
+
 
         // Get expense data from intent (default to 0 if none)
         val food = intent.getFloatExtra("food", 0f)

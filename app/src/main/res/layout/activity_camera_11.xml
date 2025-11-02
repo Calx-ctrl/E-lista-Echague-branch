@@ -31,14 +31,18 @@
     <!-- Capture button -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabCapture"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:layout_marginBottom="24dp"
-        android:src="@drawable/ic_camera_alt"
-        app:backgroundTint="@color/green_primary"
+        android:layout_width="70dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="12dp"
+        android:contentDescription="Camera"
+        android:src="@drawable/ic_camera"
+        app:backgroundTint="#16a085"
         app:tint="@android:color/white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+
+
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

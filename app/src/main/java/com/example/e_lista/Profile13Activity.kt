@@ -51,21 +51,45 @@ class Profile13Activity : AppCompatActivity() {
         binding.bottomNavigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_home -> {
-                    startActivity(Intent(this, Home9Activity::class.java))
-                    overridePendingTransition(0, 0)
+                    if (this !is Home9Activity) {
+                        startActivity(Intent(this, Home9Activity::class.java))
+                        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+                        finish()
+                    }
                     true
                 }
-                R.id.nav_stats -> {
-                    startActivity(Intent(this, ChartDesign10Activity::class.java))
-                    overridePendingTransition(0, 0)
-                    true
-                }
+
                 R.id.nav_wallet -> {
-                    startActivity(Intent(this, Expenses12Activity::class.java))
-                    overridePendingTransition(0, 0)
+                    if (this !is Expenses12Activity) {
+                        startActivity(Intent(this, Expenses12Activity::class.java))
+                        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+                        finish()
+                    }
                     true
                 }
-                R.id.nav_profile -> true // already here
+
+                R.id.nav_camera_placeholder -> {
+                    if (this !is Camera11Activity) {
+                        startActivity(Intent(this, Camera11Activity::class.java))
+                        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+                        finish()
+                    }
+                    true
+                }
+
+                R.id.nav_stats -> {
+                    if (this !is ChartDesign10Activity) {
+                        startActivity(Intent(this, ChartDesign10Activity::class.java))
+                        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+                        finish()
+                    }
+                    true
+                }
+
+                R.id.nav_profile -> {
+                    true
+                }
+
                 else -> false
             }
         }

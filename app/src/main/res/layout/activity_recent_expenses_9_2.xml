@@ -109,7 +109,7 @@
         android:layout_height="64dp"
         android:layout_marginBottom="44dp"
         android:contentDescription="Camera"
-        android:src="@drawable/camera"
+        android:src="@drawable/ic_camera"
         app:backgroundTint="@color/green_primary"
         app:tint="@android:color/white"
         app:layout_constraintBottom_toTopOf="@id/bottomNavigationView"

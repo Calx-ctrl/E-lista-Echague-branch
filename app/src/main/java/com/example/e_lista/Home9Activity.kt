@@ -39,29 +39,48 @@ class Home9Activity : AppCompatActivity() {
             startActivity(Intent(this, Expenses12Activity::class.java))
         }
 
-        // --- Bottom Navigation Setup ---
-        val bottomNavigation: BottomNavigationView = binding.bottomNavigationView
-        bottomNavigation.selectedItemId = R.id.nav_home
-
-        bottomNavigation.setOnItemSelectedListener { item ->
+        binding.bottomNavigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {
-                R.id.nav_home -> true
+                R.id.nav_home -> {
+                    true
+                }
+
                 R.id.nav_wallet -> {
-                    startActivity(Intent(this, Expenses12Activity::class.java))
+                    if (this !is Expenses12Activity) {
+                        startActivity(Intent(this, Expenses12Activity::class.java))
+                        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                        finish()
+                    }
                     true
                 }
+
                 R.id.nav_camera_placeholder -> {
-                    startActivity(Intent(this, Camera11Activity::class.java))
+                    if (this !is Camera11Activity) {
+                        startActivity(Intent(this, Camera11Activity::class.java))
+                        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                        finish()
+                    }
                     true
                 }
+
                 R.id.nav_stats -> {
-                    startActivity(Intent(this, ChartDesign10Activity::class.java))
+                    if (this !is ChartDesign10Activity) {
+                        startActivity(Intent(this, ChartDesign10Activity::class.java))
+                        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                        finish()
+                    }
                     true
                 }
+
                 R.id.nav_profile -> {
-                    startActivity(Intent(this, Profile13Activity::class.java))
+                    if (this !is Profile13Activity) {
+                        startActivity(Intent(this, Profile13Activity::class.java))
+                        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                        finish()
+                    }
                     true
                 }
+
                 else -> false
             }
         }
