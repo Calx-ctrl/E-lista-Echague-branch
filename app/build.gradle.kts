@@ -17,7 +17,15 @@ android {
         versionCode = 1
         versionName = "1.0"
     }
-
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -84,4 +92,7 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:1.3.4")
     implementation("androidx.camera:camera-view:1.3.4")
     implementation("androidx.camera:camera-extensions:1.3.4")
+    //scanner
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("androidx.recyclerview:recyclerview:1.4.0")
 }}

@@ -6,21 +6,23 @@
     android:background="#F8F8F8">
 
     <!-- Curved Green Header -->
-    <ImageView
-        android:id="@+id/headerBackground"
-        android:layout_width="0dp"
-        android:layout_height="200dp"
-        android:scaleType="fitXY"
-        android:src="@drawable/header_background_curve"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Back button -->
 
     <!-- Title -->
 
     <!-- Filter Chips -->
+
+    <ImageView
+        android:id="@+id/headerBackground"
+        android:layout_width="459dp"
+        android:layout_height="199dp"
+        android:scaleType="fitXY"
+        android:src="@drawable/header_background_curve"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
         android:id="@+id/backButton"

@@ -75,7 +75,7 @@ class Expenses12Activity : AppCompatActivity() {
         }
         // 📸 Floating camera button → CameraActivity
         binding.fabCamera.setOnClickListener {
-            val intent = Intent(this, Camera11Activity::class.java)
+            val intent = Intent(this, ReceiptScanUpload::class.java)
             startActivity(intent)
         }
 
@@ -96,8 +96,8 @@ class Expenses12Activity : AppCompatActivity() {
                 }
 
                 R.id.nav_camera_placeholder -> {
-                    if (this !is Camera11Activity) {
-                        startActivity(Intent(this, Camera11Activity::class.java))
+                    if (this !is ReceiptScanUpload) {
+                        startActivity(Intent(this, ReceiptScanUpload::class.java))
                         overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
                         finish()
                     }
@@ -231,7 +231,7 @@ class Expenses12Activity : AppCompatActivity() {
 
         val scrollView = dialog.findViewById<ScrollView>(R.id.scrollView)
         val rootLayout = scrollView?.getChildAt(0) as? LinearLayout
-        /*
+
         rootLayout?.let {
             for (i in 0 until it.childCount) {
                 val view = it.getChildAt(i)
@@ -251,9 +251,9 @@ class Expenses12Activity : AppCompatActivity() {
                     }
                 }
             }
-        }*/
+        }
     }
-/*
+
     private fun getIconForCategory(category: String): Int {
         return when {
             category.contains("Rent", true) || category.contains("Grocer", true) || category.contains("Fuel", true) ->
@@ -272,7 +272,7 @@ class Expenses12Activity : AppCompatActivity() {
                 R.drawable.ic_misc
             else -> R.drawable.ic_palette
         }
-    }*/
+    }
 
     // Dynamically add expense to your expense list UI
     private fun addExpenseToView(expense: Expense) {

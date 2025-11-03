@@ -25,7 +25,7 @@ class ChartDesign10Activity : AppCompatActivity() {
 
         // 📸 Floating camera button → CameraActivity
         binding.fabCamera.setOnClickListener {
-            val intent = Intent(this, Camera11Activity::class.java)
+            val intent = Intent(this, ReceiptScanUpload::class.java)
             startActivity(intent)
         }
         // Back button
@@ -55,8 +55,8 @@ class ChartDesign10Activity : AppCompatActivity() {
                 }
 
                 R.id.nav_camera_placeholder -> {
-                    if (this !is Camera11Activity) {
-                        startActivity(Intent(this, Camera11Activity::class.java))
+                    if (this !is ReceiptScanUpload) {
+                        startActivity(Intent(this, ReceiptScanUpload::class.java))
                         overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
                         finish()
                     }

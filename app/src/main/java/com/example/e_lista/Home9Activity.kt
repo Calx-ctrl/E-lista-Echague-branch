@@ -5,7 +5,6 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.e_lista.databinding.ActivityHome9Binding
-import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class Home9Activity : AppCompatActivity() {
 
@@ -31,7 +30,7 @@ class Home9Activity : AppCompatActivity() {
 
         // --- FloatingActionButton Click (Camera) ---
         binding.fab.setOnClickListener {
-            startActivity(Intent(this, Camera11Activity::class.java))
+            startActivity(Intent(this, ReceiptScanUpload::class.java))
         }
 
         // --- See All Click ---
@@ -55,8 +54,8 @@ class Home9Activity : AppCompatActivity() {
                 }
 
                 R.id.nav_camera_placeholder -> {
-                    if (this !is Camera11Activity) {
-                        startActivity(Intent(this, Camera11Activity::class.java))
+                    if (this !is ReceiptScanUpload) {
+                        startActivity(Intent(this, ReceiptScanUpload::class.java))
                         overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
                         finish()
                     }

@@ -10,7 +10,6 @@ class AllSetActivity : AppCompatActivity() {
 
     // Set the duration for how long this screen will be displayed (e.g., 2 seconds)
     private val SCREEN_DELAY: Long = 2000
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_all_set_8)

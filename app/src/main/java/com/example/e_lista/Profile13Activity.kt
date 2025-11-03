@@ -69,8 +69,8 @@ class Profile13Activity : AppCompatActivity() {
                 }
 
                 R.id.nav_camera_placeholder -> {
-                    if (this !is Camera11Activity) {
-                        startActivity(Intent(this, Camera11Activity::class.java))
+                    if (this !is ReceiptScanUpload) {
+                        startActivity(Intent(this, ReceiptScanUpload::class.java))
                         overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
                         finish()
                     }
