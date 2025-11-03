@@ -2,34 +2,28 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F6FAFB">
 
     <!-- Curved Header -->
-    <ImageView
-        android:id="@+id/headerBackground"
-        android:layout_width="0dp"
-        android:layout_height="180dp"
-        android:scaleType="fitXY"
-        android:src="@drawable/header_background_curve"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Back Button -->
-    <ImageView
-        android:id="@+id/backButton"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:src="@drawable/ic_arrow_back"
-        android:contentDescription="Back"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
 
     <!-- Title -->
+    <ImageView
+        android:id="@+id/headerBackground"
+        android:layout_width="411dp"
+        android:layout_height="83dp"
+        android:scaleType="fitXY"
+        android:src="@drawable/header_background_curve"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Filter Row -->
     <TextView
         android:id="@+id/titleText"
         android:layout_width="wrap_content"
@@ -38,48 +32,49 @@
         android:textColor="@android:color/black"
         android:textSize="20sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="@id/backButton"
-        app:layout_constraintStart_toEndOf="@id/backButton"
-        app:layout_constraintTop_toTopOf="@id/backButton"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintBottom_toBottomOf="@+id/headerBackground"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/headerBackground"
+        app:layout_constraintVertical_bias="0.285" />
 
-    <!-- Filter Row -->
     <LinearLayout
         android:id="@+id/filterRow"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
+        android:layout_width="183dp"
+        android:layout_height="51dp"
         android:layout_marginHorizontal="16dp"
         android:layout_marginTop="8dp"
-        app:layout_constraintTop_toBottomOf="@id/headerBackground"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toStartOf="@+id/btnAddExpense"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintTop_toBottomOf="@id/headerBackground">
 
         <com.google.android.material.chip.Chip
             android:id="@+id/chipFilter"
             style="@style/Widget.MaterialComponents.Chip.Choice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="12dp"
             android:text="Week"
             android:textColor="@android:color/white"
-            app:chipBackgroundColor="@color/green_primary"
-            android:paddingHorizontal="12dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            app:chipBackgroundColor="@color/green_primary" />
 
         <Space
             android:layout_width="8dp"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content" />
 
         <TextView
             android:id="@+id/expensesHeader"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Expenses"
-            android:textStyle="bold"
-            android:textColor="@android:color/white"
             android:background="@drawable/rounded_green_dark"
             android:paddingHorizontal="20dp"
-            android:paddingVertical="6dp"/>
+            android:paddingVertical="6dp"
+            android:text="Expenses"
+            android:textColor="@android:color/white"
+            android:textStyle="bold" />
+
     </LinearLayout>
 
     <!-- Scrollable Expense List -->
@@ -88,10 +83,10 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:fillViewport="true"
-        app:layout_constraintTop_toBottomOf="@id/filterRow"
         app:layout_constraintBottom_toTopOf="@id/fabCamera"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintTop_toBottomOf="@id/filterRow">
 
         <LinearLayout
             android:id="@+id/expenseListContainer"
@@ -103,17 +98,6 @@
 
             <!-- Dynamic list goes here -->
 
-            <Button
-                android:id="@+id/btnAddExpense"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:text="Manually Add Expense"
-                android:textAllCaps="false"
-                android:textColor="@android:color/white"
-                android:background="@drawable/rounded_green"
-                android:fontFamily="sans-serif-medium"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="24dp"/>
         </LinearLayout>
     </ScrollView>
 
@@ -147,5 +131,21 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:menu="@menu/bottom_nav_menu" />
+
+    <Button
+        android:id="@+id/btnAddExpense"
+        android:layout_width="182dp"
+        android:layout_height="45dp"
+        android:background="@drawable/rounded_green"
+        android:fontFamily="sans-serif-medium"
+        android:text="Add Expense"
+        android:textAllCaps="false"
+        android:textColor="@android:color/white"
+        app:layout_constraintBottom_toTopOf="@+id/scrollContainer"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.93"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/headerBackground"
+        app:layout_constraintVertical_bias="1.0" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

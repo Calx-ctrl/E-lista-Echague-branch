@@ -7,6 +7,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -16,6 +19,11 @@ class ManualAddExpenseActivity : AppCompatActivity() {
     private lateinit var addButton: Button
     private lateinit var removeButton: Button
 
+
+    //for expense data and database
+    private lateinit var mAuth: FirebaseAuth
+    private lateinit var UserID: String
+    private lateinit var ExpenseDatabase: DatabaseReference
     private val expenseList = mutableListOf<Expense>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,6 +36,15 @@ class ManualAddExpenseActivity : AppCompatActivity() {
 
         addButton.setOnClickListener { showAddExpenseDialog() }
         removeButton.setOnClickListener { removeLastExpense() }
+
+        //Database variables
+
+        mAuth = FirebaseAuth.getInstance()
+        val mUser = mAuth.currentUser
+        UserID = mUser?.uid ?: "UnknownUser"
+        ExpenseDatabase = FirebaseDatabase.getInstance()
+            .getReference("ExpenseData")
+            .child(UserID)
     }
 
     private fun showAddExpenseDialog() {
@@ -98,9 +115,7 @@ class ManualAddExpenseActivity : AppCompatActivity() {
                 amount = amount
             )
 
-            expenseList.add(newExpense)
-            addExpenseToView(newExpense)
-            dialog.dismiss()
+
         }
     }
 
