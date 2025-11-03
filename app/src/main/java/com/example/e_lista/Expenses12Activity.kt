@@ -212,7 +212,7 @@ class Expenses12Activity : AppCompatActivity() {
             // ✅ Upload to Firebase
             ExpenseDatabase.child(expenseId).setValue(newExpense)
                 .addOnSuccessListener {
-                    Toast.makeText(this, "Added successfully: $UserID", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Added successfully", Toast.LENGTH_SHORT).show()
                     expenseList.add(newExpense)
                     dialog.dismiss()
                 }
