@@ -11,6 +11,7 @@ data class Expense(
     var title: String = "",
     var date: String = "",
     var amount: Double = 0.0,
+    val category: String = "",      // NEW
     var description: String? = ""        // optional
 ) : Parcelable
 
