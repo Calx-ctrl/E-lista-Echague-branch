@@ -273,8 +273,11 @@ class Expenses12Activity : AppCompatActivity() {
         val categories = listOf("Food", "Transport", "Bills", "Shopping", "Entertainment", "Others")
         spinnerCategory.adapter =
             ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, categories)
-        spinnerCategory.setSelection(categories.indexOfFirst { it.equals(expense.title, true) }
-            .takeIf { it >= 0 } ?: 0)
+        spinnerCategory.setSelection(
+            categories.indexOfFirst { it.equals(expense.category, true) }
+                .takeIf { it >= 0 } ?: 0
+        )
+
 
         setFieldsEditable(false, nameEditText, dateEditText, amountEditText, descEditText, spinnerCategory)
         iconButton.isEnabled = false
@@ -340,6 +343,7 @@ class Expenses12Activity : AppCompatActivity() {
             } else if (doneButton.text == "Save") {
                 val updatedExpense = expense.copy(
                     title = nameEditText.text.toString(),
+                    category = spinnerCategory.selectedItem.toString(),  // updated
                     date = dateEditText.text.toString(),
                     amount = amountEditText.text.toString().toDoubleOrNull() ?: 0.0,
                     description = descEditText.text.toString(),
