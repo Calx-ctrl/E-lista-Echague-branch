@@ -18,45 +18,48 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- FILTER BUTTONS -->
+
+    <!-- BALANCE CARD -->
+
     <LinearLayout
         android:id="@+id/filterGroup"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="56dp"
+        android:gravity="center"
         android:orientation="horizontal"
-        android:layout_marginTop="40dp"
-        app:layout_constraintTop_toBottomOf="@id/headerBackground"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:gravity="center">
+        app:layout_constraintHorizontal_bias="0.495"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/headerBackground">
 
         <Button
             android:id="@+id/filterDay"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:backgroundTint="#1ABC9C"
             android:text="Day"
-            android:textColor="@android:color/white"
-            android:backgroundTint="#1ABC9C" />
+            android:textColor="@android:color/white" />
 
         <Button
             android:id="@+id/filterWeek"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Week"
-            android:textColor="@android:color/white"
+            android:layout_marginLeft="16dp"
             android:backgroundTint="#1ABC9C"
-            android:layout_marginLeft="16dp" />
+            android:text="Week"
+            android:textColor="@android:color/white" />
 
         <Button
             android:id="@+id/filterMonth"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Month"
-            android:textColor="@android:color/white"
+            android:layout_marginLeft="16dp"
             android:backgroundTint="#1ABC9C"
-            android:layout_marginLeft="16dp" />
+            android:text="Month"
+            android:textColor="@android:color/white" />
     </LinearLayout>
 
-    <!-- BALANCE CARD -->
     <androidx.cardview.widget.CardView
         android:id="@+id/balanceCard"
         android:layout_width="0dp"
