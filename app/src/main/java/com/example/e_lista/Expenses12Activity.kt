@@ -290,40 +290,99 @@ class Expenses12Activity : AppCompatActivity() {
         container.addView(deleteButton)
     }
 
-    private fun showCategorySelectionDialog(iconPreview: ImageView, onIconSelected: (Int) -> Unit) {
-        val dialog = AlertDialog.Builder(this).create()
-        val categories = listOf("Home", "Family", "Credit", "Entertainment", "Tools", "Misc")
+    private fun showCategorySelectionDialog(
+        iconPreview: ImageView,
+        onIconSelected: (Int) -> Unit
+    ) {
+        val dialogView = layoutInflater.inflate(R.layout.activity_category_popup_12_2, null)
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
 
-        val layout = LinearLayout(this)
-        layout.orientation = LinearLayout.VERTICAL
-        for (cat in categories) {
-            val tv = TextView(this)
-            tv.text = cat
-            tv.textSize = 16f
-            tv.setPadding(24, 16, 24, 16)
-            tv.setOnClickListener {
-                val iconRes = getIconForCategory(cat)
-                iconPreview.setImageResource(iconRes)
-                onIconSelected(iconRes)
-                dialog.dismiss()
-            }
-            layout.addView(tv)
-        }
-        dialog.setView(layout)
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
         dialog.show()
+
+        // ✅ FIX: Correctly access the inner LinearLayout inside ScrollView
+        val scrollView = dialogView.findViewById<ScrollView>(R.id.scrollView)
+        val parentLayout = scrollView.getChildAt(0) as LinearLayout
+
+        fun handleClick(tv: TextView) {
+            val categoryName = tv.text.toString()
+            val iconRes = getIconForCategory(categoryName)
+            iconPreview.setImageResource(iconRes)
+
+            // Optional: update the Category Type button text
+            val categoryButton = (iconPreview.rootView).findViewById<Button>(R.id.btnChangeIcon)
+            categoryButton.text = categoryName
+
+            onIconSelected(iconRes)
+            dialog.dismiss()
+        }
+
+        // Loop through all nested LinearLayouts in the popup
+        for (i in 0 until parentLayout.childCount) {
+            val view = parentLayout.getChildAt(i)
+            if (view is LinearLayout) {
+                for (j in 0 until view.childCount) {
+                    val subView = view.getChildAt(j)
+                    if (subView is TextView) {
+                        subView.setOnClickListener { handleClick(subView) }
+                    }
+                }
+            }
+        }
     }
+
 
     private fun getIconForCategory(category: String): Int {
-        return when (category) {
-            "Rent", "Groceries", "Fuel", "Electricity", "Internet", "Home", "Garden" -> R.drawable.ic_home
-            "Education", "Health", "Insurance" -> R.drawable.ic_family
-            "Savings", "Loan", "Credit" -> R.drawable.ic_credit_card
-            "Movies", "Games", "Travel" -> R.drawable.ic_entertainment
-            "Furniture" -> R.drawable.ic_tools
-            "Donation", "Misc" -> R.drawable.ic_misc
-            else -> R.drawable.ic_palette
+        val name = category.lowercase(Locale.getDefault())
+
+        return when {
+            // 🏠 Essential Living Expenses
+            name.contains("rent") || name.contains("mortgage") -> R.drawable.ic_home
+            name.contains("gas") || name.contains("heating") -> R.drawable.ic_home
+            name.contains("food") || name.contains("grocer") -> R.drawable.ic_home
+            name.contains("transport") || name.contains("fuel") -> R.drawable.ic_home
+
+            // 💡 Utilities & Services
+            name.contains("electricity") -> R.drawable.ic_lightbulb
+            name.contains("water") -> R.drawable.ic_lightbulb
+            name.contains("internet") || name.contains("wifi") -> R.drawable.ic_lightbulb
+
+            // 👨‍👩‍👧 Family & Personal
+            name.contains("education") || name.contains("tuition") -> R.drawable.ic_family
+            name.contains("health") || name.contains("medical") -> R.drawable.ic_family
+            name.contains("insurance") -> R.drawable.ic_family
+            name.contains("clothing") || name.contains("apparel") -> R.drawable.ic_family
+            name.contains("personal care") || name.contains("salon") -> R.drawable.ic_family
+
+            // 🎉 Leisure & Entertainment
+            name.contains("movie") || name.contains("streaming") || name.contains("subscription") -> R.drawable.ic_entertainment
+            name.contains("hobby") || name.contains("game") || name.contains("music") -> R.drawable.ic_entertainment
+            name.contains("travel") || name.contains("vacation") -> R.drawable.ic_entertainment
+            name.contains("gift") || name.contains("celebration") || name.contains("holiday") -> R.drawable.ic_entertainment
+
+            // 💳 Financial Obligations
+            name.contains("saving") || name.contains("investment") -> R.drawable.ic_credit_card
+            name.contains("loan") -> R.drawable.ic_credit_card
+            name.contains("credit") || name.contains("card") -> R.drawable.ic_credit_card
+            name.contains("tax") -> R.drawable.ic_credit_card
+            name.contains("emergency") -> R.drawable.ic_credit_card
+
+            // 🛠️ Home & Property
+            name.contains("furniture") -> R.drawable.ic_tools
+            name.contains("improvement") -> R.drawable.ic_tools
+            name.contains("garden") -> R.drawable.ic_tools
+            name.contains("hoa") || name.contains("renters") -> R.drawable.ic_tools
+
+            // 🧩 Miscellaneous
+            name.contains("donation") || name.contains("charity") -> R.drawable.ic_misc
+            name.contains("unexpected") || name.contains("misc") -> R.drawable.ic_misc
+
+            else -> R.drawable.ic_palette // fallback default
         }
-    }
-}
+    }}
+
 
 
