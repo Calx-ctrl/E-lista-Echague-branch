@@ -2,147 +2,187 @@ package com.example.e_lista
 
 import android.app.AlertDialog
 import android.app.DatePickerDialog
-import android.app.Dialog
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
+import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.e_lista.databinding.ActivityExpenses12Binding
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.*
 import java.text.SimpleDateFormat
 import java.util.*
 
 class Expenses12Activity : AppCompatActivity() {
 
-
-    //for expense data and database
-    private lateinit var mAuth: FirebaseAuth
-    private lateinit var UserID: String
-    private lateinit var ExpenseDatabase: DatabaseReference
     private lateinit var binding: ActivityExpenses12Binding
+    private lateinit var mAuth: FirebaseAuth
+    private lateinit var userID: String
+    private lateinit var expenseDatabase: DatabaseReference
+    private lateinit var adapter: ExpenseAdapter
+
     private val expenseList = mutableListOf<Expense>()
+    private val displayedList = mutableListOf<Expense>()
+
+    enum class FilterType { ALL, DAILY, WEEKLY, MONTHLY }
+    private var currentFilter = FilterType.ALL
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        binding = ActivityExpenses12Binding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        try {
-            binding = ActivityExpenses12Binding.inflate(layoutInflater)
-            setContentView(binding.root)
-            Log.d("Expenses12Activity", "✅ Layout inflated successfully")
-        } catch (e: Exception) {
-            Log.e("Expenses12Activity", "❌ Error inflating layout: ${e.message}")
-            e.printStackTrace()
-            return
-        }
-
+        // Firebase setup
         mAuth = FirebaseAuth.getInstance()
-        val mUser = mAuth.currentUser
-        UserID = mUser?.uid ?: "UnknownUser"
-        ExpenseDatabase = FirebaseDatabase.getInstance()
+        userID = mAuth.currentUser?.uid ?: "UnknownUser"
+        expenseDatabase = FirebaseDatabase.getInstance()
             .getReference("ExpenseData")
-            .child(UserID)
+            .child(userID)
 
-        // ✅ Load all expenses from Firebase in real-time
-        ExpenseDatabase.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                expenseList.clear()
-                binding.expenseListContainer.removeAllViews()
-
-                for (expenseSnapshot in snapshot.children) {
-                    val expense = expenseSnapshot.getValue(Expense::class.java)
-                    if (expense != null) {
-                        expenseList.add(expense)
-                        addExpenseToView(expense)
-                    }
-                }
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(this@Expenses12Activity, "Failed to load expenses: ${error.message}", Toast.LENGTH_SHORT).show()
-            }
-        })
-
-
-        // ➕ Manual Add Expense — show popup dialog
-        binding.btnAddExpense.setOnClickListener {
-            showAddExpenseDialog()
+        // RecyclerView setup
+        adapter = ExpenseAdapter(displayedList) { expense, _ ->
+            showExpenseDetailsDialog(expense)
         }
-        // 📸 Floating camera button → CameraActivity
+        binding.expenseRecycler.layoutManager = LinearLayoutManager(this)
+        binding.expenseRecycler.adapter = adapter
+
+        // Load expenses
+        loadExpenses()
+
+        // Add Expense button
+        binding.btnAddExpense.setOnClickListener { showAddExpenseDialog() }
+
+        // Floating camera button
         binding.fabCamera.setOnClickListener {
-            val intent = Intent(this, ReceiptScanUpload::class.java)
-            startActivity(intent)
+            startActivity(Intent(this, Camera11Activity::class.java))
         }
 
-        // ⚙️ Bottom Navigation
+        // Bottom navigation
         binding.bottomNavigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {
-                R.id.nav_home -> {
-                    if (this !is Home9Activity) {
-                        startActivity(Intent(this, Home9Activity::class.java))
-                        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
-                        finish()
-                    }
-                    true
-                }
-
-                R.id.nav_wallet -> {
-                    true
-                }
-
-                R.id.nav_camera_placeholder -> {
-                    if (this !is ReceiptScanUpload) {
-                        startActivity(Intent(this, ReceiptScanUpload::class.java))
-                        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
-                        finish()
-                    }
-                    true
-                }
-
-                R.id.nav_stats -> {
-                    if (this !is ChartDesign10Activity) {
-                        startActivity(Intent(this, ChartDesign10Activity::class.java))
-                        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
-                        finish()
-                    }
-                    true
-                }
-
-                R.id.nav_profile -> {
-                    if (this !is Profile13Activity) {
-                        startActivity(Intent(this, Profile13Activity::class.java))
-                        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
-                        finish()
-                    }
-                    true
-                }
-
+                R.id.nav_home -> { navigateTo(Home9Activity::class.java); true }
+                R.id.nav_wallet -> true
+                R.id.nav_camera_placeholder -> { navigateTo(Camera11Activity::class.java); true }
+                R.id.nav_stats -> { navigateTo(ChartDesign10Activity::class.java); true }
+                R.id.nav_profile -> { navigateTo(Profile13Activity::class.java); true }
                 else -> false
             }
         }
-
-        // ✨ Highlight Wallet icon
         binding.bottomNavigationView.selectedItemId = R.id.nav_wallet
+
+        // Filters
+        binding.filterAll.setOnClickListener { applyFilter(FilterType.ALL) }
+        binding.filterDaily.setOnClickListener { applyFilter(FilterType.DAILY) }
+        binding.filterWeekly.setOnClickListener { applyFilter(FilterType.WEEKLY) }
+        binding.filterMonthly.setOnClickListener { applyFilter(FilterType.MONTHLY) }
+
+        updateFilterUI()
     }
 
-    // ================================
-    // 🧩 Manual Add Popup Logic Below
-    // ================================
+    private fun navigateTo(cls: Class<*>) {
+        if (this::class.java != cls) {
+            startActivity(Intent(this, cls))
+            finish()
+        }
+    }
 
+    private fun loadExpenses() {
+        expenseDatabase.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                expenseList.clear()
+                for (expenseSnap in snapshot.children) {
+                    val expense = expenseSnap.getValue(Expense::class.java)
+                    if (expense != null) expenseList.add(expense)
+                }
+                applyFilter(currentFilter)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Toast.makeText(
+                    this@Expenses12Activity,
+                    "Failed to load expenses: ${error.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        })
+    }
+
+    private fun applyFilter(filter: FilterType) {
+        currentFilter = filter
+        displayedList.clear()
+        val filtered = when (filter) {
+            FilterType.ALL -> expenseList
+            FilterType.DAILY -> expenseList.filter { isSameDay(it.date) }
+            FilterType.WEEKLY -> expenseList.filter { isSameWeek(it.date) }
+            FilterType.MONTHLY -> expenseList.filter { isSameMonth(it.date) }
+        }
+        displayedList.addAll(filtered)
+        adapter.notifyDataSetChanged()
+        updateFilterUI()
+    }
+
+    private fun updateFilterUI() {
+        val activeColor = resources.getColor(R.color.green_primary, theme)
+        val inactiveColor = resources.getColor(R.color.gray_light, theme)
+        val white = resources.getColor(android.R.color.white)
+        val black = resources.getColor(android.R.color.black)
+
+        fun style(button: Button, isActive: Boolean) {
+            button.setBackgroundColor(if (isActive) activeColor else inactiveColor)
+            button.setTextColor(if (isActive) white else black)
+        }
+
+        style(binding.filterAll, currentFilter == FilterType.ALL)
+        style(binding.filterDaily, currentFilter == FilterType.DAILY)
+        style(binding.filterWeekly, currentFilter == FilterType.WEEKLY)
+        style(binding.filterMonthly, currentFilter == FilterType.MONTHLY)
+    }
+
+    private fun parseDateSafe(dateStr: String): Calendar? {
+        return try {
+            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val cal = Calendar.getInstance()
+            cal.time = sdf.parse(dateStr) ?: return null
+            cal
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun isSameDay(dateStr: String) = parseDateSafe(dateStr)?.let { cal ->
+        val today = Calendar.getInstance()
+        cal.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
+                cal.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)
+    } ?: false
+
+    private fun isSameWeek(dateStr: String) = parseDateSafe(dateStr)?.let { cal ->
+        val today = Calendar.getInstance()
+        cal.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
+                cal.get(Calendar.WEEK_OF_YEAR) == today.get(Calendar.WEEK_OF_YEAR)
+    } ?: false
+
+    private fun isSameMonth(dateStr: String) = parseDateSafe(dateStr)?.let { cal ->
+        val today = Calendar.getInstance()
+        cal.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
+                cal.get(Calendar.MONTH) == today.get(Calendar.MONTH)
+    } ?: false
+
+    // Add Expense Dialog
     private fun showAddExpenseDialog() {
         val dialogView = layoutInflater.inflate(R.layout.activity_add_category_12_1, null)
-
         val iconPreview = dialogView.findViewById<ImageView>(R.id.iconPreview)
-        val iconButton = dialogView.findViewById<Button>(R.id.btnChangeIcon)
+        val changeIconButton = dialogView.findViewById<Button>(R.id.btnChangeIcon)
+        val categorySpinner = dialogView.findViewById<Spinner>(R.id.spinnerCategory)
         val nameEditText = dialogView.findViewById<EditText>(R.id.inputName)
         val dateEditText = dialogView.findViewById<EditText>(R.id.inputDate)
         val amountEditText = dialogView.findViewById<EditText>(R.id.inputAmount)
+        val descEditText = dialogView.findViewById<EditText>(R.id.inputDescription)
         val doneButton = dialogView.findViewById<Button>(R.id.btnDone)
+
+        val categories = listOf("Food", "Transport", "Bills", "Shopping", "Entertainment", "Others")
+        categorySpinner.adapter =
+            ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, categories)
 
         var selectedIcon = R.drawable.ic_palette
         val calendar = Calendar.getInstance()
@@ -152,13 +192,12 @@ class Expenses12Activity : AppCompatActivity() {
             .setView(dialogView)
             .setCancelable(true)
             .create()
-
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
         dialog.show()
 
-        // Category selection
-        iconButton.setOnClickListener {
-            showCategorySelectionDialog(iconPreview) { newIcon ->
+        // Icon selection
+        changeIconButton.setOnClickListener {
+            showIconSelectionPopup(iconPreview) { newIcon ->
                 selectedIcon = newIcon
             }
         }
@@ -177,11 +216,13 @@ class Expenses12Activity : AppCompatActivity() {
             ).show()
         }
 
-        // Done button — validate and add
+        // Done button
         doneButton.setOnClickListener {
             val name = nameEditText.text.toString().trim()
             val date = dateEditText.text.toString().trim()
             val amountText = amountEditText.text.toString().trim()
+            val description = descEditText.text.toString().trim()
+            val selectedCategory = categorySpinner.selectedItem.toString()
 
             if (name.isEmpty() || date.isEmpty() || amountText.isEmpty()) {
                 Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
@@ -194,100 +235,181 @@ class Expenses12Activity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            val newExpense = Expense(
-                iconResId = selectedIcon,
-                title = name,
-                date = date,
-                amount = amount
-            )
+            val expenseId = expenseDatabase.push().key ?: return@setOnClickListener
+            val newExpense = Expense(expenseId, selectedIcon, name, date, amount, description)
 
-
-            // ✅ Generate a unique key for each expense
-            val expenseId = ExpenseDatabase.push().key
-            if (expenseId == null) {
-                Toast.makeText(this, "Failed to generate expense ID", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            // ✅ Upload to Firebase
-            ExpenseDatabase.child(expenseId).setValue(newExpense)
+            expenseDatabase.child(expenseId).setValue(newExpense)
                 .addOnSuccessListener {
                     Toast.makeText(this, "Added successfully", Toast.LENGTH_SHORT).show()
-                    expenseList.add(newExpense)
                     dialog.dismiss()
                 }
                 .addOnFailureListener { e ->
-                    Toast.makeText(this, "Failed to add expense: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Failed to add expense: ${e.message}", Toast.LENGTH_SHORT)
+                        .show()
                 }
         }
     }
 
-    // Category popup
-    private fun showCategorySelectionDialog(iconPreview: ImageView, onIconSelected: (Int) -> Unit) {
-        val dialog = Dialog(this)
-        dialog.setContentView(R.layout.activity_category_popup_12_2)
+    // Edit Expense Dialog
+    private fun showExpenseDetailsDialog(expense: Expense) {
+        val dialogView = layoutInflater.inflate(R.layout.activity_add_category_12_1, null)
+        val container = dialogView.findViewById<LinearLayout>(R.id.dialogContainer)
+        val iconPreview = dialogView.findViewById<ImageView>(R.id.iconPreview)
+        val iconButton = dialogView.findViewById<Button>(R.id.btnChangeIcon)
+        val nameEditText = dialogView.findViewById<EditText>(R.id.inputName)
+        val dateEditText = dialogView.findViewById<EditText>(R.id.inputDate)
+        val amountEditText = dialogView.findViewById<EditText>(R.id.inputAmount)
+        val descEditText = dialogView.findViewById<EditText>(R.id.inputDescription)
+        val spinnerCategory = dialogView.findViewById<Spinner>(R.id.spinnerCategory)
+        val doneButton = dialogView.findViewById<Button>(R.id.btnDone)
+
+        // Initial values
+        iconPreview.setImageResource(expense.iconResId)
+        nameEditText.setText(expense.title)
+        dateEditText.setText(expense.date)
+        amountEditText.setText(expense.amount.toString())
+        descEditText.setText(expense.description ?: "")
+
+        val categories = listOf("Food", "Transport", "Bills", "Shopping", "Entertainment", "Others")
+        spinnerCategory.adapter =
+            ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, categories)
+        spinnerCategory.setSelection(
+            categories.indexOfFirst { it.equals(expense.category, true) }
+                .takeIf { it >= 0 } ?: 0
+        )
+
+
+        setFieldsEditable(false, nameEditText, dateEditText, amountEditText, descEditText, spinnerCategory)
+        iconButton.isEnabled = false
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
         dialog.show()
 
-        val scrollView = dialog.findViewById<ScrollView>(R.id.scrollView)
-        val rootLayout = scrollView?.getChildAt(0) as? LinearLayout
+        // Delete button
+        val deleteButton = Button(this).apply {
+            text = "Delete"
+            setBackgroundColor(resources.getColor(android.R.color.holo_red_light))
+            setTextColor(resources.getColor(android.R.color.white))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = 16 }
+            setOnClickListener {
+                expenseDatabase.child(expense.id).removeValue().addOnSuccessListener {
+                    Toast.makeText(this@Expenses12Activity, "Expense deleted", Toast.LENGTH_SHORT).show()
+                    dialog.dismiss()
+                }
+            }
+        }
+        container.addView(deleteButton)
 
-        rootLayout?.let {
-            for (i in 0 until it.childCount) {
-                val view = it.getChildAt(i)
-                if (view is LinearLayout) {
-                    for (j in 0 until view.childCount) {
-                        val subView = view.getChildAt(j)
-                        if (subView is TextView) {
-                            subView.setOnClickListener {
-                                val selected = subView.text.toString()
-                                val newIcon = getIconForCategory(selected)
-                                iconPreview.setImageResource(newIcon)
-                                onIconSelected(newIcon)
-                                Toast.makeText(this, "Selected: $selected", Toast.LENGTH_SHORT).show()
-                                dialog.dismiss()
-                            }
-                        }
+        // Edit / Save toggle
+        doneButton.text = "Edit"
+        doneButton.setOnClickListener {
+            if (doneButton.text == "Edit") {
+                setFieldsEditable(true, nameEditText, dateEditText, amountEditText, descEditText, spinnerCategory)
+                iconButton.isEnabled = true
+                doneButton.text = "Save"
+
+                iconButton.setOnClickListener {
+                    showIconSelectionPopup(iconPreview) { newIcon ->
+                        iconPreview.setImageResource(newIcon)
+                        expense.iconResId = newIcon
                     }
+                }
+
+                val cancelButton = Button(this).apply {
+                    text = "Cancel"
+                    setBackgroundColor(resources.getColor(android.R.color.darker_gray))
+                    setTextColor(resources.getColor(android.R.color.white))
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply { topMargin = 8 }
+                    setOnClickListener {
+                        setFieldsEditable(false, nameEditText, dateEditText, amountEditText, descEditText, spinnerCategory)
+                        iconButton.isEnabled = false
+                        doneButton.text = "Edit"
+                        container.removeView(this)
+                        iconPreview.setImageResource(expense.iconResId)
+                    }
+                }
+                container.addView(cancelButton)
+
+            } else if (doneButton.text == "Save") {
+                val updatedExpense = expense.copy(
+                    title = nameEditText.text.toString(),
+                    category = spinnerCategory.selectedItem.toString(),  // updated
+                    date = dateEditText.text.toString(),
+                    amount = amountEditText.text.toString().toDoubleOrNull() ?: 0.0,
+                    description = descEditText.text.toString(),
+                    iconResId = expense.iconResId
+                )
+
+                expenseDatabase.child(expense.id).setValue(updatedExpense).addOnSuccessListener {
+                    Toast.makeText(this, "Expense updated", Toast.LENGTH_SHORT).show()
+                    setFieldsEditable(false, nameEditText, dateEditText, amountEditText, descEditText, spinnerCategory)
+                    iconButton.isEnabled = false
+                    doneButton.text = "Edit"
+                    dialog.dismiss()
                 }
             }
         }
     }
 
-    private fun getIconForCategory(category: String): Int {
-        return when {
-            category.contains("Rent", true) || category.contains("Grocer", true) || category.contains("Fuel", true) ->
-                R.drawable.ic_home
-            category.contains("Electricity", true) || category.contains("Internet", true) ->
-                R.drawable.ic_lightbulb
-            category.contains("Education", true) || category.contains("Health", true) || category.contains("Insurance", true) ->
-                R.drawable.ic_family
-            category.contains("Movies", true) || category.contains("Games", true) || category.contains("Travel", true) ->
-                R.drawable.ic_entertainment
-            category.contains("Savings", true) || category.contains("Loan", true) || category.contains("Credit", true) ->
-                R.drawable.ic_credit_card
-            category.contains("Furniture", true) || category.contains("Home", true) || category.contains("Garden", true) ->
-                R.drawable.ic_tools
-            category.contains("Donation", true) || category.contains("Misc", true) ->
-                R.drawable.ic_misc
-            else -> R.drawable.ic_palette
+    private fun setFieldsEditable(enabled: Boolean, vararg views: View) {
+        views.forEach {
+            when (it) {
+                is EditText -> it.isEnabled = enabled
+                is Spinner -> it.isEnabled = enabled
+            }
         }
     }
 
-    // Dynamically add expense to your expense list UI
-    private fun addExpenseToView(expense: Expense) {
-        val itemView = layoutInflater.inflate(R.layout.item_expense, binding.expenseListContainer, false)
+    // NEW icon selection popup
+    private fun showIconSelectionPopup(iconPreview: ImageView, onIconSelected: (Int) -> Unit) {
+        val dialogView = layoutInflater.inflate(R.layout.activity_category_popup_12_2, null)
+        val iconGrid = dialogView.findViewById<GridLayout>(R.id.iconGrid)
 
-        val iconView = itemView.findViewById<ImageView>(R.id.categoryIconImageView)
-        val nameView = itemView.findViewById<TextView>(R.id.categoryNameTextView)
-        val dateView = itemView.findViewById<TextView>(R.id.expenseDateTextView)
-        val amountView = itemView.findViewById<TextView>(R.id.amountTextView)
+        val icons = listOf(
+            R.drawable.ic_home,
+            R.drawable.ic_lightbulb,
+            R.drawable.ic_family,
+            R.drawable.ic_entertainment,
+            R.drawable.ic_credit_card,
+            R.drawable.ic_tools,
+            R.drawable.ic_misc,
+            R.drawable.ic_palette
+        )
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        dialog.show()
 
-        iconView.setImageResource(expense.iconResId)
-        nameView.text = expense.title
-        dateView.text = expense.date
-        amountView.text = "₱%.2f".format(expense.amount)
-
-        binding.expenseListContainer.addView(itemView, 0)
-    }
+        icons.forEach { iconRes ->
+            val imageView = ImageView(this).apply {
+                setImageResource(iconRes)
+                layoutParams = GridLayout.LayoutParams().apply {
+                    width = 120
+                    height = 120
+                    setMargins(16,16,16,16)
+                }
+                scaleType = ImageView.ScaleType.CENTER_INSIDE
+                setOnClickListener {
+                    iconPreview.setImageResource(iconRes)
+                    onIconSelected(iconRes)
+                    dialog.dismiss() // ✅ now visible
+                }
+            }
+            iconGrid.addView(imageView)
+        }
+        }
 }
+
+
