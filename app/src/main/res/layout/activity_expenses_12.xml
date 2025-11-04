@@ -24,7 +24,7 @@
         android:id="@+id/titleText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Receipts"
+        android:text="Expenses"
         android:textColor="@android:color/black"
         android:textSize="20sp"
         android:textStyle="bold"
@@ -35,17 +35,6 @@
         app:layout_constraintVertical_bias="0.4" />
 
     <!-- Add Expense Button -->
-    <Button
-        android:id="@+id/btnAddExpense"
-        android:layout_width="wrap_content"
-        android:layout_height="45dp"
-        android:layout_marginEnd="16dp"
-        android:background="@drawable/rounded_green"
-        android:text="Add Expense"
-        android:textAllCaps="false"
-        android:textColor="@android:color/white"
-        app:layout_constraintTop_toBottomOf="@id/headerBackground"
-        app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Filter Row: All / Daily / Weekly / Monthly -->
     <LinearLayout
@@ -106,29 +95,54 @@
     </LinearLayout>
 
     <!-- RecyclerView for Expenses -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/expenseRecycler"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:padding="16dp"
-        app:layout_constraintTop_toBottomOf="@id/filterRow"
-        app:layout_constraintBottom_toTopOf="@id/fabCamera"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Floating Camera Button -->
+
+    <ScrollView
+        android:id="@+id/scrollContainer"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintBottom_toTopOf="@+id/bottomNavigationView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/filterRow"
+        app:layout_constraintVertical_bias="1.0">
+
+        <LinearLayout
+            android:id="@+id/expenseListContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:paddingHorizontal="0dp"
+            android:paddingVertical="10dp">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/expenseRecycler"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:padding="16dp"
+                app:layout_constraintBottom_toTopOf="@id/fabCamera"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/filterRow" />
+
+        </LinearLayout>
+    </ScrollView>
+
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabCamera"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:layout_marginBottom="70dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
         android:contentDescription="Camera"
         android:src="@drawable/ic_camera"
         app:backgroundTint="#16a085"
-        app:tint="@android:color/white"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/bottomNavigationView"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:tint="@android:color/white" />
 
     <!-- Bottom Navigation -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
@@ -138,9 +152,23 @@
         android:background="@android:color/white"
         app:itemIconTint="@color/nav_item_selector"
         app:itemTextColor="@color/nav_item_selector"
-        app:menu="@menu/bottom_nav_menu"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:menu="@menu/bottom_nav_menu" />
+
+    <Button
+        android:id="@+id/btnAddExpense"
+        android:layout_width="wrap_content"
+        android:layout_marginBottom="17dp"
+        android:layout_height="45dp"
+        android:background="@drawable/rounded_green"
+        android:text="Add Expense"
+        android:textAllCaps="false"
+        android:textColor="@android:color/white"
+        app:layout_constraintBottom_toTopOf="@+id/bottomNavigationView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/fabCamera"
+         />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
