@@ -180,22 +180,11 @@ class Expenses12Activity : AppCompatActivity() {
         val descEditText = dialogView.findViewById<EditText>(R.id.inputDescription)
         val doneButton = dialogView.findViewById<Button>(R.id.btnDone)
 
-        // 🆕 Add product list EditText
-        val productListEditText = EditText(this).apply {
-            hint = "Product list (e.g. Milk - ₱50, Bread - ₱30)"
-            setPadding(16, 16, 16, 16)
-        }
-
-        val container = dialogView.findViewById<LinearLayout>(R.id.dialogContainer)
-        container.addView(productListEditText, container.childCount - 1)
-
         val categories = listOf("Food", "Transport", "Bills", "Shopping", "Entertainment", "Others")
         categorySpinner.adapter =
             ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, categories)
 
         var selectedIcon = R.drawable.ic_palette
-        iconPreview.setImageResource(selectedIcon)
-
         val calendar = Calendar.getInstance()
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
@@ -206,15 +195,14 @@ class Expenses12Activity : AppCompatActivity() {
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
         dialog.show()
 
-        // ✅ Fix: Make icon change work
+        // Icon selection
         changeIconButton.setOnClickListener {
             showIconSelectionPopup(iconPreview) { newIcon ->
                 selectedIcon = newIcon
-                iconPreview.setImageResource(newIcon)
             }
         }
 
-        // ✅ Fix: Date picker for adding
+        // Date picker
         dateEditText.setOnClickListener {
             DatePickerDialog(
                 this,
@@ -228,13 +216,13 @@ class Expenses12Activity : AppCompatActivity() {
             ).show()
         }
 
+        // Done button
         doneButton.setOnClickListener {
             val name = nameEditText.text.toString().trim()
             val date = dateEditText.text.toString().trim()
             val amountText = amountEditText.text.toString().trim()
             val description = descEditText.text.toString().trim()
-            val productList = productListEditText.text.toString().trim()
-            val category = categorySpinner.selectedItem.toString()
+            val selectedCategory = categorySpinner.selectedItem.toString()
 
             if (name.isEmpty() || date.isEmpty() || amountText.isEmpty()) {
                 Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
@@ -248,29 +236,19 @@ class Expenses12Activity : AppCompatActivity() {
             }
 
             val expenseId = expenseDatabase.push().key ?: return@setOnClickListener
-            val newExpense = Expense(
-                id = expenseId,
-                iconResId = selectedIcon,
-                title = name,
-                date = date,
-                amount = amount,
-                description = description,
-                category = category,
-                productList = productList
-            )
+            val newExpense = Expense(expenseId, selectedIcon, name, date, amount, description)
 
             expenseDatabase.child(expenseId).setValue(newExpense)
                 .addOnSuccessListener {
-                    Toast.makeText(this, "Expense added", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Added successfully", Toast.LENGTH_SHORT).show()
                     dialog.dismiss()
                 }
-                .addOnFailureListener {
-                    Toast.makeText(this, "Failed to add: ${it.message}", Toast.LENGTH_SHORT).show()
+                .addOnFailureListener { e ->
+                    Toast.makeText(this, "Failed to add expense: ${e.message}", Toast.LENGTH_SHORT)
+                        .show()
                 }
         }
     }
-
-
 
     // Edit Expense Dialog
     private fun showExpenseDetailsDialog(expense: Expense) {
@@ -285,15 +263,7 @@ class Expenses12Activity : AppCompatActivity() {
         val spinnerCategory = dialogView.findViewById<Spinner>(R.id.spinnerCategory)
         val doneButton = dialogView.findViewById<Button>(R.id.btnDone)
 
-        // 🆕 Add product list field for editing
-        val productListEditText = EditText(this).apply {
-            hint = "Product list (e.g. Milk - ₱50)"
-            setPadding(16, 16, 16, 16)
-            setText(expense.productList ?: "")
-        }
-        container.addView(productListEditText, container.childCount - 1)
-
-        // Load initial data
+        // Initial values
         iconPreview.setImageResource(expense.iconResId)
         nameEditText.setText(expense.title)
         dateEditText.setText(expense.date)
@@ -303,9 +273,13 @@ class Expenses12Activity : AppCompatActivity() {
         val categories = listOf("Food", "Transport", "Bills", "Shopping", "Entertainment", "Others")
         spinnerCategory.adapter =
             ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, categories)
-        spinnerCategory.setSelection(categories.indexOfFirst { it.equals(expense.category, true) }.takeIf { it >= 0 } ?: 0)
+        spinnerCategory.setSelection(
+            categories.indexOfFirst { it.equals(expense.category, true) }
+                .takeIf { it >= 0 } ?: 0
+        )
 
-        setFieldsEditable(false, nameEditText, dateEditText, amountEditText, descEditText, spinnerCategory, productListEditText)
+
+        setFieldsEditable(false, nameEditText, dateEditText, amountEditText, descEditText, spinnerCategory)
         iconButton.isEnabled = false
 
         val dialog = AlertDialog.Builder(this)
@@ -315,65 +289,77 @@ class Expenses12Activity : AppCompatActivity() {
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
         dialog.show()
 
+        // Delete button
         val deleteButton = Button(this).apply {
             text = "Delete"
             setBackgroundColor(resources.getColor(android.R.color.holo_red_light))
             setTextColor(resources.getColor(android.R.color.white))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = 16 }
             setOnClickListener {
-                expenseDatabase.child(expense.id).removeValue()
-                dialog.dismiss()
+                expenseDatabase.child(expense.id).removeValue().addOnSuccessListener {
+                    Toast.makeText(this@Expenses12Activity, "Expense deleted", Toast.LENGTH_SHORT).show()
+                    dialog.dismiss()
+                }
             }
         }
         container.addView(deleteButton)
 
+        // Edit / Save toggle
         doneButton.text = "Edit"
         doneButton.setOnClickListener {
             if (doneButton.text == "Edit") {
-                setFieldsEditable(true, nameEditText, dateEditText, amountEditText, descEditText, spinnerCategory, productListEditText)
+                setFieldsEditable(true, nameEditText, dateEditText, amountEditText, descEditText, spinnerCategory)
                 iconButton.isEnabled = true
                 doneButton.text = "Save"
 
                 iconButton.setOnClickListener {
                     showIconSelectionPopup(iconPreview) { newIcon ->
-                        expense.iconResId = newIcon
                         iconPreview.setImageResource(newIcon)
+                        expense.iconResId = newIcon
                     }
                 }
 
-                // ✅ Make date editable
-                dateEditText.setOnClickListener {
-                    val cal = Calendar.getInstance()
-                    DatePickerDialog(
-                        this,
-                        { _, year, month, day ->
-                            cal.set(year, month, day)
-                            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                            dateEditText.setText(dateFormat.format(cal.time))
-                        },
-                        cal.get(Calendar.YEAR),
-                        cal.get(Calendar.MONTH),
-                        cal.get(Calendar.DAY_OF_MONTH)
-                    ).show()
+                val cancelButton = Button(this).apply {
+                    text = "Cancel"
+                    setBackgroundColor(resources.getColor(android.R.color.darker_gray))
+                    setTextColor(resources.getColor(android.R.color.white))
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply { topMargin = 8 }
+                    setOnClickListener {
+                        setFieldsEditable(false, nameEditText, dateEditText, amountEditText, descEditText, spinnerCategory)
+                        iconButton.isEnabled = false
+                        doneButton.text = "Edit"
+                        container.removeView(this)
+                        iconPreview.setImageResource(expense.iconResId)
+                    }
                 }
+                container.addView(cancelButton)
 
-            } else {
+            } else if (doneButton.text == "Save") {
                 val updatedExpense = expense.copy(
                     title = nameEditText.text.toString(),
-                    category = spinnerCategory.selectedItem.toString(),
+                    category = spinnerCategory.selectedItem.toString(),  // updated
                     date = dateEditText.text.toString(),
                     amount = amountEditText.text.toString().toDoubleOrNull() ?: 0.0,
                     description = descEditText.text.toString(),
-                    productList = productListEditText.text.toString()
+                    iconResId = expense.iconResId
                 )
 
                 expenseDatabase.child(expense.id).setValue(updatedExpense).addOnSuccessListener {
-                    Toast.makeText(this, "Updated successfully", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Expense updated", Toast.LENGTH_SHORT).show()
+                    setFieldsEditable(false, nameEditText, dateEditText, amountEditText, descEditText, spinnerCategory)
+                    iconButton.isEnabled = false
+                    doneButton.text = "Edit"
                     dialog.dismiss()
                 }
             }
         }
     }
-
 
     private fun setFieldsEditable(enabled: Boolean, vararg views: View) {
         views.forEach {
@@ -397,7 +383,7 @@ class Expenses12Activity : AppCompatActivity() {
             R.drawable.ic_credit_card,
             R.drawable.ic_tools,
             R.drawable.ic_misc,
-            R.drawable.ic_receipt
+            R.drawable.ic_palette
         )
         val dialog = AlertDialog.Builder(this)
             .setView(dialogView)

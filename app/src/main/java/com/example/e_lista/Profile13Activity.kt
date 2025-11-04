@@ -16,57 +16,82 @@ class Profile13Activity : AppCompatActivity() {
         binding = ActivityProfile13Binding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Highlight Profile tab
+        // 🔹 Highlight the "Profile" tab when this screen is open
         binding.bottomNavigationView.selectedItemId = R.id.nav_profile
 
-        // Back button
-        binding.backButton.setOnClickListener { onBackPressedDispatcher.onBackPressed() }
-
-        // Dark Mode Toggle
-        val prefs = getSharedPreferences("user_settings", MODE_PRIVATE)
-        binding.switchDarkMode.isChecked = prefs.getBoolean("dark_mode", false)
-        binding.switchDarkMode.setOnCheckedChangeListener { _, isChecked ->
-            AppCompatDelegate.setDefaultNightMode(
-                if (isChecked) AppCompatDelegate.MODE_NIGHT_YES
-                else AppCompatDelegate.MODE_NIGHT_NO
-            )
-            prefs.edit().putBoolean("dark_mode", isChecked).apply()
+        // 🔙 Back button
+        binding.backButton.setOnClickListener {
+            onBackPressedDispatcher.onBackPressed()
         }
 
-        // Logout button
+        // 📸 Floating Camera button
+        //binding.fabCamera.setOnClickListener {
+        //    val intent = Intent(this, Camera11Activity::class.java)
+        //    startActivity(intent)
+        //}
+
         binding.logoutBtn.setOnClickListener {
             FirebaseAuth.getInstance().signOut()
-            startActivity(Intent(this, WelcomeActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            })
+            val intent = Intent(this, WelcomeActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            finish()
         }
 
-        // Bottom navigation
-        binding.bottomNavigationView.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.nav_home -> navigateTo(Home9Activity::class.java)
-                R.id.nav_wallet -> navigateTo(Expenses12Activity::class.java)
-                R.id.nav_camera_placeholder -> navigateTo(ReceiptScanUpload::class.java)
-                R.id.nav_stats -> navigateTo(ChartDesign10Activity::class.java)
-                R.id.nav_profile -> true
-                else -> false
+        // 🌙 Dark Mode Toggle
+        binding.switchDarkMode.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+            } else {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
             }
         }
 
-        // Navigate to separate activities
-        binding.faqItem.setOnClickListener { startActivity(Intent(this, FaqActivity::class.java)) }
-        binding.termsItem.setOnClickListener { startActivity(Intent(this, TermsActivity::class.java)) }
-        binding.privacyItem.setOnClickListener { startActivity(Intent(this, PrivacyActivity::class.java)) }
-        binding.aboutItem.setOnClickListener { startActivity(Intent(this, AboutUsActivity::class.java)) }
-    }
+        // ⚙️ Bottom Navigation
+        binding.bottomNavigationView.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_home -> {
+                    if (this !is Home9Activity) {
+                        startActivity(Intent(this, Home9Activity::class.java))
+                        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+                        finish()
+                    }
+                    true
+                }
 
-    // Navigate helper for bottom nav
-    private fun navigateTo(target: Class<*>): Boolean {
-        if (this::class.java != target) {
-            startActivity(Intent(this, target))
-            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
-            finish()
+                R.id.nav_wallet -> {
+                    if (this !is Expenses12Activity) {
+                        startActivity(Intent(this, Expenses12Activity::class.java))
+                        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+                        finish()
+                    }
+                    true
+                }
+
+                R.id.nav_camera_placeholder -> {
+                    if (this !is ReceiptScanUpload) {
+                        startActivity(Intent(this, ReceiptScanUpload::class.java))
+                        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+                        finish()
+                    }
+                    true
+                }
+
+                R.id.nav_stats -> {
+                    if (this !is ChartDesign10Activity) {
+                        startActivity(Intent(this, ChartDesign10Activity::class.java))
+                        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+                        finish()
+                    }
+                    true
+                }
+
+                R.id.nav_profile -> {
+                    true
+                }
+
+                else -> false
+            }
         }
-        return true
     }
 }

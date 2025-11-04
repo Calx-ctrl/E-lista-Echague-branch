@@ -88,17 +88,6 @@
             android:background="@drawable/rounded_input"
             android:padding="8dp" />
 
-        <!-- Product List Input -->
-        <EditText
-            android:id="@+id/inputProductList"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginBottom="12dp"
-            android:hint="Receipt Id no. "
-            android:background="@drawable/rounded_input"
-            android:padding="8dp"
-            android:inputType="text" />
-
         <!-- Done Button -->
         <Button
             android:id="@+id/btnDone"

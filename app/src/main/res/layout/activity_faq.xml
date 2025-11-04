@@ -29,78 +29,61 @@
         app:layout_constraintStart_toStartOf="parent"/>
 
     <!-- Title -->
+
+    <!-- Scrollable FAQ Content -->
     <TextView
         android:id="@+id/titleText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="FAQ"
         android:textColor="@android:color/black"
-        android:textStyle="bold"
         android:textSize="20sp"
-        app:layout_constraintTop_toTopOf="@id/backButton"
+        android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="@id/backButton"
-        app:layout_constraintStart_toEndOf="@id/backButton"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"/>
+        app:layout_constraintHorizontal_bias="0.44"
+        app:layout_constraintStart_toEndOf="@id/backButton"
+        app:layout_constraintTop_toTopOf="@id/backButton"
+        app:layout_constraintVertical_bias="1.0" />
 
-    <!-- Scrollable Content -->
     <ScrollView
         android:id="@+id/scrollFaq"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginHorizontal="24dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="16dp"
+        android:layout_margin="24dp"
         app:layout_constraintTop_toBottomOf="@id/headerBackground"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/faqText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center_horizontal">
-
-            <!-- Logo -->
-            <ImageView
-                android:id="@+id/logoImage"
-                android:layout_width="120dp"
-                android:layout_height="120dp"
-                android:layout_marginBottom="16dp"
-                android:src="@drawable/e_lista_logo"
-                android:contentDescription="E-lista Logo"
-                android:scaleType="fitCenter" />
-
-            <!-- FAQ Text -->
-            <TextView
-                android:id="@+id/faqText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="start"
-                android:lineSpacingExtra="4dp"
-                android:textColor="#333333"
-                android:textSize="14sp"
-                android:textAlignment="viewStart"
-                android:text="1. What is E-Lista?
-E-Lista is an easy-to-use expense tracker that helps you record, organize, and understand your daily spending.
+            android:gravity="center"
+            android:justificationMode="inter_word"
+            android:textAlignment="center"
+            android:lineSpacingExtra="4dp"
+            android:textColor="#333333"
+            android:textSize="14sp"
+            android:text="1. What is E-Lista?
+E-Lista is an easy-to-use expense tracker that helps you record, organize, and understand your daily spending. \n
 
 2. Is it free?
-Yes! E-Lista is free to use, with premium features coming soon.
+Yes! E-Lista is free to use, with premium features coming soon.\n
 
 3. Can I customize categories?
-Definitely. You can add, edit, or remove categories to match your lifestyle.
+Definitely. You can add, edit, or remove categories to match your lifestyle.\n
 
 4. Does it work offline?
-Yes. You can log expenses anytime—your data syncs when you’re back online.
+Yes. You can log expenses anytime—your data syncs when you’re back online.\n
 
 5. Is my data safe?
-Your privacy matters. E-Lista encrypts your data and keeps it secure.
+Your privacy matters. E-Lista encrypts your data and keeps it secure.\n
 
 6. How can I contact support?
-Email us at support@e-lista.app — we’re happy to help!" />
-
-        </LinearLayout>
+Email us at support@e-lista.app
+ — we’re happy to help!"/>
     </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
