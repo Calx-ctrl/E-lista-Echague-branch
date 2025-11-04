@@ -12,7 +12,8 @@ data class Expense(
     var date: String = "",
     var amount: Double = 0.0,
     val category: String = "",      // NEW
-    var description: String? = ""        // optional
+    var description: String? = "",        // optional
+    var productList: String? = "" // 🆕 added
 ) : Parcelable
 
 // Optional helper model for chart summaries, etc.
