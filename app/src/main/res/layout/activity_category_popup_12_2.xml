@@ -5,195 +5,33 @@
     android:layout_height="wrap_content"
     android:fillViewport="true"
     android:background="@android:color/white"
-    android:padding="12dp">
+    android:padding="16dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- 🏠 Essential Living Expenses -->
+        <!-- Title -->
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="🏠 Essential Living Expenses"
+            android:text="Select an Icon"
+            android:textSize="20sp"
             android:textStyle="bold"
-            android:textSize="18sp"
-            android:textColor="#000"
-            android:paddingVertical="6dp" />
+            android:layout_gravity="center_horizontal"
+            android:paddingBottom="16dp"
+            android:textColor="@android:color/black"/>
 
-        <LinearLayout
+        <!-- Icon Grid -->
+        <GridLayout
+            android:id="@+id/iconGrid"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="#FFFFFF"
-            android:padding="8dp"
-            android:layout_marginBottom="8dp"
-            android:divider="@android:color/black"
-            android:showDividers="middle">
-
-            <TextView android:text="Rent / Mortgage" style="@style/SubCategoryItem"/>
-            <TextView android:text="Gas / Heating" style="@style/SubCategoryItem"/>
-            <TextView android:text="Groceries / Food" style="@style/SubCategoryItem"/>
-            <TextView android:text="Transportation / Fuel" style="@style/SubCategoryItem"/>
-            <TextView android:text="Public Transport / Commute" style="@style/SubCategoryItem"/>
-        </LinearLayout>
-
-        <!-- 💡 Utilities & Services -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="💡 Utilities and Services"
-            android:textStyle="bold"
-            android:textSize="18sp"
-            android:textColor="#000"
-            android:paddingVertical="6dp" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="#FFFFFF"
-            android:padding="8dp"
-            android:layout_marginBottom="8dp"
-            android:divider="@android:color/black"
-            android:showDividers="middle">
-
-            <TextView android:text="Electricity" style="@style/SubCategoryItem"/>
-            <TextView android:text="Water" style="@style/SubCategoryItem"/>
-            <TextView android:text="Internet / Wi-Fi" style="@style/SubCategoryItem"/>
-        </LinearLayout>
-
-        <!-- 👨‍👩‍👧 Family & Personal -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="👨‍👩‍👧 Family and Personal"
-            android:textStyle="bold"
-            android:textSize="18sp"
-            android:textColor="#000"
-            android:paddingVertical="6dp" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="#FFFFFF"
-            android:padding="8dp"
-            android:layout_marginBottom="8dp"
-            android:divider="@android:color/black"
-            android:showDividers="middle">
-
-            <TextView android:text="Education / Tuition / School Fees" style="@style/SubCategoryItem"/>
-            <TextView android:text="Childcare / Babysitting" style="@style/SubCategoryItem"/>
-            <TextView android:text="Health / Medical / Medicine" style="@style/SubCategoryItem"/>
-            <TextView android:text="Insurance (Health, Life, Car, Home)" style="@style/SubCategoryItem"/>
-            <TextView android:text="Clothing / Apparel" style="@style/SubCategoryItem"/>
-            <TextView android:text="Personal Care / Salon / Grooming" style="@style/SubCategoryItem"/>
-        </LinearLayout>
-
-        <!-- 🎉 Leisure & Entertainment -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="🎉 Leisure and Entertainment"
-            android:textStyle="bold"
-            android:textSize="18sp"
-            android:textColor="#000"
-            android:paddingVertical="6dp" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="#FFFFFF"
-            android:padding="8dp"
-            android:layout_marginBottom="8dp"
-            android:divider="@android:color/black"
-            android:showDividers="middle">
-
-            <TextView android:text="Movies / Streaming / Subscriptions" style="@style/SubCategoryItem"/>
-            <TextView android:text="Hobbies / Games / Music" style="@style/SubCategoryItem"/>
-            <TextView android:text="Travel / Vacation" style="@style/SubCategoryItem"/>
-            <TextView android:text="Gifts / Celebrations / Holidays" style="@style/SubCategoryItem"/>
-        </LinearLayout>
-
-        <!-- 💳 Financial Obligations -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="💳 Financial Obligations"
-            android:textStyle="bold"
-            android:textSize="18sp"
-            android:textColor="#000"
-            android:paddingVertical="6dp" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="#FFFFFF"
-            android:padding="8dp"
-            android:layout_marginBottom="8dp"
-            android:divider="@android:color/black"
-            android:showDividers="middle">
-
-            <TextView android:text="Savings / Investments" style="@style/SubCategoryItem"/>
-            <TextView android:text="Loan Payments" style="@style/SubCategoryItem"/>
-            <TextView android:text="Credit Card Bills" style="@style/SubCategoryItem"/>
-            <TextView android:text="Taxes" style="@style/SubCategoryItem"/>
-            <TextView android:text="Emergency Fund" style="@style/SubCategoryItem"/>
-        </LinearLayout>
-
-        <!-- 🛠️ Home & Property -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="🛠️ Home and Property"
-            android:textStyle="bold"
-            android:textSize="18sp"
-            android:textColor="#000"
-            android:paddingVertical="6dp" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="#FFFFFF"
-            android:padding="8dp"
-            android:layout_marginBottom="8dp"
-            android:divider="@android:color/black"
-            android:showDividers="middle">
-
-            <TextView android:text="Furniture / Appliances" style="@style/SubCategoryItem"/>
-            <TextView android:text="Home Improvement" style="@style/SubCategoryItem"/>
-            <TextView android:text="Gardening / Yard" style="@style/SubCategoryItem"/>
-            <TextView android:text="Renters / HOA Dues" style="@style/SubCategoryItem"/>
-        </LinearLayout>
-
-        <!-- 🧩 Miscellaneous -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="🧩 Miscellaneous"
-            android:textStyle="bold"
-            android:textSize="18sp"
-            android:textColor="#000"
-            android:paddingVertical="6dp" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="#FFFFFF"
-            android:padding="8dp"
-            android:divider="@android:color/black"
-            android:showDividers="middle">
-
-            <TextView android:text="Donations / Charity" style="@style/SubCategoryItem"/>
-            <TextView android:text="Unexpected Expenses" style="@style/SubCategoryItem"/>
-            <TextView android:text="Misc Purchases / Others" style="@style/SubCategoryItem"/>
-        </LinearLayout>
+            android:columnCount="4"
+            android:alignmentMode="alignMargins"
+            android:useDefaultMargins="true"
+            android:layout_marginBottom="16dp" />
 
     </LinearLayout>
 </ScrollView>
