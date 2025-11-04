@@ -2,6 +2,7 @@ package com.example.e_lista
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.e_lista.databinding.ActivityHome9Binding
@@ -18,8 +19,12 @@ class Home9Activity : AppCompatActivity() {
         setContentView(binding.root)
 
         // --- RecyclerView Setup ---
+        adapter = ExpenseAdapter(expenseList) { expense, position ->
+            // Handle click on expense item
+            Toast.makeText(this, "Clicked: ${expense.title} at position $position", Toast.LENGTH_SHORT).show()
+        }
+
         binding.expensesRecyclerView.layoutManager = LinearLayoutManager(this)
-        adapter = ExpenseAdapter(expenseList)
         binding.expensesRecyclerView.adapter = adapter
 
         // --- Check if an expense was passed from Expenses12Activity ---
@@ -38,11 +43,10 @@ class Home9Activity : AppCompatActivity() {
             startActivity(Intent(this, Expenses12Activity::class.java))
         }
 
+        // --- Bottom Navigation ---
         binding.bottomNavigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {
-                R.id.nav_home -> {
-                    true
-                }
+                R.id.nav_home -> true
 
                 R.id.nav_wallet -> {
                     if (this !is Expenses12Activity) {
