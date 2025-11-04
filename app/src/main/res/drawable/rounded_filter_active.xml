@@ -1,0 +1,4 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#16a085"/> <!-- green for active button -->
+    <corners android:radius="50dp"/>
+</shape>

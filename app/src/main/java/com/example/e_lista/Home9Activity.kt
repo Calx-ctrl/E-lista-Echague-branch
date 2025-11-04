@@ -2,10 +2,10 @@ package com.example.e_lista
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.e_lista.databinding.ActivityHome9Binding
-import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class Home9Activity : AppCompatActivity() {
 
@@ -19,8 +19,12 @@ class Home9Activity : AppCompatActivity() {
         setContentView(binding.root)
 
         // --- RecyclerView Setup ---
+        adapter = ExpenseAdapter(expenseList) { expense, position ->
+            // Handle click on expense item
+            Toast.makeText(this, "Clicked: ${expense.title} at position $position", Toast.LENGTH_SHORT).show()
+        }
+
         binding.expensesRecyclerView.layoutManager = LinearLayoutManager(this)
-        adapter = ExpenseAdapter(expenseList)
         binding.expensesRecyclerView.adapter = adapter
 
         // --- Check if an expense was passed from Expenses12Activity ---
@@ -39,29 +43,47 @@ class Home9Activity : AppCompatActivity() {
             startActivity(Intent(this, Expenses12Activity::class.java))
         }
 
-        // --- Bottom Navigation Setup ---
-        val bottomNavigation: BottomNavigationView = binding.bottomNavigationView
-        bottomNavigation.selectedItemId = R.id.nav_home
-
-        bottomNavigation.setOnItemSelectedListener { item ->
+        // --- Bottom Navigation ---
+        binding.bottomNavigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_home -> true
+
                 R.id.nav_wallet -> {
-                    startActivity(Intent(this, Expenses12Activity::class.java))
+                    if (this !is Expenses12Activity) {
+                        startActivity(Intent(this, Expenses12Activity::class.java))
+                        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                        finish()
+                    }
                     true
                 }
+
                 R.id.nav_camera_placeholder -> {
-                    startActivity(Intent(this, Camera11Activity::class.java))
+                    if (this !is Camera11Activity) {
+                        startActivity(Intent(this, Camera11Activity::class.java))
+                        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                        finish()
+                    }
                     true
                 }
+
                 R.id.nav_stats -> {
-                    startActivity(Intent(this, ChartDesign10Activity::class.java))
+                    if (this !is ChartDesign10Activity) {
+                        startActivity(Intent(this, ChartDesign10Activity::class.java))
+                        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                        finish()
+                    }
                     true
                 }
+
                 R.id.nav_profile -> {
-                    startActivity(Intent(this, Profile13Activity::class.java))
+                    if (this !is Profile13Activity) {
+                        startActivity(Intent(this, Profile13Activity::class.java))
+                        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                        finish()
+                    }
                     true
                 }
+
                 else -> false
             }
         }

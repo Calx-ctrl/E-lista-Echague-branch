@@ -14,7 +14,7 @@
     <!-- Middle item reserved for Floating Camera FAB -->
     <item
         android:id="@+id/nav_camera_placeholder"
-        android:icon="@drawable/ic_camera_alt"
+        android:icon="@drawable/ic_camera"
         android:title=""
         android:enabled="false"
         android:visible="false" />

@@ -72,6 +72,17 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_log_in_3)
 
+        mAuth = FirebaseAuth.getInstance()
+
+        // 🔹 Add these two UI elements in your XML
+        resendVerificationBtn = findViewById(R.id.resendVerificationBtn)
+        verifyNoticeText = findViewById(R.id.verifyNoticeText)
+
+        // Hide initially
+        resendVerificationBtn.visibility = View.GONE
+        verifyNoticeText.visibility = View.GONE
+
+
         val currentUser = FirebaseAuth.getInstance().currentUser
         if (currentUser != null) {
             if (currentUser.isEmailVerified) {
@@ -82,13 +93,9 @@ class LoginActivity : AppCompatActivity() {
             } else {
                 // ⚠️ Email not verified, show verification UI
                 unverifiedUserEmail = currentUser.email
-                showVerificationSection(currentUser)
                 mAuth.signOut()
             }
         }
-
-        // Firebase
-        mAuth = FirebaseAuth.getInstance()
 
         // Configure Google Sign-In
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -115,14 +122,6 @@ class LoginActivity : AppCompatActivity() {
         googleButton = findViewById(R.id.googleButton)
         facebookButton = findViewById(R.id.facebookButton)
         progressDialog = ProgressDialog(this)
-
-        // 🔹 Add these two UI elements in your XML
-        resendVerificationBtn = findViewById(R.id.resendVerificationBtn)
-        verifyNoticeText = findViewById(R.id.verifyNoticeText)
-
-        // Hide initially
-        resendVerificationBtn.visibility = View.GONE
-        verifyNoticeText.visibility = View.GONE
 
         loginBtn.setOnClickListener {
             performEmailLogin()
