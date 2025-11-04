@@ -7,7 +7,8 @@
         android:required="false" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
-
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 
     <application
         android:allowBackup="true"
@@ -32,7 +33,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
+        <activity android:name=".ScannedReceipt" />
         <activity android:name=".LoginActivity" android:exported="false" />
         <activity android:name=".Home9Activity" android:exported="false" />
         <activity android:name=".SignupActivity" android:exported="false" />
@@ -47,7 +48,16 @@
             android:name=".ChartDesign10Activity"
             android:exported="false" />
 
-        <activity android:name=".Camera11Activity" android:exported="false"/>
+        <activity android:name=".ReceiptScanUpload" android:exported="false"/>
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.example.e_lista.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove"/>
