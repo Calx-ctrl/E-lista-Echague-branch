@@ -79,7 +79,7 @@ class ChartDesign10Activity : AppCompatActivity() {
                 else -> false
             }
         }
-
+        binding.bottomNavigationView.selectedItemId = R.id.nav_stats
 
 
         // Get expense data from intent (default to 0 if none)
