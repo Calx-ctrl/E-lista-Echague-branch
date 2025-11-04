@@ -27,12 +27,10 @@ class ReceiptScanUpload : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_camera_11)
 
         // Camera capture button
-        findViewById<FloatingActionButton>(R.id.fabCapture).setOnClickListener {
+
             dispatchTakePictureIntent()
-        }
 
         //  Upload from gallery
         /*

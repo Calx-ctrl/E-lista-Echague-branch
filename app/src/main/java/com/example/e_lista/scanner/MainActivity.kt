@@ -1,4 +1,4 @@
-package com.example.e_lista.scanner
+/*package com.example.e_lista.scanner
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_confirm_11_1)
-    setContentView(R.layout.activity_camera_11)
+  //  setContentView(R.layout.activity_camera_11)
 
     // Initialize RecyclerView and Adapter
     recyclerView = findViewById(R.id.products)
@@ -200,4 +200,4 @@ class MainActivity : AppCompatActivity() {
       }
     }
   }
-}
+}*/
