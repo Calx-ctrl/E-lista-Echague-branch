@@ -93,5 +93,6 @@ class Profile13Activity : AppCompatActivity() {
                 else -> false
             }
         }
+        binding.bottomNavigationView.selectedItemId = R.id.nav_home
     }
 }

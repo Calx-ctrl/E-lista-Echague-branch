@@ -55,19 +55,53 @@ class Home9Activity : AppCompatActivity() {
         }
 
         // Bottom navigation setup
+
         binding.bottomNavigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {
-                R.id.nav_home -> true
-                R.id.nav_wallet -> {
-                    startActivity(Intent(this, Expenses12Activity::class.java))
-                    overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
-                    finish()
+                R.id.nav_home -> {
                     true
                 }
+
+                R.id.nav_wallet -> {
+                    if (this !is Expenses12Activity) {
+                        startActivity(Intent(this, Expenses12Activity::class.java))
+                        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                        finish()
+                    }
+                    true
+                }
+
+                R.id.nav_camera_placeholder -> {
+                    if (this !is ReceiptScanUpload) {
+                        startActivity(Intent(this, ReceiptScanUpload::class.java))
+                        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                        finish()
+                    }
+                    true
+                }
+
+                R.id.nav_stats -> {
+                    if (this !is ChartDesign10Activity) {
+                        startActivity(Intent(this, ChartDesign10Activity::class.java))
+                        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                        finish()
+                    }
+                    true
+                }
+
+                R.id.nav_profile -> {
+                    if (this !is Profile13Activity) {
+                        startActivity(Intent(this, Profile13Activity::class.java))
+                        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                        finish()
+                    }
+                    true
+                }
+
                 else -> false
             }
         }
-
+        binding.bottomNavigationView.selectedItemId = R.id.nav_home
         // "See All" button action
         binding.seeAll.setOnClickListener {
             startActivity(Intent(this, Expenses12Activity::class.java))
