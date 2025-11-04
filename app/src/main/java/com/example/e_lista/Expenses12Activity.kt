@@ -276,12 +276,13 @@ class Expenses12Activity : AppCompatActivity() {
             expenseDatabase.child(expenseId).setValue(newExpense)
                 .addOnSuccessListener {
                     Toast.makeText(this, "Added successfully", Toast.LENGTH_SHORT).show()
-                    dialog.dismiss()
+
                 }
                 .addOnFailureListener { e ->
                     Toast.makeText(this, "Failed to add expense: ${e.message}", Toast.LENGTH_SHORT)
                         .show()
                 }
+            dialog.dismiss()
         }
     }
 
@@ -390,8 +391,8 @@ class Expenses12Activity : AppCompatActivity() {
                     setFieldsEditable(false, nameEditText, dateEditText, amountEditText, descEditText, spinnerCategory)
                     iconButton.isEnabled = false
                     doneButton.text = "Edit"
-                    dialog.dismiss()
                 }
+                dialog.dismiss()
             }
         }
     }
