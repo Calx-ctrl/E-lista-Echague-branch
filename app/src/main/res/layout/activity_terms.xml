@@ -29,9 +29,6 @@
         app:layout_constraintStart_toStartOf="parent"/>
 
     <!-- Title -->
-
-    <!-- Scrollable FAQ Content -->
-
     <TextView
         android:id="@+id/titleText"
         android:layout_width="wrap_content"
@@ -40,47 +37,62 @@
         android:textColor="@android:color/black"
         android:textSize="20sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="@id/backButton"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.42"
-        app:layout_constraintStart_toEndOf="@id/backButton"
         app:layout_constraintTop_toTopOf="@id/backButton"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintBottom_toBottomOf="@id/backButton"
+        app:layout_constraintStart_toEndOf="@id/backButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"/>
 
+    <!-- Scrollable Content -->
     <ScrollView
-        android:id="@+id/scrollFaq"
+        android:id="@+id/scrollTerms"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_margin="24dp"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
         app:layout_constraintTop_toBottomOf="@id/headerBackground"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <TextView
-            android:id="@+id/faqText"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:justificationMode="inter_word"
-            android:textAlignment="center"
-            android:lineSpacingExtra="4dp"
-            android:textColor="#333333"
-            android:textSize="14sp"
-            android:text="Welcome to E-Lista! By using our app, you agree to follow these simple terms:\n
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
 
-Use E-Lista only for personal and lawful purposes.\n
+            <!-- Logo -->
+            <ImageView
+                android:id="@+id/logoImage"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:layout_marginBottom="16dp"
+                android:src="@drawable/e_lista_logo"
+                android:contentDescription="E-lista Logo"
+                android:scaleType="fitCenter" />
 
-You are responsible for the accuracy of the information you enter.\n
+            <!-- Terms Text -->
+            <TextView
+                android:id="@+id/termsText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="start"
+                android:lineSpacingExtra="4dp"
+                android:textColor="#333333"
+                android:textSize="14sp"
+                android:textAlignment="viewStart"
+                android:text="Welcome to E-Lista! By using our app, you agree to follow these simple terms:
 
-Don’t attempt to copy, modify, or misuse the app’s features or data.\n
+- Use E-Lista only for personal and lawful purposes.
+- You are responsible for the accuracy of the information you enter.
+- Don’t attempt to copy, modify, or misuse the app’s features or data.
+- We may update or change the app at any time to improve your experience.
+- E-Lista is not responsible for any loss caused by inaccurate or incomplete data you provide.
 
-We may update or change the app at any time to improve your experience.\n
+By continuing to use E-Lista, you accept these terms. If you have any questions, contact us at support@e-lista.app." />
 
-E-Lista is not responsible for any loss caused by inaccurate or incomplete data you provide.\n
-
-By continuing to use E-Lista, you accept these terms. If you have any questions, contact us at support@e-lista.app
-."/>
+        </LinearLayout>
     </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

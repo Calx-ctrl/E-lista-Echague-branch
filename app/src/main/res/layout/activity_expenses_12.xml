@@ -24,120 +24,112 @@
         android:id="@+id/titleText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Expenses"
+        android:text="Manual"
         android:textColor="@android:color/black"
         android:textSize="20sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="@id/headerBackground"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@id/headerBackground"
+        app:layout_constraintBottom_toBottomOf="@id/headerBackground"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintVertical_bias="0.4" />
 
     <!-- Add Expense Button (Moved below Manual, centered) -->
+    <Button
+        android:id="@+id/btnAddExpense"
+        android:layout_width="wrap_content"
+        android:layout_height="45dp"
+        android:layout_marginTop="4dp"
+        android:background="@drawable/rounded_green"
+        android:text="Add Expense"
+        android:textAllCaps="false"
+        android:textColor="@android:color/white"
+        app:layout_constraintTop_toBottomOf="@id/titleText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Filter Row: All / Daily / Weekly / Monthly -->
-
     <LinearLayout
         android:id="@+id/filterRow"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="1dp"
         android:layout_marginEnd="16dp"
+        android:layout_marginTop="8dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnAddExpense"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/titleText">
+        app:layout_constraintEnd_toEndOf="parent">
 
         <Button
             android:id="@+id/filterAll"
             android:layout_width="0dp"
-            android:layout_height="36dp"
             android:layout_weight="1"
-            android:background="@drawable/rounded_filter"
-            android:paddingHorizontal="12dp"
+            android:layout_height="36dp"
             android:text="All"
-            android:textColor="@android:color/black" />
+            android:background="@drawable/rounded_filter"
+            android:textColor="@android:color/black"
+            android:paddingHorizontal="12dp"/>
 
         <Button
             android:id="@+id/filterDaily"
             android:layout_width="0dp"
-            android:layout_height="36dp"
-            android:layout_marginStart="4dp"
             android:layout_weight="1"
-            android:background="@drawable/rounded_filter"
-            android:paddingHorizontal="12dp"
+            android:layout_height="36dp"
             android:text="Daily"
-            android:textColor="@android:color/black" />
+            android:background="@drawable/rounded_filter"
+            android:textColor="@android:color/black"
+            android:layout_marginStart="4dp"
+            android:paddingHorizontal="12dp"/>
 
         <Button
             android:id="@+id/filterWeekly"
             android:layout_width="0dp"
-            android:layout_height="36dp"
-            android:layout_marginStart="4dp"
             android:layout_weight="1"
-            android:background="@drawable/rounded_filter"
-            android:paddingHorizontal="12dp"
+            android:layout_height="36dp"
             android:text="Weekly"
-            android:textColor="@android:color/black" />
+            android:background="@drawable/rounded_filter"
+            android:textColor="@android:color/black"
+            android:layout_marginStart="4dp"
+            android:paddingHorizontal="12dp"/>
 
         <Button
             android:id="@+id/filterMonthly"
             android:layout_width="0dp"
-            android:layout_height="36dp"
-            android:layout_marginStart="4dp"
             android:layout_weight="1"
-            android:background="@drawable/rounded_filter"
-            android:paddingHorizontal="12dp"
+            android:layout_height="36dp"
             android:text="Monthly"
-            android:textColor="@android:color/black" />
+            android:background="@drawable/rounded_filter"
+            android:textColor="@android:color/black"
+            android:layout_marginStart="4dp"
+            android:paddingHorizontal="12dp"/>
     </LinearLayout>
 
-
-
     <!-- RecyclerView for Expenses -->
-
-    <!-- Floating Camera Button -->
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/expenseRecycler"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:padding="16dp"
-        app:layout_constraintBottom_toTopOf="@+id/bottomNavigationView"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/filterRow"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintBottom_toTopOf="@id/fabCamera"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Floating Camera Button -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabCamera"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginBottom="70dp"
         android:contentDescription="Camera"
         android:src="@drawable/ic_camera"
         app:backgroundTint="#16a085"
-        app:layout_constraintBottom_toTopOf="@id/bottomNavigationView"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:tint="@android:color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:tint="@android:color/white" />
-
-    <Button
-        android:id="@+id/btnAddExpense"
-        android:layout_width="wrap_content"
-        android:layout_height="45dp"
-        android:layout_marginBottom="20dp"
-        android:background="@drawable/rounded_green"
-        android:text="Add Expense"
-        android:textAllCaps="false"
-        android:textColor="@android:color/white"
-        app:layout_constraintBottom_toTopOf="@+id/bottomNavigationView"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/fabCamera" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Bottom Navigation -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
@@ -147,9 +139,9 @@
         android:background="@android:color/white"
         app:itemIconTint="@color/nav_item_selector"
         app:itemTextColor="@color/nav_item_selector"
+        app:menu="@menu/bottom_nav_menu"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:menu="@menu/bottom_nav_menu" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
