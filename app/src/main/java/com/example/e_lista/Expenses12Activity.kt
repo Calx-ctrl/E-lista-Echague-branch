@@ -55,7 +55,7 @@ class Expenses12Activity : AppCompatActivity() {
 
         // Floating camera button
         binding.fabCamera.setOnClickListener {
-            startActivity(Intent(this, Camera11Activity::class.java))
+            startActivity(Intent(this, ReceiptScanUpload::class.java))
         }
 
         // Bottom navigation
@@ -63,7 +63,7 @@ class Expenses12Activity : AppCompatActivity() {
             when (item.itemId) {
                 R.id.nav_home -> { navigateTo(Home9Activity::class.java); true }
                 R.id.nav_wallet -> true
-                R.id.nav_camera_placeholder -> { navigateTo(Camera11Activity::class.java); true }
+                R.id.nav_camera_placeholder -> { navigateTo(ReceiptScanUpload::class.java); true }
                 R.id.nav_stats -> { navigateTo(ChartDesign10Activity::class.java); true }
                 R.id.nav_profile -> { navigateTo(Profile13Activity::class.java); true }
                 else -> false
