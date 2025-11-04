@@ -52,7 +52,7 @@ class Expenses12Activity : AppCompatActivity() {
         ExpenseDatabase.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 expenseList.clear()
-                binding.expenseRecycler.removeAllViews()
+                binding.expenseListContainer.removeAllViews()
 
                 for (expenseSnapshot in snapshot.children) {
                     val expense = expenseSnapshot.getValue(Expense::class.java)
@@ -276,7 +276,7 @@ class Expenses12Activity : AppCompatActivity() {
 
     // Dynamically add expense to your expense list UI
     private fun addExpenseToView(expense: Expense) {
-        val itemView = layoutInflater.inflate(R.layout.item_expense, binding.expenseRecycler, false)
+        val itemView = layoutInflater.inflate(R.layout.item_expense, binding.expenseListContainer, false)
 
         val iconView = itemView.findViewById<ImageView>(R.id.categoryIconImageView)
         val nameView = itemView.findViewById<TextView>(R.id.categoryNameTextView)
@@ -288,6 +288,6 @@ class Expenses12Activity : AppCompatActivity() {
         dateView.text = expense.date
         amountView.text = "₱%.2f".format(expense.amount)
 
-        binding.expenseRecycler.addView(itemView, 0)
+        binding.expenseListContainer.addView(itemView, 0)
     }
 }
