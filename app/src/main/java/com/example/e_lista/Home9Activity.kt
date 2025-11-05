@@ -54,6 +54,10 @@ class Home9Activity : AppCompatActivity() {
             applyFilter(FilterType.MONTHLY)
         }
 
+        binding.fab.setOnClickListener {
+            startActivity(Intent(this, ReceiptScanUpload::class.java))
+        }
+
         // Bottom navigation setup
 
         binding.bottomNavigationView.setOnItemSelectedListener { item ->
