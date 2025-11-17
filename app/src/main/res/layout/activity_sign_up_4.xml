@@ -14,29 +14,16 @@
         android:layout_height="wrap_content">
 
         <!-- Back Button -->
-        <ImageButton
-            android:id="@+id/backButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Back"
-            android:padding="8dp"
-            android:src="@drawable/ic_arrow_back"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
 
         <!-- Logo -->
         <ImageView
             android:id="@+id/logoImageView"
             android:layout_width="100dp"
             android:layout_height="100dp"
-            android:layout_marginTop="64dp"
             android:src="@drawable/e_lista_logo"
-            app:layout_constraintTop_toBottomOf="@id/backButton"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            tools:layout_editor_absoluteY="130dp" />
 
         <!-- Title -->
         <TextView

@@ -64,7 +64,8 @@ class Expenses12Activity : AppCompatActivity() {
                 R.id.nav_home -> {
                     if (this !is Home9Activity) {
                         startActivity(Intent(this, Home9Activity::class.java))
-                        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+                       // overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+                        overridePendingTransition(0, 0)
                         finish()
                     }
                     true
@@ -77,7 +78,8 @@ class Expenses12Activity : AppCompatActivity() {
                 R.id.nav_camera_placeholder -> {
                     if (this !is ReceiptScanUpload) {
                         startActivity(Intent(this, ReceiptScanUpload::class.java))
-                        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                        //overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                        overridePendingTransition(0, 0)
                         finish()
                     }
                     true
@@ -86,7 +88,8 @@ class Expenses12Activity : AppCompatActivity() {
                 R.id.nav_stats -> {
                     if (this !is ChartDesign10Activity) {
                         startActivity(Intent(this, ChartDesign10Activity::class.java))
-                        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+                        //overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+                        overridePendingTransition(0, 0)
                         finish()
                     }
                     true
@@ -95,7 +98,8 @@ class Expenses12Activity : AppCompatActivity() {
                 R.id.nav_profile -> {
                     if (this !is Profile13Activity) {
                         startActivity(Intent(this, Profile13Activity::class.java))
-                        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                        //overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                        overridePendingTransition(0, 0)
                         finish()
                     }
                     true

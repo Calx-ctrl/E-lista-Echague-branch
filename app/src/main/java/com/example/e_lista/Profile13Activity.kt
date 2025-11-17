@@ -19,11 +19,6 @@ class Profile13Activity : AppCompatActivity() {
         // 🔹 Highlight the "Profile" tab when this screen is open
         binding.bottomNavigationView.selectedItemId = R.id.nav_profile
 
-        // 🔙 Back button
-        binding.backButton.setOnClickListener {
-            onBackPressedDispatcher.onBackPressed()
-        }
-
         // 📸 Floating Camera button
         //binding.fabCamera.setOnClickListener {
         //    val intent = Intent(this, Camera11Activity::class.java)
@@ -53,7 +48,8 @@ class Profile13Activity : AppCompatActivity() {
                 R.id.nav_home -> {
                     if (this !is Home9Activity) {
                         startActivity(Intent(this, Home9Activity::class.java))
-                        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+                        //overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+                        overridePendingTransition(0, 0)
                         finish()
                     }
                     true
@@ -62,7 +58,8 @@ class Profile13Activity : AppCompatActivity() {
                 R.id.nav_wallet -> {
                     if (this !is Expenses12Activity) {
                         startActivity(Intent(this, Expenses12Activity::class.java))
-                        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+                        //overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+                        overridePendingTransition(0, 0)
                         finish()
                     }
                     true
@@ -71,7 +68,8 @@ class Profile13Activity : AppCompatActivity() {
                 R.id.nav_camera_placeholder -> {
                     if (this !is ReceiptScanUpload) {
                         startActivity(Intent(this, ReceiptScanUpload::class.java))
-                        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+                        //overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+                        overridePendingTransition(0, 0)
                         finish()
                     }
                     true
@@ -80,7 +78,8 @@ class Profile13Activity : AppCompatActivity() {
                 R.id.nav_stats -> {
                     if (this !is ChartDesign10Activity) {
                         startActivity(Intent(this, ChartDesign10Activity::class.java))
-                        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+                        //overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+                        overridePendingTransition(0, 0)
                         finish()
                     }
                     true
