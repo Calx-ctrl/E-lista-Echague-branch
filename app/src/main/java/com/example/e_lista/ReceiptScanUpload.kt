@@ -30,7 +30,9 @@ class ReceiptScanUpload : AppCompatActivity() {
 
         // Camera capture button
 
+        if (savedInstanceState == null) {
             dispatchTakePictureIntent()
+        }
 
         //  Upload from gallery
         /*
@@ -68,6 +70,9 @@ class ReceiptScanUpload : AppCompatActivity() {
                     }
                 }
             }
+        }else if (resultCode == Activity.RESULT_CANCELED) {
+            // User pressed back in camera or gallery, finish this activity
+            finish()
         }
     }
 
