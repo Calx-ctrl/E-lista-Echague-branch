@@ -111,10 +111,22 @@ class Expenses12Activity : AppCompatActivity() {
         binding.bottomNavigationView.selectedItemId = R.id.nav_wallet
 
         // Filters
-        binding.filterAll.setOnClickListener { applyFilter(FilterType.ALL) }
-        binding.filterDaily.setOnClickListener { applyFilter(FilterType.DAILY) }
-        binding.filterWeekly.setOnClickListener { applyFilter(FilterType.WEEKLY) }
-        binding.filterMonthly.setOnClickListener { applyFilter(FilterType.MONTHLY) }
+        binding.filterAll.setOnClickListener {
+            expenseList.sortByDescending { it.date }
+            applyFilter(FilterType.ALL)
+        }
+        binding.filterDaily.setOnClickListener {
+            expenseList.sortByDescending { it.date }
+            applyFilter(FilterType.DAILY)
+        }
+        binding.filterWeekly.setOnClickListener {
+            expenseList.sortByDescending { it.date }
+            applyFilter(FilterType.WEEKLY)
+        }
+        binding.filterMonthly.setOnClickListener {
+            expenseList.sortByDescending { it.date }
+            applyFilter(FilterType.MONTHLY)
+        }
 
         updateFilterUI()
     }
@@ -134,6 +146,7 @@ class Expenses12Activity : AppCompatActivity() {
                     val expense = expenseSnap.getValue(Expense::class.java)
                     if (expense != null) expenseList.add(expense)
                 }
+                expenseList.sortByDescending { it.date }
                 applyFilter(currentFilter)
             }
 

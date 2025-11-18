@@ -61,14 +61,17 @@ class Home9Activity : AppCompatActivity() {
 
         // Button actions for filters
         binding.filterDay.setOnClickListener {
+            expenseList.sortByDescending { it.date }
             applyFilter(FilterType.DAILY)
         }
 
         binding.filterWeek.setOnClickListener {
+            expenseList.sortByDescending { it.date }
             applyFilter(FilterType.WEEKLY)
         }
 
         binding.filterMonth.setOnClickListener {
+            expenseList.sortByDescending { it.date }
             applyFilter(FilterType.MONTHLY)
         }
 
@@ -142,6 +145,7 @@ class Home9Activity : AppCompatActivity() {
                     val expense = expenseSnap.getValue(Expense::class.java)
                     expense?.let { expenseList.add(it) }
                 }
+                expenseList.sortByDescending { it.date }
                 applyFilter(currentFilter)  // Apply the current filter to display expenses
             }
 
