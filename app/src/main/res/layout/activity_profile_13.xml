@@ -146,6 +146,7 @@
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/faqItem"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
@@ -163,6 +164,7 @@
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/termsItem"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
@@ -170,6 +172,7 @@
                 android:textSize="14sp" />
 
             <TextView
+                android:id="@+id/privacyItem"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
@@ -177,6 +180,7 @@
                 android:textSize="14sp" />
 
             <TextView
+                android:id="@+id/aboutItem"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
