@@ -44,7 +44,10 @@
         <activity android:name=".AllSetActivity" android:exported="false" />
         <activity android:name=".OtpActivity" android:exported="false" />
         <activity android:name=".Profile13Activity" android:exported="false" />
-
+        <activity android:name=".AboutUsActivity" android:exported="false" />
+        <activity android:name=".PrivacyActivity" android:exported="false" />
+        <activity android:name=".TermsActivity" android:exported="false" />
+        <activity android:name=".FaqActivity" android:exported="false" />
         <activity
             android:name=".ChartDesign10Activity"
             android:exported="false" />
