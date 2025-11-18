@@ -13,9 +13,6 @@ class AboutUsActivity : AppCompatActivity() {
         binding = ActivityAboutUsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Back button
-        binding.backButton.setOnClickListener { onBackPressedDispatcher.onBackPressed() }
-
         // Set About Us content
         binding.aboutText.text = """
             At E-Lista, we believe that financial clarity should be simple, smart, and stress-free.

@@ -2,6 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F8F8F8">
@@ -18,32 +19,23 @@
         app:layout_constraintEnd_toEndOf="parent"/>
 
     <!-- Back Button -->
-    <ImageView
-        android:id="@+id/backButton"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:src="@drawable/arrowleft"
-        android:contentDescription="Back"
-        android:layout_margin="16dp"
-        app:layout_constraintTop_toTopOf="@id/headerBackground"
-        app:layout_constraintStart_toStartOf="parent"/>
 
     <!-- Title -->
+
+    <!-- Scrollable Content -->
     <TextView
         android:id="@+id/titleText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         android:text="About Us"
         android:textColor="@android:color/black"
-        android:textStyle="bold"
         android:textSize="20sp"
-        app:layout_constraintTop_toTopOf="@id/backButton"
-        app:layout_constraintBottom_toBottomOf="@id/backButton"
-        app:layout_constraintStart_toEndOf="@id/backButton"
+        android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/headerBackground" />
 
-    <!-- Scrollable Content -->
     <ScrollView
         android:layout_width="0dp"
         android:layout_height="0dp"

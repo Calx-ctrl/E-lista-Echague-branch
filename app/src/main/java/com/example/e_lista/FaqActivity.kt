@@ -13,9 +13,6 @@ class FaqActivity : AppCompatActivity() {
         binding = ActivityFaqBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Back button to finish this activity
-        binding.backButton.setOnClickListener { onBackPressedDispatcher.onBackPressed() }
-
         // Optional: set FAQ text programmatically if needed
         binding.faqText.text = """
             1. What is E-Lista?
@@ -24,17 +21,14 @@ class FaqActivity : AppCompatActivity() {
             2. Is it free?
             Yes! E-Lista is free to use, with premium features coming soon.
 
-            3. Can I customize categories?
-            Definitely. You can add, edit, or remove categories to match your lifestyle.
-
-            4. Does it work offline?
+            3. Does it work offline?
             Yes. You can log expenses anytime—your data syncs when you’re back online.
 
-            5. Is my data safe?
+            4. Is my data safe?
             Your privacy matters. E-Lista encrypts your data and keeps it secure.
 
-            6. How can I contact support?
-            Email us at support@e-lista.app — we’re happy to help!
+            5. How can I contact support?
+            Email us at elistaapp2025@gmail.com — we’re happy to help!
         """.trimIndent()
     }
 }
