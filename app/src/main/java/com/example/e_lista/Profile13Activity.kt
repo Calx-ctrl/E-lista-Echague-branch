@@ -32,7 +32,10 @@ class Profile13Activity : AppCompatActivity() {
             startActivity(intent)
             finish()
         }
-
+        binding.faqItem.setOnClickListener { startActivity(Intent(this, FaqActivity::class.java)) }
+        binding.termsItem.setOnClickListener { startActivity(Intent(this, TermsActivity::class.java)) }
+        binding.privacyItem.setOnClickListener { startActivity(Intent(this, PrivacyActivity::class.java)) }
+        binding.aboutItem.setOnClickListener { startActivity(Intent(this, AboutUsActivity::class.java)) }
         // 🌙 Dark Mode Toggle
         binding.switchDarkMode.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {

@@ -55,11 +55,6 @@ class SignupActivity : AppCompatActivity() {
         binding = ActivitySignUp4Binding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Back button
-        binding.backButton.setOnClickListener {
-            onBackPressedDispatcher.onBackPressed()
-        }
-
         // Firebase
         mAuth = FirebaseAuth.getInstance()
 
