@@ -7,13 +7,6 @@
     android:background="#F8F8F8">
 
     <!-- Curved Green Header -->
-
-    <!-- Back button -->
-
-    <!-- Title -->
-
-    <!-- Filter Chips -->
-
     <ImageView
         android:id="@+id/headerBackground"
         android:layout_width="match_parent"
@@ -21,10 +14,10 @@
         android:scaleType="fitXY"
         android:src="@drawable/header_background_curve"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- Title -->
     <TextView
         android:id="@+id/titleText"
         android:layout_width="wrap_content"
@@ -35,12 +28,10 @@
         android:textSize="20sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/headerBackground" />
 
-
-    <!-- PieChart -->
+    <!-- Filter Chips -->
     <com.google.android.material.chip.ChipGroup
         android:id="@+id/filterGroup"
         android:layout_width="wrap_content"
@@ -76,14 +67,17 @@
             android:text="Year" />
     </com.google.android.material.chip.ChipGroup>
 
-    <com.github.mikephil.charting.charts.PieChart
-        android:id="@+id/pieChart"
+    <!-- ✅ MOCK PIE CHART (Drawable instead of MPAndroidChart) -->
+    <ImageView
+        android:id="@+id/mockPieChart"
         android:layout_width="180dp"
         android:layout_height="180dp"
-        app:layout_constraintTop_toBottomOf="@id/filterGroup"
-        app:layout_constraintStart_toStartOf="parent"
+        android:src="@drawable/mock_pie_chart"
+        android:scaleType="fitCenter"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"/>
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toBottomOf="@id/filterGroup"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <!-- Category Labels -->
     <LinearLayout
@@ -91,9 +85,9 @@
         android:orientation="vertical"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="@id/pieChart"
-        app:layout_constraintBottom_toBottomOf="@id/pieChart"
-        app:layout_constraintStart_toEndOf="@id/pieChart"
+        app:layout_constraintTop_toTopOf="@id/mockPieChart"
+        app:layout_constraintBottom_toBottomOf="@id/mockPieChart"
+        app:layout_constraintStart_toEndOf="@id/mockPieChart"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp">
@@ -126,21 +120,19 @@
             android:textSize="14sp"/>
     </LinearLayout>
 
-
-    <!-- LineChart -->
-
-    <!-- Top Spending -->
-    <com.github.mikephil.charting.charts.LineChart
-        android:id="@+id/lineChart"
+    <!-- ✅ MOCK LINE CHART (Drawable instead of MPAndroidChart) -->
+    <ImageView
+        android:id="@+id/mockLineChart"
         android:layout_width="0dp"
         android:layout_height="200dp"
         android:layout_margin="16dp"
-        android:layout_marginTop="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.625"
+        android:src="@drawable/mock_line_chart"
+        android:scaleType="fitCenter"
+        app:layout_constraintTop_toBottomOf="@id/mockPieChart"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/pieChart" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Top Spending Label -->
     <TextView
         android:id="@+id/topSpendingLabel"
         android:layout_width="wrap_content"
@@ -149,7 +141,7 @@
         android:textSize="16sp"
         android:textStyle="bold"
         android:layout_marginStart="20dp"
-        app:layout_constraintTop_toBottomOf="@id/lineChart"
+        app:layout_constraintTop_toBottomOf="@id/mockLineChart"
         app:layout_constraintStart_toStartOf="parent"/>
 
     <!-- Floating Camera Button -->
@@ -177,4 +169,5 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:menu="@menu/bottom_nav_menu" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

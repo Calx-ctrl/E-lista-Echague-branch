@@ -89,7 +89,7 @@ class ChartDesign10Activity : AppCompatActivity() {
         val bills = intent.getFloatExtra("bills", 0f)
         val others = intent.getFloatExtra("others", 0f)
 
-        setupPieChart(binding.pieChart, food, transport, bills, others)
+        //setupPieChart(binding.pieChart, food, transport, bills, others)
     }
 
     private fun setupPieChart(pieChart: PieChart, food: Float, transport: Float, bills: Float, others: Float) {
