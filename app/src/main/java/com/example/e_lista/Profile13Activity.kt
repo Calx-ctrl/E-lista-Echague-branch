@@ -32,6 +32,9 @@ class Profile13Activity : AppCompatActivity() {
             startActivity(intent)
             finish()
         }
+        val user = FirebaseAuth.getInstance().currentUser
+        binding.emailText.text = user?.email ?: ""
+
         binding.faqItem.setOnClickListener { startActivity(Intent(this, FaqActivity::class.java)) }
         binding.termsItem.setOnClickListener { startActivity(Intent(this, TermsActivity::class.java)) }
         binding.privacyItem.setOnClickListener { startActivity(Intent(this, PrivacyActivity::class.java)) }
