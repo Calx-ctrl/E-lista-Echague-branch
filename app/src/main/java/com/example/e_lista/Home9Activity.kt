@@ -64,17 +64,26 @@ class Home9Activity : AppCompatActivity() {
 
         // Button actions for filters
         binding.filterDay.setOnClickListener {
-            expenseList.sortByDescending { it.date }
+            expenseList.sortWith(
+                compareByDescending<Expense> { it.date }  // Sort by date first
+                    .thenByDescending { it.timestamp }    // Then by full time inside the date
+            )
             applyFilter(FilterType.DAILY)
         }
 
         binding.filterWeek.setOnClickListener {
-            expenseList.sortByDescending { it.date }
+            expenseList.sortWith(
+                compareByDescending<Expense> { it.date }  // Sort by date first
+                    .thenByDescending { it.timestamp }    // Then by full time inside the date
+            )
             applyFilter(FilterType.WEEKLY)
         }
 
         binding.filterMonth.setOnClickListener {
-            expenseList.sortByDescending { it.date }
+            expenseList.sortWith(
+                compareByDescending<Expense> { it.date }  // Sort by date first
+                    .thenByDescending { it.timestamp }    // Then by full time inside the date
+            )
             applyFilter(FilterType.MONTHLY)
         }
 
@@ -155,7 +164,10 @@ class Home9Activity : AppCompatActivity() {
                     expense?.let { expenseList.add(it) }
                 }
 
-                expenseList.sortByDescending { it.date }
+                expenseList.sortWith(
+                    compareByDescending<Expense> { it.date }  // Sort by date first
+                        .thenByDescending { it.timestamp }    // Then by full time inside the date
+                )
                 applyFilter(currentFilter)
             }
 

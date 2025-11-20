@@ -114,19 +114,31 @@ class Expenses12Activity : AppCompatActivity() {
 
         // Filters
         binding.filterAll.setOnClickListener {
-            expenseList.sortByDescending { it.date }
+            expenseList.sortWith(
+                compareByDescending<Expense> { it.date }  // Sort by date first
+                    .thenByDescending { it.timestamp }    // Then by full time inside the date
+            )
             applyFilter(FilterType.ALL)
         }
         binding.filterDaily.setOnClickListener {
-            expenseList.sortByDescending { it.date }
+            expenseList.sortWith(
+                compareByDescending<Expense> { it.date }  // Sort by date first
+                    .thenByDescending { it.timestamp }    // Then by full time inside the date
+            )
             applyFilter(FilterType.DAILY)
         }
         binding.filterWeekly.setOnClickListener {
-            expenseList.sortByDescending { it.date }
+            expenseList.sortWith(
+                compareByDescending<Expense> { it.date }  // Sort by date first
+                    .thenByDescending { it.timestamp }    // Then by full time inside the date
+            )
             applyFilter(FilterType.WEEKLY)
         }
         binding.filterMonthly.setOnClickListener {
-            expenseList.sortByDescending { it.date }
+            expenseList.sortWith(
+                compareByDescending<Expense> { it.date }  // Sort by date first
+                    .thenByDescending { it.timestamp }    // Then by full time inside the date
+            )
             applyFilter(FilterType.MONTHLY)
         }
 
@@ -156,7 +168,10 @@ class Expenses12Activity : AppCompatActivity() {
                     expense?.let { expenseList.add(it) }
                 }
 
-                expenseList.sortByDescending { it.date }
+                expenseList.sortWith(
+                    compareByDescending<Expense> { it.date }  // Sort by date first
+                        .thenByDescending { it.timestamp }    // Then by full time inside the date
+                )
                 applyFilter(currentFilter)
             }
 
@@ -287,6 +302,7 @@ class Expenses12Activity : AppCompatActivity() {
             val amountText = amountEditText.text.toString().trim()
             val description = descEditText.text.toString().trim()
             val selectedCategory = categorySpinner.selectedItem.toString()
+            val timestamp = System.currentTimeMillis()
 
             if (name.isEmpty() || date.isEmpty() || amountText.isEmpty()) {
                 Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
@@ -300,7 +316,14 @@ class Expenses12Activity : AppCompatActivity() {
             }
 
             val expenseId = expenseDatabase.push().key ?: return@setOnClickListener
-            val newExpense = Expense(expenseId, selectedIcon, name, date, amount, description)
+            val newExpense = Expense(id=expenseId,
+                                    iconResId=selectedIcon,
+                                    title= name,
+                                    date= date,
+                                    amount=amount,
+                                    category = selectedCategory,
+                                    description = description,
+                                    timestamp = timestamp)
 
             expenseDatabase.child(expenseId).setValue(newExpense)
                 .addOnSuccessListener {
