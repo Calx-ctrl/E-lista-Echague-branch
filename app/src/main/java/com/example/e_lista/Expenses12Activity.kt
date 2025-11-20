@@ -57,7 +57,9 @@ class Expenses12Activity : AppCompatActivity() {
 
         // Floating camera button
         binding.fabCamera.setOnClickListener {
-            startActivity(Intent(this, ReceiptScanUpload::class.java))
+            val intent = Intent(this, ReceiptScanUpload::class.java)
+            intent.putExtra("parentContext", "Home9Activity")
+            startActivity(intent)
         }
 
         // Bottom navigation
@@ -259,13 +261,16 @@ class Expenses12Activity : AppCompatActivity() {
         val descEditText = dialogView.findViewById<EditText>(R.id.inputDescription)
         val doneButton = dialogView.findViewById<Button>(R.id.btnDone)
 
-        val categories = listOf("Food", "Transport", "Bills", "Shopping", "Entertainment", "Others")
+
+
+        val categories = listOf("Category...", "Food", "Transport", "Bills", "Shopping", "Entertainment", "Others")
         categorySpinner.adapter =
             ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, categories)
 
         var selectedIcon = R.drawable.ic_palette
         val calendar = Calendar.getInstance()
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        dateEditText.setText(dateFormat.format(calendar.time))
 
         val dialog = AlertDialog.Builder(this)
             .setView(dialogView)
@@ -308,6 +313,11 @@ class Expenses12Activity : AppCompatActivity() {
             val description = descEditText.text.toString().trim()
             val selectedCategory = categorySpinner.selectedItem.toString()
             val timestamp = System.currentTimeMillis()
+
+            if (selectedCategory == "Select Category") {
+                Toast.makeText(this, "Please choose a category", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
 
             if (name.isEmpty() || date.isEmpty() || amountText.isEmpty()) {
                 Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
