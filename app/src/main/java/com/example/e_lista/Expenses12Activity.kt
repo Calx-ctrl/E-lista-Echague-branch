@@ -283,7 +283,7 @@ class Expenses12Activity : AppCompatActivity() {
 
         // Date picker
         dateEditText.setOnClickListener {
-            DatePickerDialog(
+            val datePicker = DatePickerDialog(
                 this,
                 { _, year, month, day ->
                     calendar.set(year, month, day)
@@ -292,7 +292,12 @@ class Expenses12Activity : AppCompatActivity() {
                 calendar.get(Calendar.YEAR),
                 calendar.get(Calendar.MONTH),
                 calendar.get(Calendar.DAY_OF_MONTH)
-            ).show()
+            )
+
+            // 🔒 Prevent selecting future dates
+            datePicker.datePicker.maxDate = System.currentTimeMillis()
+
+            datePicker.show()
         }
 
         // Done button
@@ -369,6 +374,27 @@ class Expenses12Activity : AppCompatActivity() {
 
         setFieldsEditable(false, nameEditText, dateEditText, amountEditText, descEditText, spinnerCategory)
         iconButton.isEnabled = false
+
+        val calendar = Calendar.getInstance()
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+
+        dateEditText.setOnClickListener {
+            val datePicker = DatePickerDialog(
+                this,
+                { _, year, month, day ->
+                    calendar.set(year, month, day)
+                    dateEditText.setText(dateFormat.format(calendar.time))
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+            )
+
+            // 🔒 Prevent selecting future dates
+            datePicker.datePicker.maxDate = System.currentTimeMillis()
+
+            datePicker.show()
+        }
 
         val dialog = AlertDialog.Builder(this)
             .setView(dialogView)
