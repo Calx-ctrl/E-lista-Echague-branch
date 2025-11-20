@@ -24,6 +24,8 @@ class Expenses12Activity : AppCompatActivity() {
 
     private val expenseList = mutableListOf<Expense>()
     private val displayedList = mutableListOf<Expense>()
+    //bugfix for database trying to load after logging out
+    private var expensesListener: ValueEventListener? = null
 
     enum class FilterType { ALL, DAILY, WEEKLY, MONTHLY }
     private var currentFilter = FilterType.ALL
@@ -138,14 +140,22 @@ class Expenses12Activity : AppCompatActivity() {
         }
     }
 
+    override fun onStop() {
+        super.onStop()
+        expensesListener?.let {
+            expenseDatabase.removeEventListener(it)
+        }
+    }
+
     private fun loadExpenses() {
-        expenseDatabase.addValueEventListener(object : ValueEventListener {
+        expensesListener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 expenseList.clear()
                 for (expenseSnap in snapshot.children) {
                     val expense = expenseSnap.getValue(Expense::class.java)
-                    if (expense != null) expenseList.add(expense)
+                    expense?.let { expenseList.add(it) }
                 }
+
                 expenseList.sortByDescending { it.date }
                 applyFilter(currentFilter)
             }
@@ -157,7 +167,9 @@ class Expenses12Activity : AppCompatActivity() {
                     Toast.LENGTH_SHORT
                 ).show()
             }
-        })
+        }
+
+        expenseDatabase.addValueEventListener(expensesListener!!)
     }
 
     private fun applyFilter(filter: FilterType) {

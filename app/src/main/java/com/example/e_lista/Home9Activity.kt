@@ -28,6 +28,9 @@ class Home9Activity : AppCompatActivity() {
     private lateinit var userID: String
     private lateinit var expenseDatabase: DatabaseReference
     private lateinit var adapter: ExpenseAdapter
+    //bugfix for database trying to load after logging out
+    private var expensesListener: ValueEventListener? = null
+
     private val expenseList = mutableListOf<Expense>()
     private var displayedList = mutableListOf<Expense>()
     private var totalBalance = 0.0
@@ -137,22 +140,35 @@ class Home9Activity : AppCompatActivity() {
         }
     }
 
+    override fun onStop() {
+        super.onStop()
+        expensesListener?.let {
+            expenseDatabase.removeEventListener(it)
+        }
+    }
     private fun loadExpenses() {
-        expenseDatabase.addValueEventListener(object : ValueEventListener {
+        expensesListener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 expenseList.clear()
                 for (expenseSnap in snapshot.children) {
                     val expense = expenseSnap.getValue(Expense::class.java)
                     expense?.let { expenseList.add(it) }
                 }
+
                 expenseList.sortByDescending { it.date }
-                applyFilter(currentFilter)  // Apply the current filter to display expenses
+                applyFilter(currentFilter)
             }
 
             override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(this@Home9Activity, "Failed to load expenses: ${error.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this@Home9Activity,
+                    "Failed to load expenses: ${error.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
-        })
+        }
+
+        expenseDatabase.addValueEventListener(expensesListener!!)
     }
 
     private fun applyFilter(filter: FilterType) {
