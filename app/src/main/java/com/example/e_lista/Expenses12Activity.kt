@@ -330,11 +330,55 @@ class Expenses12Activity : AppCompatActivity() {
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
         dialog.show()
 
+        dateEditText.setOnClickListener {
+            val datePicker = DatePickerDialog(
+                this,
+                { _, year, month, day ->
+                    calendar.set(year, month, day)
+                    dateEditText.setText(dateFormat.format(calendar.time))
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+            )
+
+            datePicker.datePicker.maxDate = System.currentTimeMillis()
+            datePicker.show()
+        }
+
         analysis?.let { data ->
 
             // BASIC FIELDS
             nameEditText.setText(data.vendor)
-            dateEditText.setText(data.date)
+
+            // ✅ Parse and reformat date to yyyy-MM-dd
+            val parsedDate = try {
+                // Try parsing common formats
+                val possibleFormats = listOf(
+                    SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()),
+                    SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                )
+                var cal: Calendar? = null
+                for (fmt in possibleFormats) {
+                    try {
+                        val date = fmt.parse(data.date)
+                        if (date != null) {
+                            cal = Calendar.getInstance()
+                            cal.time = date
+                            break
+                        }
+                    } catch (e: Exception) {
+                        // ignore, try next format
+                    }
+                }
+                cal
+            } catch (e: Exception) {
+                null
+            }
+
+            val sdfOutput = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            dateEditText.setText(parsedDate?.let { sdfOutput.format(it.time) } ?: "")
+
             descEditText.setText(data.receiptID)
 
             // CLEAR existing item rows
@@ -358,27 +402,8 @@ class Expenses12Activity : AppCompatActivity() {
                 itemPrice.setText(priceDouble.toString())
             }
 
-            //add one empty row manually at the end
+            // add one empty row manually at the end
             addNewItemRow(itemContainer, Total = Total)
-        }
-
-        // Date picker
-        dateEditText.setOnClickListener {
-            val datePicker = DatePickerDialog(
-                this,
-                { _, year, month, day ->
-                    calendar.set(year, month, day)
-                    dateEditText.setText(dateFormat.format(calendar.time))
-                },
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH)
-            )
-
-            // 🔒 Prevent selecting future dates
-            datePicker.datePicker.maxDate = System.currentTimeMillis()
-
-            datePicker.show()
         }
 
         // Done button
