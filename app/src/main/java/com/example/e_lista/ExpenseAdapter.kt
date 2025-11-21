@@ -67,7 +67,7 @@ class ExpenseAdapter(
             holder.title.text = expense.title
             holder.date.text = if (expense.date.isNotEmpty()) expense.date
             else SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(Date())
-            holder.amount.text = "₱%.2f".format(expense.amount)
+            holder.amount.text = "₱%.2f".format(expense.total)
         }
     }
 

@@ -88,7 +88,7 @@
             android:layout_marginBottom="8dp"
             android:background="@drawable/rounded_input"
             android:gravity="top"
-            android:hint="Description (optional)"
+            android:hint="Description/Receipt ID (optional)"
             android:inputType="textMultiLine"
             android:padding="8dp" />
 
@@ -102,16 +102,11 @@
             android:background="@drawable/rounded_input"
             android:padding="8dp"/>
 
-        <!-- Amount Input -->
-        <EditText
-            android:id="@+id/inputAmount"
+        <LinearLayout
+            android:id="@+id/itemContainer"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginBottom="8dp"
-            android:hint="Amount"
-            android:inputType="numberDecimal"
-            android:background="@drawable/rounded_input"
-            android:padding="8dp" />
+            android:layout_height="wrap_content"
+            android:orientation="vertical"/>
 
         <!-- Description Input -->
 
