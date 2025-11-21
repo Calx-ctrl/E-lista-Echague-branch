@@ -89,31 +89,42 @@ object ApiClient {
                         val receiptID = extractedDataJson.optString("receipt_id", "Unknown ID")
 
 
-                        val productNamesArray: JSONArray? = extractedDataJson.optJSONArray("product_names")
-                        val productPricesArray: JSONArray? = extractedDataJson.optJSONArray("product_prices")
-
                         val items = mutableListOf<ReceiptItem>()
 
-                        val namesList = mutableListOf<String>()
-                        productNamesArray?.let {
-                            for (i in 0 until it.length()) {
-                                namesList.add(it.getString(i))
-                            }
-                        }
+                        val itemsArray: JSONArray? = extractedDataJson.optJSONArray("items")
 
-                        val pricesList = mutableListOf<String>()
-                        productPricesArray?.let {
-                            for (i in 0 until it.length()) {
-                                pricesList.add(it.getString(i))
+                        if (itemsArray != null) {
+                            for (i in 0 until itemsArray.length()) {
+                                val itemObj = itemsArray.getJSONObject(i)
+                                val name = itemObj.optString("name", "Unknown Item")
+                                val price = itemObj.optString("price", "0.00")
+                                items.add(ReceiptItem(name, price))
                             }
-                        }
+                        } else {
+                            // Fallback for old structure (if backend not yet updated)
+                            val productNamesArray: JSONArray? = extractedDataJson.optJSONArray("product_names")
+                            val productPricesArray: JSONArray? = extractedDataJson.optJSONArray("product_prices")
 
-                        // Align names and prices based on index
-                        val maxLength = maxOf(namesList.size, pricesList.size)
-                        for (i in 0 until maxLength) {
-                            val name = namesList.getOrElse(i) { "Unknown Item" }
-                            val price = pricesList.getOrElse(i) { "0.00" }
-                            items.add(ReceiptItem(name, price))
+                            val namesList = mutableListOf<String>()
+                            productNamesArray?.let {
+                                for (i in 0 until it.length()) {
+                                    namesList.add(it.getString(i))
+                                }
+                            }
+
+                            val pricesList = mutableListOf<String>()
+                            productPricesArray?.let {
+                                for (i in 0 until it.length()) {
+                                    pricesList.add(it.getString(i))
+                                }
+                            }
+
+                            val maxLength = maxOf(namesList.size, pricesList.size)
+                            for (i in 0 until maxLength) {
+                                val name = namesList.getOrElse(i) { "Unknown Item" }
+                                val price = pricesList.getOrElse(i) { "0.00" }
+                                items.add(ReceiptItem(name, price))
+                            }
                         }
 
                         val receiptAnalysis = ReceiptAnalysis(
