@@ -36,6 +36,16 @@ class Expenses12Activity : AppCompatActivity() {
     enum class FilterType { ALL, DAILY, WEEKLY, MONTHLY }
     private var currentFilter = FilterType.ALL
 
+    private val categoryIcons = mapOf(
+        "Category..." to R.drawable.ic_misc,
+        "Food" to R.drawable.ic_food,
+        "Transport" to R.drawable.ic_car,
+        "Bills" to R.drawable.ic_receipt,
+        "Shopping" to R.drawable.ic_shopping,
+        "Entertainment" to R.drawable.ic_entertainment,
+        "Others" to R.drawable.ic_misc
+    )
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityExpenses12Binding.inflate(layoutInflater)
@@ -259,7 +269,6 @@ class Expenses12Activity : AppCompatActivity() {
     private fun showAddExpenseDialog() {
         val dialogView = layoutInflater.inflate(R.layout.activity_add_category_12_1, null)
         val iconPreview = dialogView.findViewById<ImageView>(R.id.iconPreview)
-        val changeIconButton = dialogView.findViewById<Button>(R.id.btnChangeIcon)
         val categorySpinner = dialogView.findViewById<Spinner>(R.id.spinnerCategory)
         val nameEditText = dialogView.findViewById<EditText>(R.id.inputName)
         val dateEditText = dialogView.findViewById<EditText>(R.id.inputDate)
@@ -271,10 +280,33 @@ class Expenses12Activity : AppCompatActivity() {
         val doneButton = dialogView.findViewById<Button>(R.id.btnDone)
 
         val categories = listOf("Category...", "Food", "Transport", "Bills", "Shopping", "Entertainment", "Others")
-        categorySpinner.adapter =
-            ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, categories)
+        val adapter = ArrayAdapter(
+            this,
+            R.layout.spinner_item,
+            categories
+        )
 
-        var selectedIcon = R.drawable.ic_palette
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        categorySpinner.adapter = adapter
+        categorySpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(
+                parent: AdapterView<*>?,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
+                val selectedCategory = parent?.getItemAtPosition(position).toString()
+                categoryIcons[selectedCategory]?.let { iconRes ->
+                    iconPreview.setImageResource(iconRes)
+                }
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                // optional: reset to default icon if nothing selected
+                iconPreview.setImageResource(R.drawable.ic_palette)
+            }
+        }
+
         val calendar = Calendar.getInstance()
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         dateEditText.setText(dateFormat.format(calendar.time))
@@ -285,13 +317,6 @@ class Expenses12Activity : AppCompatActivity() {
             .create()
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
         dialog.show()
-
-        // Icon selection
-        changeIconButton.setOnClickListener {
-            showIconSelectionPopup(iconPreview) { newIcon ->
-                selectedIcon = newIcon
-            }
-        }
 
         // Date picker
         dateEditText.setOnClickListener {
@@ -373,7 +398,6 @@ class Expenses12Activity : AppCompatActivity() {
 
             val expenseId = expenseDatabase.push().key ?: return@setOnClickListener
             val newExpense = Expense(id=expenseId,
-                                    iconResId=selectedIcon,
                                     title= name,
                                     date= date,
                                     category = selectedCategory,
@@ -470,7 +494,6 @@ class Expenses12Activity : AppCompatActivity() {
 
         val container = dialogView.findViewById<LinearLayout>(R.id.dialogContainer)
         val iconPreview = dialogView.findViewById<ImageView>(R.id.iconPreview)
-        val iconButton = dialogView.findViewById<Button>(R.id.btnChangeIcon)
         val nameEditText = dialogView.findViewById<EditText>(R.id.inputName)
         val dateEditText = dialogView.findViewById<EditText>(R.id.inputDate)
         val descEditText = dialogView.findViewById<EditText>(R.id.inputDescription)
@@ -481,14 +504,38 @@ class Expenses12Activity : AppCompatActivity() {
         // ----------------------------------------------------------
         // 1️⃣ INITIAL VALUES
         // ----------------------------------------------------------
-        iconPreview.setImageResource(expense.iconResId)
         nameEditText.setText(expense.title)
         dateEditText.setText(expense.date)
         descEditText.setText(expense.description ?: "")
 
         val categories = listOf("Food", "Transport", "Bills", "Shopping", "Entertainment", "Others")
-        spinnerCategory.adapter =
-            ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, categories)
+        val adapter = ArrayAdapter(
+            this,
+            R.layout.spinner_item,
+            categories
+        )
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerCategory.adapter = adapter
+
+        spinnerCategory.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(
+                parent: AdapterView<*>?,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
+                val selectedCategory = parent?.getItemAtPosition(position).toString()
+                categoryIcons[selectedCategory]?.let { iconRes ->
+                    iconPreview.setImageResource(iconRes)
+                }
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                // optional: reset to default icon if nothing selected
+                iconPreview.setImageResource(R.drawable.ic_palette)
+            }
+        }
+
 
         spinnerCategory.setSelection(
             categories.indexOfFirst { it.equals(expense.category, true) }
@@ -508,7 +555,7 @@ class Expenses12Activity : AppCompatActivity() {
 
         setFieldsEditable(false, nameEditText, dateEditText, descEditText, spinnerCategory)
         setItemRowsEditable(itemContainer, false)
-        iconButton.isEnabled = false
+
 
         // ----------------------------------------------------------
         // 2️⃣ DATE PICKER
@@ -576,16 +623,8 @@ class Expenses12Activity : AppCompatActivity() {
                 // ENABLE ALL FIELDS
                 setFieldsEditable(true, nameEditText, dateEditText, descEditText, spinnerCategory)
                 setItemRowsEditable(itemContainer, true)
-                iconButton.isEnabled = true
                 doneButton.text = "Save"
 
-                // Icon selector
-                iconButton.setOnClickListener {
-                    showIconSelectionPopup(iconPreview) { newIcon ->
-                        iconPreview.setImageResource(newIcon)
-                        expense.iconResId = newIcon
-                    }
-                }
 
                 // Cancel button dynamically added
                 val cancelButton = Button(this).apply {
@@ -650,7 +689,6 @@ class Expenses12Activity : AppCompatActivity() {
                     category = spinnerCategory.selectedItem.toString(),
                     date = dateEditText.text.toString(),
                     description = descEditText.text.toString(),
-                    iconResId = expense.iconResId,
                     items = updatedItems,
                 )
 
@@ -694,7 +732,7 @@ class Expenses12Activity : AppCompatActivity() {
             }
         }
     }
-
+    /*
     // NEW icon selection popup
     private fun showIconSelectionPopup(iconPreview: ImageView, onIconSelected: (Int) -> Unit) {
         val dialogView = layoutInflater.inflate(R.layout.activity_category_popup_12_2, null)
@@ -734,7 +772,7 @@ class Expenses12Activity : AppCompatActivity() {
             }
             iconGrid.addView(imageView)
         }
-        }
+        }*/
 }
 
 

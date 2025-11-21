@@ -14,6 +14,14 @@ class ExpenseAdapter(
     private val onExpenseClick: (expense: Expense, position: Int) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
+    private val categoryIcons = mapOf(
+        "Food" to R.drawable.ic_food,
+        "Transport" to R.drawable.ic_car,
+        "Bills" to R.drawable.ic_receipt,
+        "Shopping" to R.drawable.ic_shopping,
+        "Entertainment" to R.drawable.ic_entertainment,
+        "Others" to R.drawable.ic_misc
+    )
     companion object {
         private const val TYPE_HEADER = 0
         private const val TYPE_ITEM = 1
@@ -42,7 +50,7 @@ class ExpenseAdapter(
     }
 
     override fun getItemViewType(position: Int): Int {
-        return if (expenseList[position].iconResId == 0) TYPE_HEADER else TYPE_ITEM
+        return if (expenseList[position].category.isEmpty()) TYPE_HEADER else TYPE_ITEM
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -63,7 +71,8 @@ class ExpenseAdapter(
             (holder as HeaderViewHolder).headerTitle.text = expense.title
         } else {
             holder as ExpenseViewHolder
-            holder.icon.setImageResource(expense.iconResId)
+            val iconRes = categoryIcons[expense.category] ?: R.drawable.ic_palette
+            holder.icon.setImageResource(iconRes)
             holder.title.text = expense.title
             holder.date.text = if (expense.date.isNotEmpty()) expense.date
             else SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(Date())

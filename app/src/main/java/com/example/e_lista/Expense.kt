@@ -11,7 +11,6 @@ data class ExpenseItem(
 )
 data class Expense(
     var id: String = "",                 // Firebase key
-    var iconResId: Int = R.drawable.ic_palette, // default icon
     var title: String = "",
     var date: String = "",
     val category: String = "",      // NEW
