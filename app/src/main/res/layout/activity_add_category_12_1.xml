@@ -83,6 +83,8 @@
                 android:cursorVisible="false"
                 android:longClickable="false"
                 android:inputType="none"
+                android:singleLine="true"
+                android:ellipsize="end"
                 />
 
         </LinearLayout>
@@ -95,7 +97,9 @@
             android:layout_marginBottom="8dp"
             android:hint="Name"
             android:background="@drawable/rounded_input"
-            android:padding="8dp" />
+            android:padding="8dp"
+            android:singleLine="true"
+            android:ellipsize="end"/>
 
         <!-- Date Input -->
         <EditText

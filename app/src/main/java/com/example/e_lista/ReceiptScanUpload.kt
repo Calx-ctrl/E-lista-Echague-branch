@@ -18,6 +18,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.example.e_lista.scanner.ApiClient
+import com.google.gson.Gson
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -196,12 +197,13 @@ class ReceiptScanUpload : AppCompatActivity() {
             runOnUiThread {
                 if (analysis != null) {
                     Toast.makeText(this, "Receipt scanned successfully!", Toast.LENGTH_SHORT).show()
-                    val intent = Intent(this, ScannedReceipt::class.java)
-                    intent.putExtra("analysis", analysis)
+                    val intent = Intent(this, Expenses12Activity::class.java)
+                    intent.putExtra("analysis", Gson().toJson(analysis)) // send as JSON string
                     startActivity(intent)
-
+                    finish()
                 } else {
                     Toast.makeText(this, "Failed to analyze receipt.", Toast.LENGTH_LONG).show()
+                    finish()
                 }
             }
         }

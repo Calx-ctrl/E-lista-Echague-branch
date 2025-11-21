@@ -20,11 +20,11 @@ class ScannedReceipt : AppCompatActivity() {
         setContentView(R.layout.activity_confirm_11_1)
 
 
-        productsLayout = findViewById(R.id.products)
-        tvStoreName = findViewById(R.id.storeName)
-        tvDate = findViewById(R.id.dateLabel)
-        tvTotal = findViewById(R.id.totalLabel)
-        tvReceiptId = findViewById(R.id.receipt_id)
+        productsLayout = findViewById(R.id.itemContainer)
+        tvStoreName = findViewById(R.id.inputName)
+        tvDate = findViewById(R.id.inputDate)
+        tvTotal = findViewById(R.id.Total)
+        tvReceiptId = findViewById(R.id.inputDescription)
 
 
         val analysis = intent.getSerializableExtra("analysis") as? ReceiptAnalysis
@@ -32,12 +32,6 @@ class ScannedReceipt : AppCompatActivity() {
         if (analysis != null) {
             tvStoreName.text = analysis.vendor
             tvDate.text = "Date: ${analysis.date}"
-
-            tvTotal.text = try {
-                "Total: ₱${String.format("%.2f", analysis.total.toDouble())}"
-            } catch (e: Exception) {
-                "Total: ₱${analysis.total}"
-            }
 
             tvReceiptId.text = "Receipt ID: ${analysis.receiptID}"
 

@@ -37,6 +37,7 @@ android {
     kotlin {
         jvmToolchain {
             languageVersion.set(JavaLanguageVersion.of(17))
+        }
     }
 
     buildFeatures {
@@ -57,6 +58,7 @@ dependencies {
     implementation("com.firebaseui:firebase-ui-database:8.0.2")
     implementation("com.google.android.gms:play-services-auth:21.1.1")
     implementation("com.facebook.android:facebook-android-sdk:latest.release")
+    implementation("com.google.code.gson:gson:2.11.0")
 
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
     implementation(libs.androidx.core.ktx)
@@ -95,4 +97,4 @@ dependencies {
     //scanner
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("androidx.recyclerview:recyclerview:1.4.0")
-}}
+}

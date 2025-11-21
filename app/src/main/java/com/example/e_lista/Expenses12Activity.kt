@@ -11,8 +11,10 @@ import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.e_lista.databinding.ActivityExpenses12Binding
+import com.example.e_lista.scanner.ReceiptAnalysis
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
+import com.google.gson.Gson
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -46,10 +48,18 @@ class Expenses12Activity : AppCompatActivity() {
         "Others" to R.drawable.ic_misc
     )
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityExpenses12Binding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        //If galing sa camera scan
+        val analysisJson = intent.getStringExtra("analysis")
+        if (analysisJson != null) {
+            val analysisObj = Gson().fromJson(analysisJson, ReceiptAnalysis::class.java)
+            showAddExpenseDialog(analysisObj)   // pass into dialog
+        }
 
         // Firebase setup
         mAuth = FirebaseAuth.getInstance()
@@ -266,7 +276,9 @@ class Expenses12Activity : AppCompatActivity() {
     } ?: false
 
     // Add Expense Dialog
-    private fun showAddExpenseDialog() {
+    private fun showAddExpenseDialog(
+        analysis: ReceiptAnalysis? = null
+    ){
         val dialogView = layoutInflater.inflate(R.layout.activity_add_category_12_1, null)
         val iconPreview = dialogView.findViewById<ImageView>(R.id.iconPreview)
         val categorySpinner = dialogView.findViewById<Spinner>(R.id.spinnerCategory)
@@ -317,6 +329,38 @@ class Expenses12Activity : AppCompatActivity() {
             .create()
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
         dialog.show()
+
+        analysis?.let { data ->
+
+            // BASIC FIELDS
+            nameEditText.setText(data.vendor)
+            dateEditText.setText(data.date)
+            descEditText.setText(data.receiptID)
+
+            // CLEAR existing item rows
+            itemContainer.removeAllViews()
+            itemCount = 0
+
+            // REBUILD each row using addNewItemRow()
+            data.items.forEach { receiptItem ->
+                addNewItemRow(itemContainer, Total = Total, autoAdd = false)  // <-- disable auto-add
+
+                val itemView = itemContainer.getChildAt(itemContainer.childCount - 1)
+                val itemName = itemView.findViewById<EditText>(R.id.etItem)
+                val itemPrice = itemView.findViewById<EditText>(R.id.etAmount)
+
+                itemName.setText(receiptItem.name)
+
+                val priceDouble = receiptItem.price
+                    .replace("[^0-9.]".toRegex(), "")
+                    .toDoubleOrNull() ?: 0.0
+
+                itemPrice.setText(priceDouble.toString())
+            }
+
+            //add one empty row manually at the end
+            addNewItemRow(itemContainer, Total = Total)
+        }
 
         // Date picker
         dateEditText.setOnClickListener {
@@ -423,7 +467,8 @@ class Expenses12Activity : AppCompatActivity() {
         itemContainer: LinearLayout,
         itemName: String = "",
         amountValue: Double? = null,
-        Total: TextView? = null   // <-- NEW
+        Total: TextView? = null,
+        autoAdd: Boolean = true   // <-- NEW FLAG
     ) {
         itemCount++
 
@@ -440,15 +485,16 @@ class Expenses12Activity : AppCompatActivity() {
 
         val watcher = object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if (!autoAdd) return  // <-- prevent auto-add while pre-filling
+
                 val isLastRow = (row == itemContainer.getChildAt(itemContainer.childCount - 1))
                 val itemText = etItem.text.toString().trim()
                 val amountText = etAmount.text.toString().trim()
                 val isFilled = itemText.isNotEmpty() || amountText.isNotEmpty()
 
                 if (isFilled && isLastRow) {
-                    addNewItemRow(itemContainer, Total = Total) // pass tvTotal down
+                    addNewItemRow(itemContainer, Total = Total)
                 }
 
                 if (!isFilled && !isLastRow) {
@@ -456,10 +502,8 @@ class Expenses12Activity : AppCompatActivity() {
                     renumberRows(itemContainer)
                 }
 
-                // 🔥 UPDATE TOTAL whenever amount changes
                 Total?.let { updateTotal(itemContainer, it) }
             }
-
             override fun afterTextChanged(s: Editable?) {}
         }
 
@@ -468,10 +512,9 @@ class Expenses12Activity : AppCompatActivity() {
 
         itemContainer.addView(row)
         renumberRows(itemContainer)
-
-        // 🔥 INITIAL total update
         Total?.let { updateTotal(itemContainer, it) }
     }
+
 
 
 
