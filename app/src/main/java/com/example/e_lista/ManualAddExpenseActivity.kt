@@ -14,7 +14,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class ManualAddExpenseActivity : AppCompatActivity() {
-
+    /*
     private lateinit var categoryListContainer: LinearLayout
     private lateinit var addButton: Button
     private lateinit var removeButton: Button
@@ -199,4 +199,5 @@ class ManualAddExpenseActivity : AppCompatActivity() {
             Toast.makeText(this, "No categories to remove", Toast.LENGTH_SHORT).show()
         }
     }
+    */
 }

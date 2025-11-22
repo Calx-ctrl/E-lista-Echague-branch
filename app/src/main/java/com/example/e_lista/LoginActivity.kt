@@ -210,11 +210,11 @@ class LoginActivity : AppCompatActivity() {
                         // ✅ Existing account — proceed
                         Toast.makeText(
                             this@LoginActivity,
-                            "Welcome back, ${user?.displayName}",
+                            "Welcome back",
                             Toast.LENGTH_SHORT
                         ).show()
-
-                        startActivity(Intent(this@LoginActivity, Home9Activity::class.java))
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        startActivity(intent)
                         finish()
                     }
 
@@ -516,10 +516,11 @@ class LoginActivity : AppCompatActivity() {
                                 val user = mAuth.currentUser
                                 Toast.makeText(
                                     this,
-                                    "Welcome back, ${user?.email}",
+                                    "Welcome back",
                                     Toast.LENGTH_SHORT
                                 ).show()
-                                startActivity(Intent(this, Home9Activity::class.java))
+                                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                startActivity(intent)
                                 finish()
                             } else {
                                 Toast.makeText(

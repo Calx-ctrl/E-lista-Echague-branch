@@ -18,11 +18,11 @@
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:layout_gravity="center_horizontal"
-            android:src="@drawable/ic_palette"
+            android:src="@drawable/ic_misc"
             android:contentDescription="Selected icon"
             android:layout_marginBottom="8dp" />
 
-        <!-- Change Icon Button (Add mode only) -->
+        <!-- Change Icon Button (Add mode only)
         <Button
             android:id="@+id/btnChangeIcon"
             android:layout_width="wrap_content"
@@ -34,15 +34,60 @@
             android:textColor="@android:color/white"
             android:layout_marginBottom="12dp"
             android:visibility="visible" />
-
+        -->
         <!-- Category Dropdown (Spinner) -->
-        <Spinner
-            android:id="@+id/spinnerCategory"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginBottom="12dp"
-            android:background="@drawable/rounded_input"
-            android:padding="8dp" />
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="2"
+            android:layout_marginBottom="12dp">
+
+            <RelativeLayout
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/rounded_input">
+
+                <Spinner
+                    android:id="@+id/spinnerCategory"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:dropDownWidth="match_parent"
+                    android:spinnerMode="dropdown"
+                    android:background="@android:color/transparent"
+                    android:popupBackground="@drawable/spinner_popup_bg"
+                    android:padding="0dp" />
+                <ImageView
+                    android:id="@+id/spinnerArrow"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginEnd="12dp"
+                    android:src="@drawable/ic_arrow_drop_down" />
+
+            </RelativeLayout>
+
+            <EditText
+                android:id="@+id/Total"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:text="Total: "
+                android:background="@drawable/rounded_input"
+                android:padding="8dp"
+                android:focusable="false"
+                android:cursorVisible="false"
+                android:longClickable="false"
+                android:inputType="none"
+                android:singleLine="true"
+                android:ellipsize="end"
+                />
+
+        </LinearLayout>
 
         <!-- Name Input -->
         <EditText
@@ -50,11 +95,24 @@
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginBottom="8dp"
-            android:hint="Expense name"
+            android:hint="Name"
             android:background="@drawable/rounded_input"
-            android:padding="8dp" />
+            android:padding="8dp"
+            android:singleLine="true"
+            android:ellipsize="end"/>
 
         <!-- Date Input -->
+        <EditText
+            android:id="@+id/inputDescription"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/rounded_input"
+            android:gravity="top"
+            android:hint="Description/Receipt ID (optional)"
+            android:inputType="textMultiLine"
+            android:padding="8dp" />
+
         <EditText
             android:id="@+id/inputDate"
             android:layout_width="match_parent"
@@ -63,30 +121,15 @@
             android:hint="Date"
             android:focusable="false"
             android:background="@drawable/rounded_input"
-            android:padding="8dp" />
+            android:padding="8dp"/>
 
-        <!-- Amount Input -->
-        <EditText
-            android:id="@+id/inputAmount"
+        <LinearLayout
+            android:id="@+id/itemContainer"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginBottom="8dp"
-            android:hint="Amount"
-            android:inputType="numberDecimal"
-            android:background="@drawable/rounded_input"
-            android:padding="8dp" />
+            android:layout_height="wrap_content"
+            android:orientation="vertical"/>
 
         <!-- Description Input -->
-        <EditText
-            android:id="@+id/inputDescription"
-            android:layout_width="match_parent"
-            android:layout_height="96dp"
-            android:layout_marginBottom="12dp"
-            android:hint="Description (optional)"
-            android:inputType="textMultiLine"
-            android:gravity="top"
-            android:background="@drawable/rounded_input"
-            android:padding="8dp" />
 
         <!-- Done Button -->
         <Button

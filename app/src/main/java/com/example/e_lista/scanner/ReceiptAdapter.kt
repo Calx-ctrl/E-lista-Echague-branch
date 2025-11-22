@@ -14,8 +14,8 @@ class ReceiptAdapter(private var items: List<ReceiptItem>) :
     RecyclerView.Adapter<ReceiptAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val txtName: TextView = view.findViewById(R.id.txtName)
-        val txtPrice: TextView = view.findViewById(R.id.txtPrice)
+        //val txtName: TextView = view.findViewById(R.id.txtName)
+        //val txtPrice: TextView = view.findViewById(R.id.txtPrice)
 
     }
 
@@ -27,8 +27,8 @@ class ReceiptAdapter(private var items: List<ReceiptItem>) :
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = items[position]
-        holder.txtName.text = item.name
-        holder.txtPrice.text = "₱${item.price}"
+        //holder.txtName.text = item.name
+        //holder.txtPrice.text = "₱${item.price}"
     }
 
     override fun getItemCount(): Int = items.size

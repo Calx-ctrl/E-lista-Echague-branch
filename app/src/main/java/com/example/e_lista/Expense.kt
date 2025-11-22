@@ -4,19 +4,22 @@ import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 
 // Main expense model — now parcelable so it can be sent between activities
-@Parcelize
+
+data class ExpenseItem(
+    var itemName: String = "",
+    var itemAmount: Double = 0.0
+)
 data class Expense(
     var id: String = "",                 // Firebase key
-    var iconResId: Int = R.drawable.ic_palette, // default icon
     var title: String = "",
     var date: String = "",
-    var amount: Double = 0.0,
     val category: String = "",      // NEW
-    var description: String? = ""        // optional
-) : Parcelable
+    var description: String? = "",
+    var timestamp: Long = 0L,
+    var items: MutableList<ExpenseItem> = mutableListOf()
+) {
+    val total: Double
+        get() = items.sumOf { it.itemAmount }
+}
 
-// Optional helper model for chart summaries, etc.
-data class ExpenseItem(
-    val category: String,
-    val amount: Double
-)
+
