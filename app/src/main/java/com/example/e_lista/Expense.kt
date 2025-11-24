@@ -17,6 +17,7 @@ data class Expense(
     var description: String? = "",
     var timestamp: Long = 0L,
     var items: MutableList<ExpenseItem> = mutableListOf()
+
 ) {
     val total: Double
         get() = items.sumOf { it.itemAmount }

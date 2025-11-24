@@ -9,8 +9,14 @@ import androidx.recyclerview.widget.RecyclerView
 import java.text.SimpleDateFormat
 import java.util.*
 
+// Sealed class for grouped list items
+sealed class GroupedListItem {
+    data class Header(val title: String) : GroupedListItem()
+    data class ExpenseItem(val expense: Expense) : GroupedListItem()
+}
+
 class ExpenseAdapter(
-    private val expenseList: MutableList<Expense>,
+    private val itemList: MutableList<GroupedListItem>,
     private val onExpenseClick: (expense: Expense, position: Int) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
@@ -22,12 +28,13 @@ class ExpenseAdapter(
         "Entertainment" to R.drawable.ic_entertainment,
         "Others" to R.drawable.ic_misc
     )
+
     companion object {
         private const val TYPE_HEADER = 0
         private const val TYPE_ITEM = 1
     }
 
-    // ViewHolder for expense item
+    // ViewHolder for expense items
     inner class ExpenseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val icon: ImageView = itemView.findViewById(R.id.categoryIconImageView)
         val title: TextView = itemView.findViewById(R.id.categoryNameTextView)
@@ -38,19 +45,23 @@ class ExpenseAdapter(
             itemView.setOnClickListener {
                 val position = adapterPosition
                 if (position != RecyclerView.NO_POSITION && getItemViewType(position) == TYPE_ITEM) {
-                    onExpenseClick(expenseList[position], position)
+                    val item = itemList[position] as GroupedListItem.ExpenseItem
+                    onExpenseClick(item.expense, position)
                 }
             }
         }
     }
 
-    // ViewHolder for header
+    // ViewHolder for headers
     inner class HeaderViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val headerTitle: TextView = itemView.findViewById(R.id.categoryNameTextView)
     }
 
     override fun getItemViewType(position: Int): Int {
-        return if (expenseList[position].category.isEmpty()) TYPE_HEADER else TYPE_ITEM
+        return when (itemList[position]) {
+            is GroupedListItem.Header -> TYPE_HEADER
+            is GroupedListItem.ExpenseItem -> TYPE_ITEM
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -66,37 +77,30 @@ class ExpenseAdapter(
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        val expense = expenseList[position]
-        if (getItemViewType(position) == TYPE_HEADER) {
-            (holder as HeaderViewHolder).headerTitle.text = expense.title
-        } else {
-            holder as ExpenseViewHolder
-            val iconRes = categoryIcons[expense.category] ?: R.drawable.ic_palette
-            holder.icon.setImageResource(iconRes)
-            holder.title.text = expense.title
-            holder.date.text = if (expense.date.isNotEmpty()) expense.date
-            else SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(Date())
-            holder.amount.text = "₱%.2f".format(expense.total)
+        val item = itemList[position]
+        when (item) {
+            is GroupedListItem.Header -> {
+                (holder as HeaderViewHolder).headerTitle.text = item.title
+            }
+            is GroupedListItem.ExpenseItem -> {
+                holder as ExpenseViewHolder
+                val expense = item.expense
+                val iconRes = categoryIcons[expense.category] ?: R.drawable.ic_palette
+                holder.icon.setImageResource(iconRes)
+                holder.title.text = expense.title
+                holder.date.text = expense.date.ifEmpty {
+                    SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(Date())
+                }
+                holder.amount.text = "₱%.2f".format(expense.total)
+            }
         }
     }
 
-    override fun getItemCount(): Int = expenseList.size
+    override fun getItemCount(): Int = itemList.size
 
-    fun addExpense(expense: Expense) {
-        expenseList.add(0, expense)
-        notifyItemInserted(0)
-    }
-
-    fun removeExpenseAt(position: Int) {
-        if (position in 0 until expenseList.size) {
-            expenseList.removeAt(position)
-            notifyItemRemoved(position)
-        }
-    }
-
-    fun updateExpenses(newList: List<Expense>) {
-        expenseList.clear()
-        expenseList.addAll(newList)
+    fun updateList(newList: List<GroupedListItem>) {
+        itemList.clear()
+        itemList.addAll(newList)
         notifyDataSetChanged()
     }
 }
