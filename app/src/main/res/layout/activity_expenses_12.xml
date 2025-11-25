@@ -45,78 +45,70 @@
         android:gravity="center_vertical"
         app:layout_constraintTop_toBottomOf="@id/titleText"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintEnd_toEndOf="parent"
+        android:weightSum="4">
 
-        <!-- Text Buttons (Dynamic width) -->
+        <!-- Filter Buttons -->
         <Button
             android:id="@+id/filterAll"
             android:layout_width="0dp"
             android:layout_height="36dp"
-            android:layout_weight="1.0"
+            android:layout_weight="1"
             android:layout_marginEnd="4dp"
             android:background="@drawable/rounded_filter"
             android:text="All"
-            android:textColor="@android:color/black"
-            android:autoSizeTextType="uniform"
-            android:autoSizeMinTextSize="10sp"
-            android:autoSizeMaxTextSize="14sp"
-            android:autoSizeStepGranularity="1sp"/>
+            android:textColor="@android:color/white"
+            android:textSize="11sp"
+            android:paddingHorizontal="8dp"/>
 
         <Button
             android:id="@+id/filterDaily"
             android:layout_width="0dp"
             android:layout_height="36dp"
-            android:layout_weight="1.0"
+            android:layout_weight="1"
             android:layout_marginEnd="4dp"
             android:background="@drawable/rounded_filter"
             android:text="Daily"
-            android:textColor="@android:color/black"
-            android:autoSizeTextType="uniform"
-            android:autoSizeMinTextSize="10sp"
-            android:autoSizeMaxTextSize="14sp"
-            android:autoSizeStepGranularity="1sp"/>
+            android:textColor="@android:color/white"
+            android:textSize="11sp"
+            android:paddingHorizontal="8dp"/>
 
         <Button
             android:id="@+id/filterMonthly"
             android:layout_width="0dp"
             android:layout_height="36dp"
-            android:layout_weight="1.1"
+            android:layout_weight="1"
             android:layout_marginEnd="4dp"
             android:background="@drawable/rounded_filter"
             android:text="Monthly"
-            android:textColor="@android:color/black"
-            android:autoSizeTextType="uniform"
-            android:autoSizeMinTextSize="10sp"
-            android:autoSizeMaxTextSize="14sp"
-            android:autoSizeStepGranularity="1sp"/>
+            android:textColor="@android:color/white"
+            android:textSize="11sp"
+            android:paddingHorizontal="8dp"/>
 
         <Button
             android:id="@+id/filterYearly"
             android:layout_width="0dp"
             android:layout_height="36dp"
-            android:layout_weight="1.1"
-            android:layout_marginEnd="6dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="4dp"
             android:background="@drawable/rounded_filter"
             android:text="Yearly"
-            android:textColor="@android:color/black"
-            android:autoSizeTextType="uniform"
-            android:autoSizeMinTextSize="10sp"
-            android:autoSizeMaxTextSize="14sp"
-            android:autoSizeStepGranularity="1sp"/>
+            android:textColor="@android:color/white"
+            android:textSize="11sp"
+            android:paddingHorizontal="8dp"/>
 
-        <!-- Calendar Icon Only Button -->
+        <!-- Calendar Icon Button -->
         <ImageButton
             android:id="@+id/btnFilterDate"
             android:layout_width="36dp"
             android:layout_height="36dp"
             android:layout_marginStart="8dp"
-
             android:background="@android:color/transparent"
-            android:src="@drawable/cat"
-        android:scaleType="centerInside"
-        android:contentDescription="Filter by date"/>
-
+            android:src="@drawable/ic_calendar"
+            android:scaleType="centerInside"
+            android:contentDescription="Filter by date"/>
     </LinearLayout>
+
 
     <!-- RecyclerView for Expenses -->
     <androidx.recyclerview.widget.RecyclerView

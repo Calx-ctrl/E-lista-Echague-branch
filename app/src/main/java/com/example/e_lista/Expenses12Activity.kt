@@ -38,7 +38,9 @@ class Expenses12Activity : AppCompatActivity() {
     lateinit var itemContainer: LinearLayout
     var itemCount = 0
 
-    enum class FilterType { ALL, DAILY, MONTHLY, YEARLY }
+    // ExpensesActivity.kt
+    enum class FilterType { ALL, DAILY_WEEK, MONTHLY, YEARLY }
+
 
     private var currentFilter = FilterType.ALL
 
@@ -179,7 +181,7 @@ class Expenses12Activity : AppCompatActivity() {
                 compareByDescending<Expense> { it.date }
                     .thenByDescending { it.timestamp }
             )
-            applyFilter(FilterType.DAILY) // Will group by day
+            applyFilter(FilterType.DAILY_WEEK) // Will group by day
         }
 
         binding.filterMonthly.setOnClickListener {
@@ -288,14 +290,15 @@ class Expenses12Activity : AppCompatActivity() {
 
         val filtered = when (filter) {
             FilterType.ALL -> expenseList
-            FilterType.DAILY -> expenseList.filter { isSameDay(it.date) }
+            FilterType.DAILY_WEEK -> expenseList.filter { isInCurrentWeek(it.date) }
             FilterType.MONTHLY -> expenseList
             FilterType.YEARLY -> expenseList
         }
 
+
         // Grouping logic
         val grouped = when (filter) {
-            FilterType.DAILY -> filtered.groupBy { it.date }
+            FilterType.DAILY_WEEK -> filtered.groupBy { it.date }       // group by date
             FilterType.MONTHLY -> filtered.groupBy { it.date.substring(0, 7) } // YYYY-MM
             FilterType.YEARLY -> filtered.groupBy { it.date.substring(0, 4) } // YYYY
             else -> mapOf("All Expenses" to filtered)
@@ -326,7 +329,7 @@ class Expenses12Activity : AppCompatActivity() {
         }
 
         style(binding.filterAll, currentFilter == FilterType.ALL)
-        style(binding.filterDaily, currentFilter == FilterType.DAILY)
+        style(binding.filterDaily, currentFilter == FilterType.DAILY_WEEK)
         style(binding.filterMonthly, currentFilter == FilterType.MONTHLY)
         style(binding.filterYearly, currentFilter == FilterType.YEARLY)
     }
@@ -359,6 +362,29 @@ class Expenses12Activity : AppCompatActivity() {
         cal.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
                 cal.get(Calendar.MONTH) == today.get(Calendar.MONTH)
     } ?: false
+
+    // Checks if a date string (yyyy-MM-dd) is in the current week
+    private fun isInCurrentWeek(dateStr: String): Boolean {
+        val cal = parseDateSafe(dateStr) ?: return false
+        val today = Calendar.getInstance()
+
+        // get first day of week
+        val weekStart = today.clone() as Calendar
+        weekStart.set(Calendar.DAY_OF_WEEK, weekStart.firstDayOfWeek)
+        weekStart.set(Calendar.HOUR_OF_DAY, 0)
+        weekStart.set(Calendar.MINUTE, 0)
+        weekStart.set(Calendar.SECOND, 0)
+        weekStart.set(Calendar.MILLISECOND, 0)
+
+        // get last day of week
+        val weekEnd = weekStart.clone() as Calendar
+        weekEnd.add(Calendar.DAY_OF_WEEK, 6)
+
+        return cal.timeInMillis in weekStart.timeInMillis..weekEnd.timeInMillis
+    }
+
+
+
 
     // Add Expense Dialog
     private fun showAddExpenseDialog(

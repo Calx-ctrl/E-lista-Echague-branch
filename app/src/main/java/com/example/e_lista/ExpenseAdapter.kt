@@ -80,21 +80,45 @@ class ExpenseAdapter(
         val item = itemList[position]
         when (item) {
             is GroupedListItem.Header -> {
-                (holder as HeaderViewHolder).headerTitle.text = item.title
+                val headerHolder = holder as HeaderViewHolder
+                // Format the header if it's a date
+                headerHolder.headerTitle.text = try {
+                    val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                    val outputFormat = SimpleDateFormat("EEE, MMM dd", Locale.getDefault())
+                    outputFormat.format(inputFormat.parse(item.title)!!)
+                } catch (e: Exception) {
+                    // Fallback to raw title
+                    item.title
+                }
             }
+
             is GroupedListItem.ExpenseItem -> {
-                holder as ExpenseViewHolder
+                val expenseHolder = holder as ExpenseViewHolder
                 val expense = item.expense
+
+                // Set icon
                 val iconRes = categoryIcons[expense.category] ?: R.drawable.ic_palette
-                holder.icon.setImageResource(iconRes)
-                holder.title.text = expense.title
-                holder.date.text = expense.date.ifEmpty {
+                expenseHolder.icon.setImageResource(iconRes)
+
+                // Set title
+                expenseHolder.title.text = expense.title
+
+                // Set formatted date
+                expenseHolder.date.text = try {
+                    val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                    val outputFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+                    outputFormat.format(inputFormat.parse(expense.date)!!)
+                } catch (e: Exception) {
+                    // Fallback to current date if parsing fails
                     SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(Date())
                 }
-                holder.amount.text = "₱%.2f".format(expense.total)
+
+                // Set amount
+                expenseHolder.amount.text = "₱%.2f".format(expense.total)
             }
         }
     }
+
 
     override fun getItemCount(): Int = itemList.size
 
