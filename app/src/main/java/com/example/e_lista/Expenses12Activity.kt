@@ -239,11 +239,13 @@ class Expenses12Activity : AppCompatActivity() {
         }
 
         if (index != -1) {
-            binding.expenseRecycler.scrollToPosition(index)
+            val layoutManager = binding.expenseRecycler.layoutManager as? LinearLayoutManager
+            layoutManager?.scrollToPositionWithOffset(index, 0) // 0 offset => header at top
         } else {
             Toast.makeText(this, "No expenses found on $formattedDate", Toast.LENGTH_SHORT).show()
         }
     }
+
 
 
 

@@ -68,7 +68,7 @@
             android:layout_weight="1"
             android:layout_marginEnd="4dp"
             android:background="@drawable/rounded_filter"
-            android:text="Daily"
+            android:text="Week"
             android:textColor="@android:color/white"
             android:textSize="11sp"
             android:paddingHorizontal="8dp"/>
@@ -80,7 +80,7 @@
             android:layout_weight="1"
             android:layout_marginEnd="4dp"
             android:background="@drawable/rounded_filter"
-            android:text="Monthly"
+            android:text="Month"
             android:textColor="@android:color/white"
             android:textSize="11sp"
             android:paddingHorizontal="8dp"/>
@@ -92,7 +92,7 @@
             android:layout_weight="1"
             android:layout_marginEnd="4dp"
             android:background="@drawable/rounded_filter"
-            android:text="Yearly"
+            android:text="Year"
             android:textColor="@android:color/white"
             android:textSize="11sp"
             android:paddingHorizontal="8dp"/>
