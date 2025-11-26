@@ -208,7 +208,7 @@ class Expenses12Activity : AppCompatActivity() {
         val month = calendar.get(Calendar.MONTH)
         val day = calendar.get(Calendar.DAY_OF_MONTH)
 
-        DatePickerDialog(this, { _, selectedYear, selectedMonth, selectedDay ->
+        val datepicker = DatePickerDialog(this, { _, selectedYear, selectedMonth, selectedDay ->
 
             val selectedDateStr = "%04d-%02d-%02d".format(selectedYear, selectedMonth + 1, selectedDay)
 
@@ -220,7 +220,10 @@ class Expenses12Activity : AppCompatActivity() {
                 scrollToDateHeader(selectedDateStr)
             }
 
-        }, year, month, day).show()
+        }, year, month, day)
+
+         datepicker.datePicker.maxDate = System.currentTimeMillis()
+         datepicker.show()
     }
 
     private fun scrollToDateHeader(dateStr: String) {
