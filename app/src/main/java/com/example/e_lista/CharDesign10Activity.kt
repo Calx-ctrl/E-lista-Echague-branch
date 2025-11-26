@@ -10,13 +10,32 @@ import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 
 class ChartDesign10Activity : AppCompatActivity() {
 
     private lateinit var binding: ActivityChartDesign10Binding
 
+    //para sa database
+    private lateinit var mAuth: FirebaseAuth
+    private lateinit var userID: String
+    private lateinit var expenseDatabase: DatabaseReference
+
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        //connection sa database
+        mAuth = FirebaseAuth.getInstance()
+        userID = mAuth.currentUser?.uid ?: "UnknownUser"
+        expenseDatabase = FirebaseDatabase.getInstance()
+            .getReference("ExpenseData")
+            .child(userID)
+
+
         binding = ActivityChartDesign10Binding.inflate(layoutInflater)
         setContentView(binding.root)
 

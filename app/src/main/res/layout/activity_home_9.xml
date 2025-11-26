@@ -37,28 +37,37 @@
             android:id="@+id/filterDay"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:backgroundTint="#1ABC9C"
+            android:background="@drawable/rounded_filter"
+            android:backgroundTint="#0F6E52"
             android:text="Day"
-            android:textColor="@android:color/white" />
+            android:textColor="@android:color/white"
+            android:textSize="14sp" />
 
         <Button
             android:id="@+id/filterWeek"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="16dp"
-            android:backgroundTint="#1ABC9C"
+            android:layout_marginStart="16dp"
+            android:background="@drawable/rounded_filter"
+            android:backgroundTint="#0F6E52"
             android:text="Week"
-            android:textColor="@android:color/white" />
+            android:textColor="@android:color/white"
+            android:textSize="14sp" />
 
         <Button
             android:id="@+id/filterMonth"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="16dp"
-            android:backgroundTint="#1ABC9C"
+            android:layout_marginStart="16dp"
+            android:background="@drawable/rounded_filter"
+            android:backgroundTint="#0F6E52"
             android:text="Month"
-            android:textColor="@android:color/white" />
+            android:textColor="@android:color/white"
+            android:textSize="14sp" />
     </LinearLayout>
+
+
+
 
     <androidx.cardview.widget.CardView
         android:id="@+id/balanceCard"

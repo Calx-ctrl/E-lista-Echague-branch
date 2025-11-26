@@ -18,6 +18,8 @@ import com.google.gson.Gson
 import java.text.SimpleDateFormat
 import java.util.*
 
+
+
 class Expenses12Activity : AppCompatActivity() {
 
     private lateinit var binding: ActivityExpenses12Binding
@@ -28,14 +30,18 @@ class Expenses12Activity : AppCompatActivity() {
 
     private val expenseList = mutableListOf<Expense>()
     private val displayedList = mutableListOf<Expense>()
+
     //bugfix for database trying to load after logging out
     private var expensesListener: ValueEventListener? = null
-
+    private var groupedDisplayedList = mutableListOf<GroupedListItem>()
     //item containers
     lateinit var itemContainer: LinearLayout
     var itemCount = 0
 
-    enum class FilterType { ALL, DAILY, WEEKLY, MONTHLY }
+    // ExpensesActivity.kt
+    enum class FilterType { ALL, DAILY_WEEK, MONTHLY, YEARLY }
+
+
     private var currentFilter = FilterType.ALL
 
     private val categoryIcons = mapOf(
@@ -54,11 +60,11 @@ class Expenses12Activity : AppCompatActivity() {
         binding = ActivityExpenses12Binding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        //If galing sa camera scan
+        // If coming from camera scan
         val analysisJson = intent.getStringExtra("analysis")
         if (analysisJson != null) {
             val analysisObj = Gson().fromJson(analysisJson, ReceiptAnalysis::class.java)
-            showAddExpenseDialog(analysisObj)   // pass into dialog
+            showAddExpenseDialog(analysisObj) // Pass scanned receipt into dialog
         }
 
         // Firebase setup
@@ -68,110 +74,181 @@ class Expenses12Activity : AppCompatActivity() {
             .getReference("ExpenseData")
             .child(userID)
 
+        binding.btnFilterDate.setOnClickListener {
+            openDatePicker()
+        }
+
+        // -------------------------------
         // RecyclerView setup
-        adapter = ExpenseAdapter(displayedList) { expense, _ ->
-            showExpenseDetailsDialog(expense)
+        // -------------------------------
+        // Use groupedDisplayedList to support daily/monthly/yearly grouping
+
+        // 1️⃣ Convert displayedList (MutableList<Expense>) into groupedDisplayedList (MutableList<GroupedListItem>)
+        groupedDisplayedList = mutableListOf<GroupedListItem>()
+
+// Example grouping by date for daily filter
+        val grouped = displayedList.groupBy { it.date } // you can also group by month or year later
+        grouped.forEach { (date, expenses) ->
+            groupedDisplayedList.add(GroupedListItem.Header(date))  // header for the date
+            expenses.forEach { expense ->
+                groupedDisplayedList.add(GroupedListItem.ExpenseItem(expense)) // wrap expense
+            }
+        }
+
+// 2️⃣ Pass the grouped list to the adapter
+        adapter = ExpenseAdapter(groupedDisplayedList) { item, _ ->
+                showExpenseDetailsDialog(item)
         }
         binding.expenseRecycler.layoutManager = LinearLayoutManager(this)
         binding.expenseRecycler.adapter = adapter
 
-        // Load expenses
+
+        // Load expenses from Firebase
         loadExpenses()
 
+        // -------------------------------
         // Add Expense button
+        // -------------------------------
         binding.btnAddExpense.setOnClickListener { showAddExpenseDialog() }
 
+        // -------------------------------
         // Floating camera button
+        // -------------------------------
         binding.fabCamera.setOnClickListener {
             val intent = Intent(this, ReceiptScanUpload::class.java)
             intent.putExtra("parentContext", "Home9Activity")
             startActivity(intent)
         }
 
-        // Bottom navigation
+        // -------------------------------
+        // Bottom navigation setup
+        // -------------------------------
         binding.bottomNavigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_home -> {
                     if (this !is Home9Activity) {
                         startActivity(Intent(this, Home9Activity::class.java))
-                       // overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
                         overridePendingTransition(0, 0)
                         finish()
                     }
                     true
                 }
-
-                R.id.nav_wallet -> {
-                    true
-                }
-
+                R.id.nav_wallet -> true
                 R.id.nav_camera_placeholder -> {
                     if (this !is ReceiptScanUpload) {
                         startActivity(Intent(this, ReceiptScanUpload::class.java))
-                        //overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
                         overridePendingTransition(0, 0)
                         finish()
                     }
                     true
                 }
-
                 R.id.nav_stats -> {
                     if (this !is ChartDesign10Activity) {
                         startActivity(Intent(this, ChartDesign10Activity::class.java))
-                        //overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
                         overridePendingTransition(0, 0)
                         finish()
                     }
                     true
                 }
-
                 R.id.nav_profile -> {
                     if (this !is Profile13Activity) {
                         startActivity(Intent(this, Profile13Activity::class.java))
-                        //overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
                         overridePendingTransition(0, 0)
                         finish()
                     }
                     true
                 }
-
                 else -> false
             }
         }
         binding.bottomNavigationView.selectedItemId = R.id.nav_wallet
 
-        // Filters
+        // -------------------------------
+        // Filters setup
+        // -------------------------------
         binding.filterAll.setOnClickListener {
             expenseList.sortWith(
-                compareByDescending<Expense> { it.date }  // Sort by date first
-                    .thenByDescending { it.timestamp }    // Then by full time inside the date
+                compareByDescending<Expense> { it.date }
+                    .thenByDescending { it.timestamp }
             )
             applyFilter(FilterType.ALL)
         }
+
         binding.filterDaily.setOnClickListener {
             expenseList.sortWith(
-                compareByDescending<Expense> { it.date }  // Sort by date first
-                    .thenByDescending { it.timestamp }    // Then by full time inside the date
+                compareByDescending<Expense> { it.date }
+                    .thenByDescending { it.timestamp }
             )
-            applyFilter(FilterType.DAILY)
-        }
-        binding.filterWeekly.setOnClickListener {
-            expenseList.sortWith(
-                compareByDescending<Expense> { it.date }  // Sort by date first
-                    .thenByDescending { it.timestamp }    // Then by full time inside the date
-            )
-            applyFilter(FilterType.WEEKLY)
-        }
-        binding.filterMonthly.setOnClickListener {
-            expenseList.sortWith(
-                compareByDescending<Expense> { it.date }  // Sort by date first
-                    .thenByDescending { it.timestamp }    // Then by full time inside the date
-            )
-            applyFilter(FilterType.MONTHLY)
+            applyFilter(FilterType.DAILY_WEEK) // Will group by day
         }
 
+        binding.filterMonthly.setOnClickListener {
+            expenseList.sortWith(
+                compareByDescending<Expense> { it.date }
+                    .thenByDescending { it.timestamp }
+            )
+            applyFilter(FilterType.MONTHLY) // Will group by month
+        }
+
+        binding.filterYearly.setOnClickListener {
+            expenseList.sortWith(
+                compareByDescending<Expense> { it.date }
+                    .thenByDescending { it.timestamp }
+            )
+            applyFilter(FilterType.YEARLY) // Will group by year
+        }
+
+        // Update filter button UI colors
         updateFilterUI()
     }
+     private fun openDatePicker() {
+        val calendar = Calendar.getInstance()
+
+        val year = calendar.get(Calendar.YEAR)
+        val month = calendar.get(Calendar.MONTH)
+        val day = calendar.get(Calendar.DAY_OF_MONTH)
+
+        DatePickerDialog(this, { _, selectedYear, selectedMonth, selectedDay ->
+
+            val selectedDateStr = "%04d-%02d-%02d".format(selectedYear, selectedMonth + 1, selectedDay)
+
+            // Switch to ALL filter and rebuild grouped list
+            applyFilter(FilterType.ALL)
+
+            // Scroll to the selected date header after adapter updates
+            binding.expenseRecycler.post {
+                scrollToDateHeader(selectedDateStr)
+            }
+
+        }, year, month, day).show()
+    }
+
+    private fun scrollToDateHeader(dateStr: String) {
+        val sdfInput = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val sdfOutput = SimpleDateFormat("EEEE, MMM dd, yyyy", Locale.getDefault()) // Header format used in applyFilter
+
+        val formattedDate = try {
+            sdfOutput.format(sdfInput.parse(dateStr) ?: Date())
+        } catch (e: Exception) {
+            dateStr
+        }
+
+        // Find the index of the header in groupedDisplayedList
+        val index = groupedDisplayedList.indexOfFirst {
+            it is GroupedListItem.Header && it.title == formattedDate
+        }
+
+        if (index != -1) {
+            val layoutManager = binding.expenseRecycler.layoutManager as? LinearLayoutManager
+            layoutManager?.scrollToPositionWithOffset(index, 0) // 0 offset => header at top
+        } else {
+            Toast.makeText(this, "No expenses found on $formattedDate", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
+
+
 
     private fun navigateTo(cls: Class<*>) {
         if (this::class.java != cls) {
@@ -196,11 +273,10 @@ class Expenses12Activity : AppCompatActivity() {
                     expense?.let { expenseList.add(it) }
                 }
 
-                expenseList.sortWith(
-                    compareByDescending<Expense> { it.date }  // Sort by date first
-                        .thenByDescending { it.timestamp }    // Then by full time inside the date
-                )
-                applyFilter(currentFilter)
+                expenseList.sortWith(compareByDescending<Expense> { it.date }
+                    .thenByDescending { it.timestamp })
+
+                applyFilter(currentFilter) // this will rebuild groupedDisplayedList and notify adapter
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -217,17 +293,45 @@ class Expenses12Activity : AppCompatActivity() {
 
     private fun applyFilter(filter: FilterType) {
         currentFilter = filter
-        displayedList.clear()
+        groupedDisplayedList.clear()
+
         val filtered = when (filter) {
-            FilterType.ALL -> expenseList
-            FilterType.DAILY -> expenseList.filter { isSameDay(it.date) }
-            FilterType.WEEKLY -> expenseList.filter { isSameWeek(it.date) }
-            FilterType.MONTHLY -> expenseList.filter { isSameMonth(it.date) }
+            FilterType.ALL -> expenseList               // we'll group by date below
+            FilterType.DAILY_WEEK -> expenseList.filter { isInCurrentWeek(it.date) }
+            FilterType.MONTHLY -> expenseList.filter { isSameMonth(it.date) }  // current month
+            FilterType.YEARLY -> expenseList.filter { isSameYear(it.date) }    // current year
         }
-        displayedList.addAll(filtered)
+
+        // Grouping logic
+        val grouped = when (filter) {
+            FilterType.ALL -> filtered.groupBy { it.date }.toSortedMap(reverseOrder()) // group by date
+            FilterType.DAILY_WEEK -> filtered.groupBy { it.date }                      // group by today
+            FilterType.MONTHLY -> filtered.groupBy { it.date.substring(0, 7) }        // YYYY-MM
+            FilterType.YEARLY -> filtered.groupBy { it.date.substring(0, 4) }         // YYYY
+        }
+
+        // Format headers nicely for daily grouping
+        val sdfInput = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val sdfOutput = SimpleDateFormat("EEEE, MMM dd, yyyy", Locale.getDefault()) // Monday, Nov 25, 2025
+
+        grouped.forEach { (groupTitle, expenses) ->
+            val formattedTitle = try {
+                sdfOutput.format(sdfInput.parse(groupTitle) ?: Date())
+            } catch (e: Exception) {
+                groupTitle // fallback to original if parsing fails
+            }
+
+            groupedDisplayedList.add(GroupedListItem.Header(formattedTitle))
+            expenses.forEach { groupedDisplayedList.add(GroupedListItem.ExpenseItem(it)) }
+        }
+
         adapter.notifyDataSetChanged()
         updateFilterUI()
     }
+
+
+
+
 
     private fun updateFilterUI() {
         val activeColor = resources.getColor(R.color.green_primary, theme)
@@ -241,10 +345,11 @@ class Expenses12Activity : AppCompatActivity() {
         }
 
         style(binding.filterAll, currentFilter == FilterType.ALL)
-        style(binding.filterDaily, currentFilter == FilterType.DAILY)
-        style(binding.filterWeekly, currentFilter == FilterType.WEEKLY)
+        style(binding.filterDaily, currentFilter == FilterType.DAILY_WEEK)
         style(binding.filterMonthly, currentFilter == FilterType.MONTHLY)
+        style(binding.filterYearly, currentFilter == FilterType.YEARLY)
     }
+
 
     private fun parseDateSafe(dateStr: String): Calendar? {
         return try {
@@ -263,10 +368,9 @@ class Expenses12Activity : AppCompatActivity() {
                 cal.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)
     } ?: false
 
-    private fun isSameWeek(dateStr: String) = parseDateSafe(dateStr)?.let { cal ->
+    private fun isSameYear(dateStr: String) = parseDateSafe(dateStr)?.let { cal ->
         val today = Calendar.getInstance()
-        cal.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
-                cal.get(Calendar.WEEK_OF_YEAR) == today.get(Calendar.WEEK_OF_YEAR)
+        cal.get(Calendar.YEAR) == today.get(Calendar.YEAR)
     } ?: false
 
     private fun isSameMonth(dateStr: String) = parseDateSafe(dateStr)?.let { cal ->
@@ -275,10 +379,33 @@ class Expenses12Activity : AppCompatActivity() {
                 cal.get(Calendar.MONTH) == today.get(Calendar.MONTH)
     } ?: false
 
+    // Checks if a date string (yyyy-MM-dd) is in the current week
+    private fun isInCurrentWeek(dateStr: String): Boolean {
+        val cal = parseDateSafe(dateStr) ?: return false
+        val today = Calendar.getInstance()
+
+        // get first day of week
+        val weekStart = today.clone() as Calendar
+        weekStart.set(Calendar.DAY_OF_WEEK, weekStart.firstDayOfWeek)
+        weekStart.set(Calendar.HOUR_OF_DAY, 0)
+        weekStart.set(Calendar.MINUTE, 0)
+        weekStart.set(Calendar.SECOND, 0)
+        weekStart.set(Calendar.MILLISECOND, 0)
+
+        // get last day of week
+        val weekEnd = weekStart.clone() as Calendar
+        weekEnd.add(Calendar.DAY_OF_WEEK, 6)
+
+        return cal.timeInMillis in weekStart.timeInMillis..weekEnd.timeInMillis
+    }
+
+
+
+
     // Add Expense Dialog
     private fun showAddExpenseDialog(
         analysis: ReceiptAnalysis? = null
-    ){
+    ) {
         val dialogView = layoutInflater.inflate(R.layout.activity_add_category_12_1, null)
         val iconPreview = dialogView.findViewById<ImageView>(R.id.iconPreview)
         val categorySpinner = dialogView.findViewById<Spinner>(R.id.spinnerCategory)
@@ -291,7 +418,15 @@ class Expenses12Activity : AppCompatActivity() {
         val descEditText = dialogView.findViewById<EditText>(R.id.inputDescription)
         val doneButton = dialogView.findViewById<Button>(R.id.btnDone)
 
-        val categories = listOf("Category...", "Food", "Transport", "Bills", "Shopping", "Entertainment", "Others")
+        val categories = listOf(
+            "Category...",
+            "Food",
+            "Transport",
+            "Bills",
+            "Shopping",
+            "Entertainment",
+            "Others"
+        )
         val adapter = ArrayAdapter(
             this,
             R.layout.spinner_item,
@@ -387,7 +522,11 @@ class Expenses12Activity : AppCompatActivity() {
 
             // REBUILD each row using addNewItemRow()
             data.items.forEach { receiptItem ->
-                addNewItemRow(itemContainer, Total = Total, autoAdd = false)  // <-- disable auto-add
+                addNewItemRow(
+                    itemContainer,
+                    Total = Total,
+                    autoAdd = false
+                )  // <-- disable auto-add
 
                 val itemView = itemContainer.getChildAt(itemContainer.childCount - 1)
                 val itemName = itemView.findViewById<EditText>(R.id.etItem)
@@ -432,24 +571,37 @@ class Expenses12Activity : AppCompatActivity() {
 
                 if (row is LinearLayout && row.tag == "itemRow") {
                     val itemText = row.findViewById<EditText>(R.id.etItem).text.toString().trim()
-                    val amountText = row.findViewById<EditText>(R.id.etAmount).text.toString().trim()
+                    val amountText =
+                        row.findViewById<EditText>(R.id.etAmount).text.toString().trim()
 
                     if (itemText.isNotEmpty() || amountText.isNotEmpty()) {
                         // Validate item name
                         if (itemText.isEmpty()) {
-                            Toast.makeText(this, "Please enter item name for amount \"$amountText\"", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                this,
+                                "Please enter item name for amount \"$amountText\"",
+                                Toast.LENGTH_SHORT
+                            ).show()
                             return@setOnClickListener
                         }
 
                         // Validate amount
                         if (amountText.isEmpty()) {
-                            Toast.makeText(this, "Please enter amount for item \"$itemText\"", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                this,
+                                "Please enter amount for item \"$itemText\"",
+                                Toast.LENGTH_SHORT
+                            ).show()
                             return@setOnClickListener
                         }
 
                         val amountValue = amountText.toDoubleOrNull()
                         if (amountValue == null) {
-                            Toast.makeText(this, "Enter a valid number for \"$itemText\"", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                this,
+                                "Enter a valid number for \"$itemText\"",
+                                Toast.LENGTH_SHORT
+                            ).show()
                             return@setOnClickListener
                         }
 
@@ -466,13 +618,15 @@ class Expenses12Activity : AppCompatActivity() {
             }
 
             val expenseId = expenseDatabase.push().key ?: return@setOnClickListener
-            val newExpense = Expense(id=expenseId,
-                                    title= name,
-                                    date= date,
-                                    category = selectedCategory,
-                                    description = description,
-                                    timestamp = timestamp,
-                                    items = itemsList  )
+            val newExpense = Expense(
+                id = expenseId,
+                title = name,
+                date = date,
+                category = selectedCategory,
+                description = description,
+                timestamp = timestamp,
+                items = itemsList
+            )
 
             expenseDatabase.child(expenseId).setValue(newExpense)
                 .addOnSuccessListener {
@@ -529,6 +683,7 @@ class Expenses12Activity : AppCompatActivity() {
 
                 Total?.let { updateTotal(itemContainer, it) }
             }
+
             override fun afterTextChanged(s: Editable?) {}
         }
 
@@ -539,9 +694,6 @@ class Expenses12Activity : AppCompatActivity() {
         renumberRows(itemContainer)
         Total?.let { updateTotal(itemContainer, it) }
     }
-
-
-
 
 
     private fun renumberRows(container: LinearLayout) {
@@ -614,7 +766,12 @@ class Expenses12Activity : AppCompatActivity() {
         itemContainer.removeAllViews()
         if (expense.items != null && expense.items.isNotEmpty()) {
             expense.items.forEach { item ->
-                addNewItemRow(itemContainer, Total = Total, itemName = item.itemName, amountValue = item.itemAmount)
+                addNewItemRow(
+                    itemContainer,
+                    Total = Total,
+                    itemName = item.itemName,
+                    amountValue = item.itemAmount
+                )
             }
             addNewItemRow(itemContainer, Total = Total)
         } else {
@@ -717,25 +874,39 @@ class Expenses12Activity : AppCompatActivity() {
                 for (i in 0 until itemContainer.childCount) {
                     val row = itemContainer.getChildAt(i)
                     if (row.tag == "itemRow") {
-                        val itemName = row.findViewById<EditText>(R.id.etItem).text.toString().trim()
-                        val amountText = row.findViewById<EditText>(R.id.etAmount).text.toString().trim()
+                        val itemName =
+                            row.findViewById<EditText>(R.id.etItem).text.toString().trim()
+                        val amountText =
+                            row.findViewById<EditText>(R.id.etAmount).text.toString().trim()
 
                         if (itemName.isNotEmpty() || amountText.isNotEmpty()) {
                             // Validate item name
                             if (itemName.isEmpty()) {
-                                Toast.makeText(this, "Please enter item name for amount \"$amountText\"", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    this,
+                                    "Please enter item name for amount \"$amountText\"",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                                 return@setOnClickListener
                             }
 
                             // Validate amount
                             if (amountText.isEmpty()) {
-                                Toast.makeText(this, "Please enter amount for item \"$itemName\"", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    this,
+                                    "Please enter amount for item \"$itemName\"",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                                 return@setOnClickListener
                             }
 
                             val amountValue = amountText.toDoubleOrNull()
                             if (amountValue == null) {
-                                Toast.makeText(this, "Enter a valid number for \"$itemName\"", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    this,
+                                    "Enter a valid number for \"$itemName\"",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                                 return@setOnClickListener
                             }
 
@@ -762,9 +933,19 @@ class Expenses12Activity : AppCompatActivity() {
 
                 expenseDatabase.child(expense.id).setValue(updatedExpense)
                     .addOnSuccessListener {
+                        // 1️⃣ Update local list
+                        val index = expenseList.indexOfFirst { it.id == updatedExpense.id }
+                        if (index != -1) {
+                            expenseList[index] = updatedExpense
+                        }
+
+                        // 2️⃣ Re-apply the current filter to refresh groupedDisplayedList & adapter
+                        applyFilter(currentFilter)
+
                         Toast.makeText(this, "Expense updated", Toast.LENGTH_SHORT).show()
                         dialog.dismiss()
                     }
+
             }
         }
     }
@@ -800,47 +981,4 @@ class Expenses12Activity : AppCompatActivity() {
             }
         }
     }
-    /*
-    // NEW icon selection popup
-    private fun showIconSelectionPopup(iconPreview: ImageView, onIconSelected: (Int) -> Unit) {
-        val dialogView = layoutInflater.inflate(R.layout.activity_category_popup_12_2, null)
-        val iconGrid = dialogView.findViewById<GridLayout>(R.id.iconGrid)
-
-        val icons = listOf(
-            R.drawable.ic_home,
-            R.drawable.ic_lightbulb,
-            R.drawable.ic_family,
-            R.drawable.ic_entertainment,
-            R.drawable.ic_credit_card,
-            R.drawable.ic_tools,
-            R.drawable.ic_misc,
-            R.drawable.ic_palette
-        )
-        val dialog = AlertDialog.Builder(this)
-            .setView(dialogView)
-            .setCancelable(true)
-            .create()
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-        dialog.show()
-
-        icons.forEach { iconRes ->
-            val imageView = ImageView(this).apply {
-                setImageResource(iconRes)
-                layoutParams = GridLayout.LayoutParams().apply {
-                    width = 120
-                    height = 120
-                    setMargins(16,16,16,16)
-                }
-                scaleType = ImageView.ScaleType.CENTER_INSIDE
-                setOnClickListener {
-                    iconPreview.setImageResource(iconRes)
-                    onIconSelected(iconRes)
-                    dialog.dismiss() // ✅ now visible
-                }
-            }
-            iconGrid.addView(imageView)
-        }
-        }*/
 }
-
-

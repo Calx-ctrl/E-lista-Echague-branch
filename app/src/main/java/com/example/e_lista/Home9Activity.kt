@@ -1,17 +1,8 @@
 package com.example.e_lista
 
-import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
-import android.widget.ArrayAdapter
-import android.widget.Button
-import android.widget.EditText
-import android.widget.GridLayout
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.Spinner
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -28,13 +19,13 @@ class Home9Activity : AppCompatActivity() {
     private lateinit var userID: String
     private lateinit var expenseDatabase: DatabaseReference
     private lateinit var adapter: ExpenseAdapter
-    //bugfix for database trying to load after logging out
     private var expensesListener: ValueEventListener? = null
 
     private val expenseList = mutableListOf<Expense>()
-    private var displayedList = mutableListOf<Expense>()
+    private val groupedDisplayedList = mutableListOf<GroupedListItem>()
     private var totalBalance = 0.0
 
+    // Home9Activity.kt
     enum class FilterType { DAILY, WEEKLY, MONTHLY }
     private var currentFilter = FilterType.DAILY
 
@@ -43,118 +34,86 @@ class Home9Activity : AppCompatActivity() {
         binding = ActivityHome9Binding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Firebase setup
+        setupFirebase()
+        setupRecycler()
+        setupFilters()
+        setupBottomNav()
+        setupButtons()
+
+        loadExpenses()
+    }
+
+    // ---------------------------------------------------------
+    // INITIAL SETUP
+    // ---------------------------------------------------------
+
+    private fun setupFirebase() {
         mAuth = FirebaseAuth.getInstance()
         userID = mAuth.currentUser?.uid ?: "UnknownUser"
         expenseDatabase = FirebaseDatabase.getInstance()
             .getReference("ExpenseData")
             .child(userID)
+    }
 
-
-        // RecyclerView setup
-        adapter = ExpenseAdapter(displayedList) { expense, _ ->
-            // Handle click on expense item
-            //Toast.makeText(this, "Clicked: ${expense.title}", Toast.LENGTH_SHORT).show()
-        }
+    private fun setupRecycler() {
+        adapter = ExpenseAdapter(groupedDisplayedList) { _, _ -> }
         binding.expensesRecyclerView.layoutManager = LinearLayoutManager(this)
         binding.expensesRecyclerView.adapter = adapter
+    }
 
-        // Load expenses from Firebase
-        loadExpenses()
-
-        // Button actions for filters
+    private fun setupFilters() {
         binding.filterDay.setOnClickListener {
-            expenseList.sortWith(
-                compareByDescending<Expense> { it.date }  // Sort by date first
-                    .thenByDescending { it.timestamp }    // Then by full time inside the date
-            )
-            applyFilter(FilterType.DAILY)
+            sortExpenses()
+            applyGroupedFilter(FilterType.DAILY)
         }
-
         binding.filterWeek.setOnClickListener {
-            expenseList.sortWith(
-                compareByDescending<Expense> { it.date }  // Sort by date first
-                    .thenByDescending { it.timestamp }    // Then by full time inside the date
-            )
-            applyFilter(FilterType.WEEKLY)
+            sortExpenses()
+            applyGroupedFilter(FilterType.WEEKLY)
         }
-
         binding.filterMonth.setOnClickListener {
-            expenseList.sortWith(
-                compareByDescending<Expense> { it.date }  // Sort by date first
-                    .thenByDescending { it.timestamp }    // Then by full time inside the date
-            )
-            applyFilter(FilterType.MONTHLY)
+            sortExpenses()
+            applyGroupedFilter(FilterType.MONTHLY)
         }
 
+    }
+
+    private fun setupButtons() {
         binding.fab.setOnClickListener {
             startActivity(Intent(this, ReceiptScanUpload::class.java))
         }
 
-        // Bottom navigation setup
-
-        binding.bottomNavigationView.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.nav_home -> {
-                    true
-                }
-
-                R.id.nav_wallet -> {
-                    if (this !is Expenses12Activity) {
-                        startActivity(Intent(this, Expenses12Activity::class.java))
-                        //overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
-                        overridePendingTransition(0, 0)
-                        finish()
-                    }
-                    true
-                }
-
-                R.id.nav_camera_placeholder -> {
-                    if (this !is ReceiptScanUpload) {
-                        startActivity(Intent(this, ReceiptScanUpload::class.java))
-                        //overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
-                        overridePendingTransition(0, 0)
-                        finish()
-                    }
-                    true
-                }
-
-                R.id.nav_stats -> {
-                    if (this !is ChartDesign10Activity) {
-                        startActivity(Intent(this, ChartDesign10Activity::class.java))
-                        //overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
-                        overridePendingTransition(0, 0)
-                        finish()
-                    }
-                    true
-                }
-
-                R.id.nav_profile -> {
-                    if (this !is Profile13Activity) {
-                        startActivity(Intent(this, Profile13Activity::class.java))
-                        //overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
-                        overridePendingTransition(0, 0)
-                        finish()
-                    }
-                    true
-                }
-
-                else -> false
-            }
-        }
-        binding.bottomNavigationView.selectedItemId = R.id.nav_home
-        // "See All" button action
         binding.seeAll.setOnClickListener {
             startActivity(Intent(this, Expenses12Activity::class.java))
         }
     }
 
-    override fun onStop() {
-        super.onStop()
-        expensesListener?.let {
-            expenseDatabase.removeEventListener(it)
+    private fun setupBottomNav() {
+        binding.bottomNavigationView.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_home -> true
+                R.id.nav_wallet -> navigateTo(Expenses12Activity::class.java)
+                R.id.nav_camera_placeholder -> navigateTo(ReceiptScanUpload::class.java)
+                R.id.nav_stats -> navigateTo(ChartDesign10Activity::class.java)
+                R.id.nav_profile -> navigateTo(Profile13Activity::class.java)
+                else -> false
+            }
         }
+        binding.bottomNavigationView.selectedItemId = R.id.nav_home
     }
+
+    private fun navigateTo(activityClass: Class<*>): Boolean {
+        if (this::class.java != activityClass) {
+            startActivity(Intent(this, activityClass))
+            overridePendingTransition(0, 0)
+            finish()
+        }
+        return true
+    }
+
+    // ---------------------------------------------------------
+    // LOAD EXPENSES
+    // ---------------------------------------------------------
+
     private fun loadExpenses() {
         expensesListener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
@@ -163,12 +122,8 @@ class Home9Activity : AppCompatActivity() {
                     val expense = expenseSnap.getValue(Expense::class.java)
                     expense?.let { expenseList.add(it) }
                 }
-
-                expenseList.sortWith(
-                    compareByDescending<Expense> { it.date }  // Sort by date first
-                        .thenByDescending { it.timestamp }    // Then by full time inside the date
-                )
-                applyFilter(currentFilter)
+                sortExpenses()
+                applyGroupedFilter(currentFilter)
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -179,72 +134,167 @@ class Home9Activity : AppCompatActivity() {
                 ).show()
             }
         }
-
         expenseDatabase.addValueEventListener(expensesListener!!)
     }
 
-    private fun applyFilter(filter: FilterType) {
-        currentFilter = filter
-        displayedList.clear()
-        totalBalance = 0.0
+    override fun onStop() {
+        super.onStop()
+        expensesListener?.let { expenseDatabase.removeEventListener(it) }
+    }
 
-        val calendar = Calendar.getInstance()
-        val today = calendar.time
+    // ---------------------------------------------------------
+    // FILTERING & GROUPING
+    // ---------------------------------------------------------
 
-        // Filter expenses based on selected filter (Daily, Weekly, Monthly)
-        displayedList.addAll(
-            when (filter) {
-                FilterType.DAILY -> expenseList.filter { isSameDay(it.date, today) }
-                FilterType.WEEKLY -> expenseList.filter { isSameWeek(it.date, today) }
-                FilterType.MONTHLY -> expenseList.filter { isSameMonth(it.date, today) }
-            }
+    private fun sortExpenses() {
+        expenseList.sortWith(
+            compareByDescending<Expense> { it.date }
+                .thenByDescending { it.timestamp }
         )
+    }
 
+    private fun applyGroupedFilter(filter: FilterType) {
+        currentFilter = filter
+        groupedDisplayedList.clear()
 
-        // Update total balance
-        totalBalance = displayedList.sumOf { it.total }
+        val today = Calendar.getInstance()
 
-        // Update UI
+        val filteredExpenses = when (filter) {
+            FilterType.DAILY -> expenseList.filter { isSameDay(it.date, today) } // ✅ today only
+            FilterType.WEEKLY -> expenseList.filter { isSameWeek(it.date, today) }
+            FilterType.MONTHLY -> expenseList.filter { isSameMonth(it.date, today) }
+        }
+
+        totalBalance = filteredExpenses.sumOf { it.total }
         binding.totalBalance.text = "₱${"%.2f".format(totalBalance)}"
+
+        val grouped = when (filter) {
+            FilterType.DAILY -> filteredExpenses.groupBy { it.date } // group by each date in the week
+            FilterType.WEEKLY -> filteredExpenses.groupBy { getWeekLabel(it.date) }
+            FilterType.MONTHLY -> filteredExpenses.groupBy { it.date.substring(0, 7) }
+        }
+
+        grouped.forEach { (header, list) ->
+            groupedDisplayedList.add(GroupedListItem.Header(header))
+            list.forEach { groupedDisplayedList.add(GroupedListItem.ExpenseItem(it)) }
+        }
+
         adapter.notifyDataSetChanged()
     }
 
-    private fun isSameDay(dateStr: String, today: Date): Boolean {
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val expenseDate = sdf.parse(dateStr)
-        val calExpense = Calendar.getInstance()
-        calExpense.time = expenseDate
 
-        val calToday = Calendar.getInstance()
-        calToday.time = today
+    // ---------------------------------------------------------
+    // DATE PICKER LOGIC
+    // ---------------------------------------------------------
 
-        return calExpense.get(Calendar.YEAR) == calToday.get(Calendar.YEAR) &&
-                calExpense.get(Calendar.DAY_OF_YEAR) == calToday.get(Calendar.DAY_OF_YEAR)
+    private fun openDatePicker() {
+        val today = Calendar.getInstance()
+        val year = today.get(Calendar.YEAR)
+        val month = today.get(Calendar.MONTH)
+        val day = today.get(Calendar.DAY_OF_MONTH)
+
+        DatePickerDialog(this, { _, y, m, d ->
+            val selected = String.format("%04d-%02d-%02d", y, m + 1, d)
+            filterBySpecificDate(selected)
+        }, year, month, day).show()
     }
 
-    private fun isSameWeek(dateStr: String, today: Date): Boolean {
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val expenseDate = sdf.parse(dateStr)
-        val calExpense = Calendar.getInstance()
-        calExpense.time = expenseDate
+    private fun filterBySpecificDate(selectedDate: String) {
+        groupedDisplayedList.clear()
 
-        val calToday = Calendar.getInstance()
-        calToday.time = today
+        val filtered = expenseList.filter { it.date == selectedDate }
+        totalBalance = filtered.sumOf { it.total }
+        binding.totalBalance.text = "₱${"%.2f".format(totalBalance)}"
 
-        return calExpense.get(Calendar.YEAR) == calToday.get(Calendar.YEAR) &&
-                calExpense.get(Calendar.WEEK_OF_YEAR) == calToday.get(Calendar.WEEK_OF_YEAR)
+        if (filtered.isEmpty()) {
+            groupedDisplayedList.add(GroupedListItem.Header("No expenses on $selectedDate"))
+        } else {
+            groupedDisplayedList.add(GroupedListItem.Header(selectedDate))
+            filtered.forEach {
+                groupedDisplayedList.add(GroupedListItem.ExpenseItem(it))
+            }
+        }
+
+        adapter.notifyDataSetChanged()
     }
 
-    private fun isSameMonth(dateStr: String, today: Date): Boolean {
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val expenseDate = sdf.parse(dateStr)
-        val calExpense = Calendar.getInstance()
-        calExpense.time = expenseDate
+    // ---------------------------------------------------------
+    // DATE HELPERS
+    // ---------------------------------------------------------
 
-        val calToday = Calendar.getInstance()
-        calToday.time = today
-
-        return calExpense.get(Calendar.YEAR) == calToday.get(Calendar.YEAR) &&
-                calExpense.get(Calendar.MONTH) == calToday.get(Calendar.MONTH)
+    private fun parseDateSafe(dateStr: String): Calendar? {
+        return try {
+            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val date = sdf.parse(dateStr) ?: return null
+            Calendar.getInstance().apply { time = date }
+        } catch (e: Exception) {
+            null
+        }
     }
+
+    private fun isSameDay(dateStr: String, reference: Calendar): Boolean {
+        val cal = parseDateSafe(dateStr) ?: return false
+        return cal.get(Calendar.YEAR) == reference.get(Calendar.YEAR) &&
+                cal.get(Calendar.DAY_OF_YEAR) == reference.get(Calendar.DAY_OF_YEAR)
+    }
+
+    private fun isSameWeek(dateStr: String, reference: Calendar): Boolean {
+        val cal = parseDateSafe(dateStr) ?: return false
+
+        val weekStart = reference.clone() as Calendar
+        weekStart.set(Calendar.DAY_OF_WEEK, weekStart.firstDayOfWeek)
+        weekStart.set(Calendar.HOUR_OF_DAY, 0)
+        weekStart.set(Calendar.MINUTE, 0)
+        weekStart.set(Calendar.SECOND, 0)
+        weekStart.set(Calendar.MILLISECOND, 0)
+
+        val weekEnd = weekStart.clone() as Calendar
+        weekEnd.add(Calendar.DAY_OF_WEEK, 6)
+        weekEnd.set(Calendar.HOUR_OF_DAY, 23)
+        weekEnd.set(Calendar.MINUTE, 59)
+        weekEnd.set(Calendar.SECOND, 59)
+        weekEnd.set(Calendar.MILLISECOND, 999)
+
+        return cal.timeInMillis in weekStart.timeInMillis..weekEnd.timeInMillis
+    }
+
+    private fun isSameMonth(dateStr: String, reference: Calendar): Boolean {
+        val cal = parseDateSafe(dateStr) ?: return false
+        return cal.get(Calendar.YEAR) == reference.get(Calendar.YEAR) &&
+                cal.get(Calendar.MONTH) == reference.get(Calendar.MONTH)
+    }
+    private fun isInCurrentWeek(dateStr: String): Boolean {
+        val cal = parseDateSafe(dateStr) ?: return false
+        val today = Calendar.getInstance()
+
+        // start of week
+        val weekStart = today.clone() as Calendar
+        weekStart.set(Calendar.DAY_OF_WEEK, weekStart.firstDayOfWeek)
+        weekStart.set(Calendar.HOUR_OF_DAY, 0)
+        weekStart.set(Calendar.MINUTE, 0)
+        weekStart.set(Calendar.SECOND, 0)
+        weekStart.set(Calendar.MILLISECOND, 0)
+
+        // end of week
+        val weekEnd = weekStart.clone() as Calendar
+        weekEnd.add(Calendar.DAY_OF_WEEK, 6)
+        weekEnd.set(Calendar.HOUR_OF_DAY, 23)
+        weekEnd.set(Calendar.MINUTE, 59)
+        weekEnd.set(Calendar.SECOND, 59)
+        weekEnd.set(Calendar.MILLISECOND, 999)
+
+        return cal.timeInMillis in weekStart.timeInMillis..weekEnd.timeInMillis
+    }
+
+
+    private fun getWeekLabel(dateStr: String): String {
+        val cal = parseDateSafe(dateStr) ?: return ""
+        val sdf = SimpleDateFormat("MMM dd", Locale.getDefault())
+        val startOfWeek = cal.clone() as Calendar
+        startOfWeek.set(Calendar.DAY_OF_WEEK, startOfWeek.firstDayOfWeek)
+        val endOfWeek = startOfWeek.clone() as Calendar
+        endOfWeek.add(Calendar.DAY_OF_WEEK, 6)
+        return "Week of ${sdf.format(startOfWeek.time)} - ${sdf.format(endOfWeek.time)}"
+    }
+
 }
