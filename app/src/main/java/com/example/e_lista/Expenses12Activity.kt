@@ -201,7 +201,7 @@ class Expenses12Activity : AppCompatActivity() {
         // Update filter button UI colors
         updateFilterUI()
     }
-    private fun openDatePicker() {
+     private fun openDatePicker() {
         val calendar = Calendar.getInstance()
 
         val year = calendar.get(Calendar.YEAR)
@@ -212,18 +212,21 @@ class Expenses12Activity : AppCompatActivity() {
 
             val selectedDateStr = "%04d-%02d-%02d".format(selectedYear, selectedMonth + 1, selectedDay)
 
-            // Switch to ALL filter
+            // Switch to ALL filter and rebuild grouped list
             applyFilter(FilterType.ALL)
 
-            // Scroll to the selected date header
-            scrollToDateHeader(selectedDateStr)
+            // Scroll to the selected date header after adapter updates
+            binding.expenseRecycler.post {
+                scrollToDateHeader(selectedDateStr)
+            }
 
         }, year, month, day).show()
     }
 
     private fun scrollToDateHeader(dateStr: String) {
         val sdfInput = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val sdfOutput = SimpleDateFormat("EEEE, MMM dd, yyyy", Locale.getDefault())
+        val sdfOutput = SimpleDateFormat("EEEE, MMM dd, yyyy", Locale.getDefault()) // Header format used in applyFilter
+
         val formattedDate = try {
             sdfOutput.format(sdfInput.parse(dateStr) ?: Date())
         } catch (e: Exception) {
@@ -241,6 +244,7 @@ class Expenses12Activity : AppCompatActivity() {
             Toast.makeText(this, "No expenses found on $formattedDate", Toast.LENGTH_SHORT).show()
         }
     }
+
 
 
 
@@ -927,9 +931,19 @@ class Expenses12Activity : AppCompatActivity() {
 
                 expenseDatabase.child(expense.id).setValue(updatedExpense)
                     .addOnSuccessListener {
+                        // 1️⃣ Update local list
+                        val index = expenseList.indexOfFirst { it.id == updatedExpense.id }
+                        if (index != -1) {
+                            expenseList[index] = updatedExpense
+                        }
+
+                        // 2️⃣ Re-apply the current filter to refresh groupedDisplayedList & adapter
+                        applyFilter(currentFilter)
+
                         Toast.makeText(this, "Expense updated", Toast.LENGTH_SHORT).show()
                         dialog.dismiss()
                     }
+
             }
         }
     }
