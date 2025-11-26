@@ -97,9 +97,7 @@ class Expenses12Activity : AppCompatActivity() {
 
 // 2️⃣ Pass the grouped list to the adapter
         adapter = ExpenseAdapter(groupedDisplayedList) { item, _ ->
-            if (item is GroupedListItem.ExpenseItem) {
-                showExpenseDetailsDialog(item.expense)
-            }
+                showExpenseDetailsDialog(item)
         }
         binding.expenseRecycler.layoutManager = LinearLayoutManager(this)
         binding.expenseRecycler.adapter = adapter
