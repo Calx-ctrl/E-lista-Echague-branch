@@ -210,35 +210,38 @@ class Expenses12Activity : AppCompatActivity() {
 
         DatePickerDialog(this, { _, selectedYear, selectedMonth, selectedDay ->
 
-            // Convert selected date to string like yyyy-MM-dd
-            val selectedDate = "%04d-%02d-%02d".format(
-                selectedYear,
-                selectedMonth + 1,
-                selectedDay
-            )
+            val selectedDateStr = "%04d-%02d-%02d".format(selectedYear, selectedMonth + 1, selectedDay)
 
-            // Now filter the expenses by the picked date
-            applySpecificDateFilter(selectedDate)
+            // Switch to ALL filter
+            applyFilter(FilterType.ALL)
+
+            // Scroll to the selected date header
+            scrollToDateHeader(selectedDateStr)
 
         }, year, month, day).show()
     }
-    private fun applySpecificDateFilter(dateStr: String) {
-        groupedDisplayedList.clear()
 
-        val filtered = expenseList.filter { it.date == dateStr }
-
-        if (filtered.isNotEmpty()) {
-            // Add header showing picked date
-            groupedDisplayedList.add(GroupedListItem.Header(dateStr))
-
-            // Add items
-            filtered.forEach { expense ->
-                groupedDisplayedList.add(GroupedListItem.ExpenseItem(expense))
-            }
+    private fun scrollToDateHeader(dateStr: String) {
+        val sdfInput = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val sdfOutput = SimpleDateFormat("EEEE, MMM dd, yyyy", Locale.getDefault())
+        val formattedDate = try {
+            sdfOutput.format(sdfInput.parse(dateStr) ?: Date())
+        } catch (e: Exception) {
+            dateStr
         }
 
-        adapter.notifyDataSetChanged()
+        // Find the index of the header in groupedDisplayedList
+        val index = groupedDisplayedList.indexOfFirst {
+            it is GroupedListItem.Header && it.title == formattedDate
+        }
+
+        if (index != -1) {
+            binding.expenseRecycler.scrollToPosition(index)
+        } else {
+            Toast.makeText(this, "No expenses found on $formattedDate", Toast.LENGTH_SHORT).show()
+        }
     }
+
 
 
     private fun navigateTo(cls: Class<*>) {
@@ -287,30 +290,39 @@ class Expenses12Activity : AppCompatActivity() {
         groupedDisplayedList.clear()
 
         val filtered = when (filter) {
-            FilterType.ALL -> expenseList
+            FilterType.ALL -> expenseList               // we'll group by date below
             FilterType.DAILY_WEEK -> expenseList.filter { isInCurrentWeek(it.date) }
-            FilterType.MONTHLY -> expenseList
-            FilterType.YEARLY -> expenseList
+            FilterType.MONTHLY -> expenseList.filter { isSameMonth(it.date) }  // current month
+            FilterType.YEARLY -> expenseList.filter { isSameYear(it.date) }    // current year
         }
-
 
         // Grouping logic
         val grouped = when (filter) {
-            FilterType.DAILY_WEEK -> filtered.groupBy { it.date }       // group by date
-            FilterType.MONTHLY -> filtered.groupBy { it.date.substring(0, 7) } // YYYY-MM
-            FilterType.YEARLY -> filtered.groupBy { it.date.substring(0, 4) } // YYYY
-            else -> mapOf("All Expenses" to filtered)
+            FilterType.ALL -> filtered.groupBy { it.date }.toSortedMap(reverseOrder()) // group by date
+            FilterType.DAILY_WEEK -> filtered.groupBy { it.date }                      // group by today
+            FilterType.MONTHLY -> filtered.groupBy { it.date.substring(0, 7) }        // YYYY-MM
+            FilterType.YEARLY -> filtered.groupBy { it.date.substring(0, 4) }         // YYYY
         }
+
+        // Format headers nicely for daily grouping
+        val sdfInput = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val sdfOutput = SimpleDateFormat("EEEE, MMM dd, yyyy", Locale.getDefault()) // Monday, Nov 25, 2025
 
         grouped.forEach { (groupTitle, expenses) ->
-            groupedDisplayedList.add(GroupedListItem.Header(groupTitle))
+            val formattedTitle = try {
+                sdfOutput.format(sdfInput.parse(groupTitle) ?: Date())
+            } catch (e: Exception) {
+                groupTitle // fallback to original if parsing fails
+            }
+
+            groupedDisplayedList.add(GroupedListItem.Header(formattedTitle))
             expenses.forEach { groupedDisplayedList.add(GroupedListItem.ExpenseItem(it)) }
         }
-
 
         adapter.notifyDataSetChanged()
         updateFilterUI()
     }
+
 
 
 
