@@ -1,294 +1,203 @@
 package com.example.e_lista
 
-import android.content.Intent
-import android.graphics.Color
+import android.app.AlertDialog
+import android.app.DatePickerDialog
+import android.app.Dialog
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import com.example.e_lista.databinding.ActivityChartDesign10Binding
-import com.github.mikephil.charting.charts.LineChart
-import com.github.mikephil.charting.charts.PieChart
-import com.github.mikephil.charting.components.Legend
-import com.github.mikephil.charting.data.*
-import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.*
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 
-class ChartDesign10Activity : AppCompatActivity() {
+class ManualAddExpenseActivity : AppCompatActivity() {
+    /*
+    private lateinit var categoryListContainer: LinearLayout
+    private lateinit var addButton: Button
+    private lateinit var removeButton: Button
 
-    private lateinit var binding: ActivityChartDesign10Binding
 
-    // Firebase
+    //for expense data and database
     private lateinit var mAuth: FirebaseAuth
-    private lateinit var userID: String
-    private lateinit var expenseDatabase: DatabaseReference
-
-    // Charts
-    private lateinit var pieChart: PieChart
-    private lateinit var lineChart: LineChart
+    private lateinit var UserID: String
+    private lateinit var ExpenseDatabase: DatabaseReference
+    private val expenseList = mutableListOf<Expense>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_category_settings)
 
-        // Firebase init
+        categoryListContainer = findViewById(R.id.categoryListContainer)
+        addButton = findViewById(R.id.addCategoryButton)
+        removeButton = findViewById(R.id.removeCategoryButton)
+
+        addButton.setOnClickListener { showAddExpenseDialog() }
+        removeButton.setOnClickListener { removeLastExpense() }
+
+        //Database variables
+
         mAuth = FirebaseAuth.getInstance()
-        userID = mAuth.currentUser?.uid ?: "UnknownUser"
-        expenseDatabase = FirebaseDatabase.getInstance()
+        val mUser = mAuth.currentUser
+        UserID = mUser?.uid ?: "UnknownUser"
+        ExpenseDatabase = FirebaseDatabase.getInstance()
             .getReference("ExpenseData")
-            .child(userID)
-
-        binding = ActivityChartDesign10Binding.inflate(layoutInflater)
-        setContentView(binding.root)
-
-        // Keep navigation highlighting
-        binding.bottomNavigationView.selectedItemId = R.id.nav_stats
-
-        // Hook charts (these IDs must match the XML above)
-        pieChart = binding.pieChart
-        lineChart = binding.lineChart
-
-        setupPieChartStyle(pieChart)
-        setupLineChartStyle(lineChart)
-
-        // FAB -> camera
-        binding.fabCamera.setOnClickListener {
-            val intent = Intent(this, ReceiptScanUpload::class.java)
-            startActivity(intent)
-        }
-
-        // Bottom nav unchanged
-        binding.bottomNavigationView.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.nav_home -> {
-                    if (this !is Home9Activity) {
-                        startActivity(Intent(this, Home9Activity::class.java))
-                        overridePendingTransition(0, 0)
-                        finish()
-                    }
-                    true
-                }
-
-                R.id.nav_wallet -> {
-                    if (this !is Expenses12Activity) {
-                        startActivity(Intent(this, Expenses12Activity::class.java))
-                        overridePendingTransition(0, 0)
-                        finish()
-                    }
-                    true
-                }
-
-                R.id.nav_camera_placeholder -> {
-                    if (this !is ReceiptScanUpload) {
-                        startActivity(Intent(this, ReceiptScanUpload::class.java))
-                        overridePendingTransition(0, 0)
-                        finish()
-                    }
-                    true
-                }
-
-                R.id.nav_stats -> {
-                    true
-                }
-
-                R.id.nav_profile -> {
-                    if (this !is Profile13Activity) {
-                        startActivity(Intent(this, Profile13Activity::class.java))
-                        overridePendingTransition(0, 0)
-                        finish()
-                    }
-                    true
-                }
-
-                else -> false
-            }
-        }
-
-        // Load data from Firebase and update charts
-        fetchExpensesAndRenderCharts()
+            .child(UserID)
     }
 
-    private fun fetchExpensesAndRenderCharts() {
-        // Listen once (load current snapshot)
-        expenseDatabase.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
+    private fun showAddExpenseDialog() {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.activity_add_category_12_1, null)
 
-                // Maps for aggregations
-                val categoryTotals = HashMap<String, Double>()
-                val dailyTotals = TreeMap<Long, Double>() // keyed by dayStartMillis (sorted)
+        val iconPreview = dialogView.findViewById<ImageView>(R.id.iconPreview)
+        val iconButton = dialogView.findViewById<Button>(R.id.btnChangeIcon)
+        val nameEditText = dialogView.findViewById<EditText>(R.id.inputName)
+        val dateEditText = dialogView.findViewById<EditText>(R.id.inputDate)
+        val amountEditText = dialogView.findViewById<EditText>(R.id.inputAmount)
+        val doneButton = dialogView.findViewById<Button>(R.id.btnDone)
 
-                for (child in snapshot.children) {
-                    val expense = child.getValue(Expense::class.java) ?: continue
+        var selectedIcon = R.drawable.ic_palette
+        val calendar = Calendar.getInstance()
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
-                    // compute expense total from items, fallback to expense.total if present
-                    val total = if (expense.items.isNotEmpty()) {
-                        expense.items.sumOf { it.itemAmount }
-                    } else {
-                        // if items missing, maybe there is a total property - but user's model computes total property,
-                        // so we keep 0 fallback
-                        0.0
-                    }
+        // ✅ Create dialog first
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
 
-                    // Aggregate category totals (use category string; handle empties)
-                    val categoryName = if (expense.category.isNullOrBlank()) "Others" else expense.category
-                    categoryTotals[categoryName] = categoryTotals.getOrDefault(categoryName, 0.0) + total
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        dialog.show()
 
-                    // Aggregate per day using timestamp
-                    val ts = if (expense.timestamp > 0L) expense.timestamp else 0L
-                    if (ts > 0L) {
-                        // Normalize to day start (midnight) in device timezone
-                        val dayStart = getDayStartMillis(ts)
-                        dailyTotals[dayStart] = dailyTotals.getOrDefault(dayStart, 0.0) + total
-                    }
-                }
-
-                // Update the PieChart and LineChart on UI thread (we are already on main thread)
-                updatePieChartWithData(pieChart, categoryTotals)
-                updateLineChartWithData(lineChart, dailyTotals)
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                // handle error (optional)
-            }
-        })
-    }
-
-    // Helper — convert timestamp millis to day-start (local timezone)
-    private fun getDayStartMillis(tsMillis: Long): Long {
-        val cal = Calendar.getInstance()
-        cal.timeInMillis = tsMillis
-        cal.set(Calendar.HOUR_OF_DAY, 0)
-        cal.set(Calendar.MINUTE, 0)
-        cal.set(Calendar.SECOND, 0)
-        cal.set(Calendar.MILLISECOND, 0)
-        return cal.timeInMillis
-    }
-
-    private fun setupPieChartStyle(pieChart: PieChart) {
-        pieChart.apply {
-            setUsePercentValues(true)
-            description.isEnabled = false
-            setDrawHoleEnabled(true)
-            holeRadius = 35f
-            transparentCircleRadius = 40f
-            centerText = "Spending"
-            setCenterTextSize(18f)
-            setEntryLabelColor(Color.BLACK)
-            setEntryLabelTextSize(12f)
-
-            legend.apply {
-                orientation = Legend.LegendOrientation.HORIZONTAL
-                horizontalAlignment = Legend.LegendHorizontalAlignment.CENTER
-                verticalAlignment = Legend.LegendVerticalAlignment.BOTTOM
-                textSize = 12f
-                form = Legend.LegendForm.CIRCLE
-            }
-        }
-    }
-
-    private fun setupLineChartStyle(lineChart: LineChart) {
-        lineChart.apply {
-            description.isEnabled = false
-            setDrawGridBackground(false)
-            axisRight.isEnabled = false
-
-            // x-axis formatting will be done when data is available using labels
-            xAxis.apply {
-                granularity = 1f
-                setDrawGridLines(false)
-                position = com.github.mikephil.charting.components.XAxis.XAxisPosition.BOTTOM
-            }
-
-            axisLeft.apply {
-                setDrawGridLines(true)
-            }
-
-            legend.isEnabled = false
-        }
-    }
-
-    private fun updatePieChartWithData(pieChart: PieChart, categoryTotals: Map<String, Double>) {
-        val entries = ArrayList<PieEntry>()
-        var totalSum = 0.0
-        for ((category, total) in categoryTotals) {
-            if (total > 0.0) {
-                entries.add(PieEntry(total.toFloat(), category))
-                totalSum += total
+        // ✅ Category picker popup
+        iconButton.setOnClickListener {
+            showCategorySelectionDialog(iconPreview) { newIcon ->
+                selectedIcon = newIcon
             }
         }
 
-        if (entries.isEmpty()) {
-            pieChart.clear()
-            pieChart.centerText = "No data"
-            pieChart.invalidate()
-            return
+        // ✅ Date picker
+        dateEditText.setOnClickListener {
+            DatePickerDialog(
+                this,
+                { _, year, month, day ->
+                    calendar.set(year, month, day)
+                    dateEditText.setText(dateFormat.format(calendar.time))
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+            ).show()
         }
 
-        val dataSet = PieDataSet(entries, "Expense Breakdown").apply {
-            colors = listOf(
-                Color.parseColor("#16a085"),
-                Color.parseColor("#27ae60"),
-                Color.parseColor("#2ecc71"),
-                Color.parseColor("#1abc9c"),
-                Color.parseColor("#f39c12"),
-                Color.parseColor("#e74c3c"),
-                Color.parseColor("#9b59b6")
+        // ✅ Done button action
+        doneButton.setOnClickListener {
+            val name = nameEditText.text.toString().trim()
+            val date = dateEditText.text.toString().trim()
+            val amountText = amountEditText.text.toString().trim()
+
+            if (name.isEmpty() || date.isEmpty() || amountText.isEmpty()) {
+                Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val amount = amountText.toDoubleOrNull()
+            if (amount == null) {
+                Toast.makeText(this, "Enter a valid amount", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val newExpense = Expense(
+                iconResId = selectedIcon,
+                title = name,
+                date = date,
+                amount = amount
             )
-            sliceSpace = 3f
-            valueTextColor = Color.WHITE
-            valueTextSize = 12f
-        }
 
-        val data = PieData(dataSet)
-        pieChart.data = data
-        pieChart.invalidate()
-        pieChart.animateY(900)
+
+        }
     }
 
-    private fun updateLineChartWithData(lineChart: LineChart, dailyTotals: SortedMap<Long, Double>) {
-        if (dailyTotals.isEmpty()) {
-            lineChart.clear()
-            lineChart.invalidate()
-            return
+    // ✅ Icon category selection dialog
+    private fun showCategorySelectionDialog(iconPreview: ImageView, onIconSelected: (Int) -> Unit) {
+        val dialog = Dialog(this)
+        dialog.setContentView(R.layout.activity_category_popup_12_2)
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        dialog.show()
+
+        val scrollView = dialog.findViewById<ScrollView>(R.id.scrollView)
+        val rootLayout = scrollView?.getChildAt(0) as? LinearLayout
+
+        rootLayout?.let {
+            for (i in 0 until it.childCount) {
+                val view = it.getChildAt(i)
+                if (view is LinearLayout) {
+                    for (j in 0 until view.childCount) {
+                        val subView = view.getChildAt(j)
+                        if (subView is TextView) {
+                            subView.setOnClickListener {
+                                val selected = subView.text.toString()
+                                val newIcon = getIconForCategory(selected)
+                                iconPreview.setImageResource(newIcon)
+                                onIconSelected(newIcon)
+                                Toast.makeText(this, "Selected: $selected", Toast.LENGTH_SHORT).show()
+                                dialog.dismiss()
+                            }
+                        }
+                    }
+                }
+            }
         }
-
-        // Build xLabels list (String) and entries (index-based)
-        val xLabels = ArrayList<String>()
-        val entries = ArrayList<Entry>()
-
-        val sdf = SimpleDateFormat("MMM d", Locale.getDefault()) // label format e.g. "Jan 3"
-        var idx = 0f
-        for ((dayStart, total) in dailyTotals) {
-            xLabels.add(sdf.format(Date(dayStart)))
-            entries.add(Entry(idx, total.toFloat()))
-            idx += 1f
-        }
-
-        val dataSet = LineDataSet(entries, "Daily Spending").apply {
-            lineWidth = 2.5f
-            circleRadius = 4f
-            setDrawCircleHole(true)
-            setDrawValues(true)
-            valueTextSize = 10f
-            valueTextColor = Color.BLACK
-            mode = LineDataSet.Mode.LINEAR
-            setDrawFilled(false)
-            color = Color.parseColor("#c0392b") // line color
-            setCircleColor(Color.parseColor("#c0392b"))
-        }
-
-        val lineData = LineData(dataSet)
-        lineChart.data = lineData
-
-        // Set x-axis labels
-        lineChart.xAxis.valueFormatter = IndexAxisValueFormatter(xLabels)
-        lineChart.xAxis.labelRotationAngle = 0f
-        lineChart.xAxis.setLabelCount(xLabels.size, true)
-
-        lineChart.axisLeft.resetAxisMinimum()
-        lineChart.invalidate()
-        lineChart.animateY(900)
     }
+
+    // ✅ Category → Icon logic
+    private fun getIconForCategory(category: String): Int {
+        return when {
+            category.contains("Rent", true) || category.contains("Grocer", true) || category.contains("Fuel", true) ->
+                R.drawable.ic_home
+            category.contains("Electricity", true) || category.contains("Internet", true) ->
+                R.drawable.ic_lightbulb
+            category.contains("Education", true) || category.contains("Health", true) || category.contains("Insurance", true) ->
+                R.drawable.ic_family
+            category.contains("Movies", true) || category.contains("Games", true) || category.contains("Travel", true) ->
+                R.drawable.ic_entertainment
+            category.contains("Savings", true) || category.contains("Loan", true) || category.contains("Credit", true) ->
+                R.drawable.ic_credit_card
+            category.contains("Furniture", true) || category.contains("Home", true) || category.contains("Garden", true) ->
+                R.drawable.ic_tools
+            category.contains("Donation", true) || category.contains("Misc", true) ->
+                R.drawable.ic_misc
+            else -> R.drawable.ic_palette
+        }
+    }
+
+    // ✅ Add expense card dynamically
+    private fun addExpenseToView(expense: Expense) {
+        val itemView = layoutInflater.inflate(R.layout.item_expense, categoryListContainer, false)
+
+        val iconView = itemView.findViewById<ImageView>(R.id.categoryIconImageView)
+        val nameView = itemView.findViewById<TextView>(R.id.categoryNameTextView)
+        val dateView = itemView.findViewById<TextView>(R.id.expenseDateTextView)
+        val amountView = itemView.findViewById<TextView>(R.id.amountTextView)
+
+        iconView.setImageResource(expense.iconResId)
+        nameView.text = expense.title
+        dateView.text = expense.date
+        amountView.text = "₱%.2f".format(expense.amount)
+
+        categoryListContainer.addView(itemView, 0)
+    }
+
+    // ✅ Remove last expense
+    private fun removeLastExpense() {
+        if (expenseList.isNotEmpty()) {
+            expenseList.removeAt(expenseList.lastIndex)
+            categoryListContainer.removeViewAt(0)
+            Toast.makeText(this, "Last category removed", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, "No categories to remove", Toast.LENGTH_SHORT).show()
+        }
+    }
+    */
 }
