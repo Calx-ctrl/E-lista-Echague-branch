@@ -5,8 +5,10 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.e_lista.databinding.ItemExpenseBinding
 import com.example.e_lista.databinding.ItemExpenseHeaderBinding
+import java.text.SimpleDateFormat
+import java.util.*
 
-class TopSpendingAdapter(private val items: List<TopSpendingItem>) :
+class TopSpendingAdapter(private val items: List<TopSpendingItem>, private val expenseMap: Map<String, Expense>) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object { private const val TYPE_HEADER = 0; private const val TYPE_ITEM = 1 }
@@ -30,10 +32,32 @@ class TopSpendingAdapter(private val items: List<TopSpendingItem>) :
             holder.binding.categoryNameTextView.text = "Top Spending"
         } else if (holder is ItemViewHolder) {
             val item = items[position - 1]
+
             holder.binding.categoryNameTextView.text = item.name
             holder.binding.amountTextView.text = "₱%.2f".format(item.amount)
-            holder.binding.expenseDateTextView.text = ""
-            holder.binding.categoryIconImageView.setImageResource(R.drawable.ic_category_placeholder)
+
+            val parentExpense = expenseMap[item.name]
+            val category = parentExpense?.category ?: "Others"
+            val timestamp = parentExpense?.timestamp ?: 0L
+
+            holder.binding.categoryIconImageView.setImageResource(getIconForCategory(category))
+
+            val date = if (timestamp != 0L) {
+                val sdf = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+                sdf.format(Date(timestamp))
+            } else ""
+            holder.binding.expenseDateTextView.text = date
+        }
+    }
+
+    private fun getIconForCategory(category: String): Int {
+        return when (category) {
+            "Food" -> R.drawable.ic_food
+            "Transport" -> R.drawable.ic_car
+            "Bills" -> R.drawable.ic_receipt
+            "Shopping" -> R.drawable.ic_shopping
+            "Entertainment" -> R.drawable.ic_entertainment
+            else -> R.drawable.coffee_icon
         }
     }
 
