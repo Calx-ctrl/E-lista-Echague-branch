@@ -19,7 +19,6 @@ import java.util.*
 class ChartDesign10Activity : AppCompatActivity() {
 
     private lateinit var binding: ActivityChartDesign10Binding
-
     private lateinit var mAuth: FirebaseAuth
     private lateinit var userID: String
     private lateinit var expenseDatabase: DatabaseReference
@@ -39,10 +38,10 @@ class ChartDesign10Activity : AppCompatActivity() {
         binding.fabCamera.setOnClickListener { startActivity(Intent(this, ReceiptScanUpload::class.java)) }
         setupBottomNavigation()
 
-        // RecyclerView for Top Spending
+        // RecyclerView
         binding.topSpendingList.layoutManager = LinearLayoutManager(this)
 
-        // ChipGroup filtering
+        // Chip filtering
         binding.filterGroup.setOnCheckedStateChangeListener { group, checkedIds ->
             when (checkedIds.firstOrNull()) {
                 group.getChildAt(0).id -> fetchAndDisplayData("DAY")
