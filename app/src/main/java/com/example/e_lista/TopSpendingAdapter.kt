@@ -19,10 +19,14 @@ class TopSpendingAdapter(private val items: List<TopSpendingItem>) :
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return if (viewType == TYPE_HEADER) {
-            val binding = ItemExpenseHeaderBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+            val binding = ItemExpenseHeaderBinding.inflate(
+                LayoutInflater.from(parent.context), parent, false
+            )
             HeaderViewHolder(binding)
         } else {
-            val binding = ItemExpenseBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+            val binding = ItemExpenseBinding.inflate(
+                LayoutInflater.from(parent.context), parent, false
+            )
             ItemViewHolder(binding)
         }
     }
@@ -35,11 +39,17 @@ class TopSpendingAdapter(private val items: List<TopSpendingItem>) :
         } else if (holder is ItemViewHolder) {
             val item = items[position - 1]
 
-            holder.binding.categoryNameTextView.text = item.title
-            holder.binding.amountTextView.text = "₱%.2f".format(item.amount)
-            holder.binding.expenseDateTextView.text = item.date
-
-            holder.binding.categoryIconImageView.setImageResource(getIconForCategory(item.category))
+            if (item.title == "No data available") {
+                holder.binding.categoryNameTextView.text = item.title
+                holder.binding.amountTextView.text = ""
+                holder.binding.expenseDateTextView.text = ""
+                holder.binding.categoryIconImageView.setImageResource(R.drawable.ic_misc)
+            } else {
+                holder.binding.categoryNameTextView.text = item.title
+                holder.binding.amountTextView.text = "₱%.2f".format(item.amount)
+                holder.binding.categoryIconImageView.setImageResource(getIconForCategory(item.category))
+                holder.binding.expenseDateTextView.text = item.date
+            }
         }
     }
 
@@ -50,7 +60,7 @@ class TopSpendingAdapter(private val items: List<TopSpendingItem>) :
             "Bills" -> R.drawable.ic_receipt
             "Shopping" -> R.drawable.ic_shopping
             "Entertainment" -> R.drawable.ic_entertainment
-            else -> R.drawable.coffee_icon
+            else -> R.drawable.ic_misc
         }
     }
 

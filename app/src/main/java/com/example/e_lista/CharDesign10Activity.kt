@@ -85,7 +85,6 @@ class ChartDesign10Activity : AppCompatActivity() {
                 setupLineChart(binding.lineChart, lineTotals, period)
                 binding.topSpendingList.adapter = TopSpendingAdapter(topCategories)
             }
-
             override fun onCancelled(error: DatabaseError) {}
         })
     }
@@ -97,35 +96,10 @@ class ChartDesign10Activity : AppCompatActivity() {
         return expenses.filter { exp ->
             val ts = exp.timestamp
             when (period) {
-                "DAY" -> {
-                    val todayStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(now))
-                    exp.date == todayStr
-                }
-                "WEEK" -> {
-                    cal.timeInMillis = now
-                    val weekNow = cal.get(Calendar.WEEK_OF_YEAR)
-                    val yearNow = cal.get(Calendar.YEAR)
-
-                    val expCal = parseDateSafe(exp.date) ?: return@filter false
-                    weekNow == expCal.get(Calendar.WEEK_OF_YEAR) &&
-                            yearNow == expCal.get(Calendar.YEAR)
-                }
-                "MONTH" -> {
-                    cal.timeInMillis = now
-                    val monthNow = cal.get(Calendar.MONTH)
-                    val yearNow = cal.get(Calendar.YEAR)
-
-                    val expCal = parseDateSafe(exp.date) ?: return@filter false
-                    monthNow == expCal.get(Calendar.MONTH) &&
-                            yearNow == expCal.get(Calendar.YEAR)
-                }
-                "YEAR" -> {
-                    cal.timeInMillis = now
-                    val yearNow = cal.get(Calendar.YEAR)
-
-                    val expCal = parseDateSafe(exp.date) ?: return@filter false
-                    yearNow == expCal.get(Calendar.YEAR)
-                }
+                "DAY" -> exp.date == getTodayDate()  // Compare inputted date
+                "WEEK" -> isSameWeek(exp.date, cal)
+                "MONTH" -> isSameMonth(exp.date, cal)
+                "YEAR" -> isSameYear(exp.date, cal)
                 else -> false
             }
         }
@@ -161,11 +135,20 @@ class ChartDesign10Activity : AppCompatActivity() {
     }
 
     private fun calculateTopSpending(expenses: List<Expense>): List<TopSpendingItem> {
-        // Only take the top 5 expenses based on total
+        if (expenses.isEmpty()) {
+            return listOf(
+                TopSpendingItem(
+                    title = "No data available",
+                    amount = 0.0,
+                    date = "",
+                    category = ""
+                )
+            )
+        }
+
         return expenses.sortedByDescending { it.total }
             .take(5)
             .map { exp ->
-                // Convert exp.date from yyyy-MM-dd to "MMM dd, yyyy"
                 val formattedDate = try {
                     val sdfInput = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                     val sdfOutput = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
@@ -257,13 +240,51 @@ class ChartDesign10Activity : AppCompatActivity() {
         }
     }
 
-    private fun parseDateSafe(dateStr: String): Calendar? {
-        return try {
+    // ----------------- DATE HELPERS -----------------
+    private fun getTodayDate(): String {
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        return sdf.format(Date())
+    }
+
+    private fun isSameWeek(dateStr: String, reference: Calendar): Boolean {
+        val cal = try {
             val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val date = sdf.parse(dateStr) ?: return null
-            Calendar.getInstance().apply { time = date }
-        } catch (e: Exception) {
-            null
-        }
+            Calendar.getInstance().apply { time = sdf.parse(dateStr)!! }
+        } catch (e: Exception) { return false }
+
+        val weekStart = reference.clone() as Calendar
+        weekStart.set(Calendar.DAY_OF_WEEK, weekStart.firstDayOfWeek)
+        weekStart.set(Calendar.HOUR_OF_DAY, 0)
+        weekStart.set(Calendar.MINUTE, 0)
+        weekStart.set(Calendar.SECOND, 0)
+        weekStart.set(Calendar.MILLISECOND, 0)
+
+        val weekEnd = weekStart.clone() as Calendar
+        weekEnd.add(Calendar.DAY_OF_WEEK, 6)
+        weekEnd.set(Calendar.HOUR_OF_DAY, 23)
+        weekEnd.set(Calendar.MINUTE, 59)
+        weekEnd.set(Calendar.SECOND, 59)
+        weekEnd.set(Calendar.MILLISECOND, 999)
+
+        return cal.timeInMillis in weekStart.timeInMillis..weekEnd.timeInMillis
+    }
+
+    private fun isSameMonth(dateStr: String, reference: Calendar): Boolean {
+        val cal = try {
+            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            Calendar.getInstance().apply { time = sdf.parse(dateStr)!! }
+        } catch (e: Exception) { return false }
+
+        return cal.get(Calendar.YEAR) == reference.get(Calendar.YEAR) &&
+                cal.get(Calendar.MONTH) == reference.get(Calendar.MONTH)
+    }
+
+    private fun isSameYear(dateStr: String, reference: Calendar): Boolean {
+        val cal = try {
+            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            Calendar.getInstance().apply { time = sdf.parse(dateStr)!! }
+        } catch (e: Exception) { return false }
+
+        return cal.get(Calendar.YEAR) == reference.get(Calendar.YEAR)
     }
 }
