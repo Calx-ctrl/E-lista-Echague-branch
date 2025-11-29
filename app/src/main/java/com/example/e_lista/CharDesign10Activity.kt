@@ -37,9 +37,7 @@ class ChartDesign10Activity : AppCompatActivity() {
         expenseDatabase = FirebaseDatabase.getInstance().getReference("ExpenseData").child(userID)
 
         binding.bottomNavigationView.selectedItemId = R.id.nav_stats
-        binding.fabCamera.setOnClickListener {
-            startActivity(Intent(this, ReceiptScanUpload::class.java))
-        }
+        binding.fabCamera.setOnClickListener { startActivity(Intent(this, ReceiptScanUpload::class.java)) }
         setupBottomNavigation()
 
         binding.topSpendingList.layoutManager = LinearLayoutManager(this)
@@ -83,8 +81,24 @@ class ChartDesign10Activity : AppCompatActivity() {
 
                 setupPieChart(binding.pieChart, categoryTotals)
                 setupLineChart(binding.lineChart, lineTotals, period)
-                binding.topSpendingList.adapter = TopSpendingAdapter(topCategories)
+
+                if (topCategories.isEmpty()) {
+                    // show placeholder if no top spending
+                    binding.topSpendingList.adapter = TopSpendingAdapter(
+                        listOf(
+                            TopSpendingItem(
+                                title = "No Data",
+                                amount = 0.0,
+                                date = "",
+                                category = "Misc"
+                            )
+                        )
+                    )
+                } else {
+                    binding.topSpendingList.adapter = TopSpendingAdapter(topCategories)
+                }
             }
+
             override fun onCancelled(error: DatabaseError) {}
         })
     }
@@ -95,14 +109,51 @@ class ChartDesign10Activity : AppCompatActivity() {
 
         return expenses.filter { exp ->
             val ts = exp.timestamp
+            val expCal = parseDateSafe(exp.date) ?: return@filter false
+
             when (period) {
-                "DAY" -> exp.date == getTodayDate()  // Compare inputted date
-                "WEEK" -> isSameWeek(exp.date, cal)
-                "MONTH" -> isSameMonth(exp.date, cal)
-                "YEAR" -> isSameYear(exp.date, cal)
+                "DAY" -> isSameDay(exp.date, Calendar.getInstance())
+                "WEEK" -> isSameWeek(exp.date, Calendar.getInstance())
+                "MONTH" -> isSameMonth(exp.date, Calendar.getInstance())
+                "YEAR" -> expCal.get(Calendar.YEAR) == Calendar.getInstance().get(Calendar.YEAR)
                 else -> false
             }
         }
+    }
+
+    private fun parseDateSafe(dateStr: String): Calendar? {
+        return try {
+            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val date = sdf.parse(dateStr) ?: return null
+            Calendar.getInstance().apply { time = date }
+        } catch (e: Exception) { null }
+    }
+
+    private fun isSameDay(dateStr: String, reference: Calendar): Boolean {
+        val cal = parseDateSafe(dateStr) ?: return false
+        return cal.get(Calendar.YEAR) == reference.get(Calendar.YEAR) &&
+                cal.get(Calendar.DAY_OF_YEAR) == reference.get(Calendar.DAY_OF_YEAR)
+    }
+
+    private fun isSameWeek(dateStr: String, reference: Calendar): Boolean {
+        val cal = parseDateSafe(dateStr) ?: return false
+        val weekStart = reference.clone() as Calendar
+        weekStart.set(Calendar.DAY_OF_WEEK, weekStart.firstDayOfWeek)
+        weekStart.set(Calendar.HOUR_OF_DAY, 0); weekStart.set(Calendar.MINUTE, 0)
+        weekStart.set(Calendar.SECOND, 0); weekStart.set(Calendar.MILLISECOND, 0)
+
+        val weekEnd = weekStart.clone() as Calendar
+        weekEnd.add(Calendar.DAY_OF_WEEK, 6)
+        weekEnd.set(Calendar.HOUR_OF_DAY, 23); weekEnd.set(Calendar.MINUTE, 59)
+        weekEnd.set(Calendar.SECOND, 59); weekEnd.set(Calendar.MILLISECOND, 999)
+
+        return cal.timeInMillis in weekStart.timeInMillis..weekEnd.timeInMillis
+    }
+
+    private fun isSameMonth(dateStr: String, reference: Calendar): Boolean {
+        val cal = parseDateSafe(dateStr) ?: return false
+        return cal.get(Calendar.YEAR) == reference.get(Calendar.YEAR) &&
+                cal.get(Calendar.MONTH) == reference.get(Calendar.MONTH)
     }
 
     private fun calculateCategoryTotals(expenses: List<Expense>): Map<String, Float> {
@@ -113,7 +164,6 @@ class ChartDesign10Activity : AppCompatActivity() {
             val cat = if (categories.contains(exp.category)) exp.category else "Others"
             totals[cat] = totals.getOrDefault(cat, 0f) + exp.total.toFloat()
         }
-
         return totals
     }
 
@@ -135,45 +185,27 @@ class ChartDesign10Activity : AppCompatActivity() {
     }
 
     private fun calculateTopSpending(expenses: List<Expense>): List<TopSpendingItem> {
-        if (expenses.isEmpty()) {
-            return listOf(
-                TopSpendingItem(
-                    title = "No data available",
-                    amount = 0.0,
-                    date = "",
-                    category = ""
-                )
-            )
-        }
-
+        if (expenses.isEmpty()) return emptyList()
         return expenses.sortedByDescending { it.total }
             .take(5)
-            .map { exp ->
-                val formattedDate = try {
-                    val sdfInput = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                    val sdfOutput = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-                    val date = sdfInput.parse(exp.date)
-                    if (date != null) sdfOutput.format(date) else exp.date
-                } catch (e: Exception) {
-                    exp.date
-                }
-
+            .map {
                 TopSpendingItem(
-                    title = exp.title,
-                    amount = exp.total,
-                    date = formattedDate,
-                    category = if (categories.contains(exp.category)) exp.category else "Others"
+                    title = it.title,
+                    amount = it.total,
+                    date = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(parseDateSafe(it.date)?.time ?: Date()),
+                    category = if (categories.contains(it.category)) it.category else "Others"
                 )
             }
     }
 
     private fun setupPieChart(pie: PieChart, categoryTotals: Map<String, Float>) {
-        val entries = categoryTotals
-            .filter { it.value > 0 }
+        val entries = categoryTotals.filter { it.value > 0 }
             .map { PieEntry(it.value, it.key) }
+            .ifEmpty { listOf(PieEntry(1f, "No Data")) }
 
         val dataSet = PieDataSet(entries, "").apply {
-            colors = listOf(
+            colors = if (entries.first().label == "No Data") listOf(Color.LTGRAY)
+            else listOf(
                 Color.parseColor("#16a085"),
                 Color.parseColor("#27ae60"),
                 Color.parseColor("#2ecc71"),
@@ -192,28 +224,19 @@ class ChartDesign10Activity : AppCompatActivity() {
             data = PieData(dataSet)
             description.isEnabled = false
             setDrawEntryLabels(false)
-            centerText = ""
+            centerText = if (entries.first().label == "No Data") "No Data Available" else ""
             setDrawHoleEnabled(true)
             holeRadius = 35f
             transparentCircleRadius = 40f
-            legend.apply {
-                orientation = Legend.LegendOrientation.HORIZONTAL
-                horizontalAlignment = Legend.LegendHorizontalAlignment.CENTER
-                verticalAlignment = Legend.LegendVerticalAlignment.BOTTOM
-                isWordWrapEnabled = true
-                textSize = 12f
-            }
+            legend.isEnabled = entries.first().label != "No Data"
             animateY(1000)
             invalidate()
         }
     }
 
     private fun setupLineChart(chart: LineChart, totals: Map<String, Float>, period: String) {
-        val entries = totals.values.mapIndexed { index, value ->
-            Entry(index.toFloat(), value)
-        }
-
-        val labels = totals.keys.toList()
+        val entries = if (totals.isEmpty()) listOf(Entry(0f, 0f)) else totals.values.mapIndexed { index, value -> Entry(index.toFloat(), value) }
+        val labels = if (totals.isEmpty()) listOf("No Data") else totals.keys.toList()
 
         val dataSet = LineDataSet(entries, "Total Expenses").apply {
             color = Color.parseColor("#16a085")
@@ -238,53 +261,5 @@ class ChartDesign10Activity : AppCompatActivity() {
             animateY(1000)
             invalidate()
         }
-    }
-
-    // ----------------- DATE HELPERS -----------------
-    private fun getTodayDate(): String {
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        return sdf.format(Date())
-    }
-
-    private fun isSameWeek(dateStr: String, reference: Calendar): Boolean {
-        val cal = try {
-            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            Calendar.getInstance().apply { time = sdf.parse(dateStr)!! }
-        } catch (e: Exception) { return false }
-
-        val weekStart = reference.clone() as Calendar
-        weekStart.set(Calendar.DAY_OF_WEEK, weekStart.firstDayOfWeek)
-        weekStart.set(Calendar.HOUR_OF_DAY, 0)
-        weekStart.set(Calendar.MINUTE, 0)
-        weekStart.set(Calendar.SECOND, 0)
-        weekStart.set(Calendar.MILLISECOND, 0)
-
-        val weekEnd = weekStart.clone() as Calendar
-        weekEnd.add(Calendar.DAY_OF_WEEK, 6)
-        weekEnd.set(Calendar.HOUR_OF_DAY, 23)
-        weekEnd.set(Calendar.MINUTE, 59)
-        weekEnd.set(Calendar.SECOND, 59)
-        weekEnd.set(Calendar.MILLISECOND, 999)
-
-        return cal.timeInMillis in weekStart.timeInMillis..weekEnd.timeInMillis
-    }
-
-    private fun isSameMonth(dateStr: String, reference: Calendar): Boolean {
-        val cal = try {
-            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            Calendar.getInstance().apply { time = sdf.parse(dateStr)!! }
-        } catch (e: Exception) { return false }
-
-        return cal.get(Calendar.YEAR) == reference.get(Calendar.YEAR) &&
-                cal.get(Calendar.MONTH) == reference.get(Calendar.MONTH)
-    }
-
-    private fun isSameYear(dateStr: String, reference: Calendar): Boolean {
-        val cal = try {
-            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            Calendar.getInstance().apply { time = sdf.parse(dateStr)!! }
-        } catch (e: Exception) { return false }
-
-        return cal.get(Calendar.YEAR) == reference.get(Calendar.YEAR)
     }
 }
