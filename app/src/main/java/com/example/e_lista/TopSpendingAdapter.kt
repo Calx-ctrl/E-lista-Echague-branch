@@ -8,12 +8,16 @@ import com.example.e_lista.databinding.ItemExpenseHeaderBinding
 import java.text.SimpleDateFormat
 import java.util.*
 
-class TopSpendingAdapter(private val items: List<TopSpendingItem>, private val expenseMap: Map<String, Expense>) :
+class TopSpendingAdapter(private val items: List<TopSpendingItem>) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    companion object { private const val TYPE_HEADER = 0; private const val TYPE_ITEM = 1 }
+    companion object {
+        private const val TYPE_HEADER = 0
+        private const val TYPE_ITEM = 1
+    }
 
-    override fun getItemViewType(position: Int) = if (position == 0) TYPE_HEADER else TYPE_ITEM
+    override fun getItemViewType(position: Int): Int =
+        if (position == 0) TYPE_HEADER else TYPE_ITEM
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return if (viewType == TYPE_HEADER) {
@@ -31,22 +35,15 @@ class TopSpendingAdapter(private val items: List<TopSpendingItem>, private val e
         if (holder is HeaderViewHolder) {
             holder.binding.categoryNameTextView.text = "Top Spending"
         } else if (holder is ItemViewHolder) {
-            val item = items[position - 1]
+            val item = items[position - 1]  // <-- uses TopSpendingItem from TopSpendingItem.kt
 
-            holder.binding.categoryNameTextView.text = item.name
+            holder.binding.categoryNameTextView.text = item.category
             holder.binding.amountTextView.text = "₱%.2f".format(item.amount)
 
-            val parentExpense = expenseMap[item.name]
-            val category = parentExpense?.category ?: "Others"
-            val timestamp = parentExpense?.timestamp ?: 0L
+            holder.binding.categoryIconImageView.setImageResource(getIconForCategory(item.category))
 
-            holder.binding.categoryIconImageView.setImageResource(getIconForCategory(category))
-
-            val date = if (timestamp != 0L) {
-                val sdf = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-                sdf.format(Date(timestamp))
-            } else ""
-            holder.binding.expenseDateTextView.text = date
+            val sdf = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+            holder.binding.expenseDateTextView.text = sdf.format(Date(item.timestamp))
         }
     }
 
@@ -61,6 +58,9 @@ class TopSpendingAdapter(private val items: List<TopSpendingItem>, private val e
         }
     }
 
-    inner class HeaderViewHolder(val binding: ItemExpenseHeaderBinding) : RecyclerView.ViewHolder(binding.root)
-    inner class ItemViewHolder(val binding: ItemExpenseBinding) : RecyclerView.ViewHolder(binding.root)
+    inner class HeaderViewHolder(val binding: ItemExpenseHeaderBinding) :
+        RecyclerView.ViewHolder(binding.root)
+
+    inner class ItemViewHolder(val binding: ItemExpenseBinding) :
+        RecyclerView.ViewHolder(binding.root)
 }
