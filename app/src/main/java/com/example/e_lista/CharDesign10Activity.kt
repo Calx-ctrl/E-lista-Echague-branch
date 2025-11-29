@@ -37,12 +37,13 @@ class ChartDesign10Activity : AppCompatActivity() {
         expenseDatabase = FirebaseDatabase.getInstance().getReference("ExpenseData").child(userID)
 
         binding.bottomNavigationView.selectedItemId = R.id.nav_stats
-        binding.fabCamera.setOnClickListener { startActivity(Intent(this, ReceiptScanUpload::class.java)) }
+        binding.fabCamera.setOnClickListener {
+            startActivity(Intent(this, ReceiptScanUpload::class.java))
+        }
         setupBottomNavigation()
 
         binding.topSpendingList.layoutManager = LinearLayoutManager(this)
 
-        // Handle filter chip selection
         binding.filterGroup.setOnCheckedStateChangeListener { group, checkedIds ->
             val chips = group.children.toList()
             when (checkedIds.firstOrNull()) {
@@ -78,7 +79,7 @@ class ChartDesign10Activity : AppCompatActivity() {
 
                 val categoryTotals = calculateCategoryTotals(filtered)
                 val lineTotals = calculateLineTotals(filtered, period)
-                val topCategories = calculateTopSpendingByCategory(filtered)
+                val topCategories = calculateTopSpending(filtered)
 
                 setupPieChart(binding.pieChart, categoryTotals)
                 setupLineChart(binding.lineChart, lineTotals, period)
@@ -96,31 +97,34 @@ class ChartDesign10Activity : AppCompatActivity() {
         return expenses.filter { exp ->
             val ts = exp.timestamp
             when (period) {
-                "DAY" -> now - ts <= 24L * 60 * 60 * 1000
+                "DAY" -> {
+                    val todayStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(now))
+                    exp.date == todayStr
+                }
                 "WEEK" -> {
                     cal.timeInMillis = now
                     val weekNow = cal.get(Calendar.WEEK_OF_YEAR)
                     val yearNow = cal.get(Calendar.YEAR)
 
-                    cal.timeInMillis = ts
-                    weekNow == cal.get(Calendar.WEEK_OF_YEAR) &&
-                            yearNow == cal.get(Calendar.YEAR)
+                    val expCal = parseDateSafe(exp.date) ?: return@filter false
+                    weekNow == expCal.get(Calendar.WEEK_OF_YEAR) &&
+                            yearNow == expCal.get(Calendar.YEAR)
                 }
                 "MONTH" -> {
                     cal.timeInMillis = now
                     val monthNow = cal.get(Calendar.MONTH)
                     val yearNow = cal.get(Calendar.YEAR)
 
-                    cal.timeInMillis = ts
-                    monthNow == cal.get(Calendar.MONTH) &&
-                            yearNow == cal.get(Calendar.YEAR)
+                    val expCal = parseDateSafe(exp.date) ?: return@filter false
+                    monthNow == expCal.get(Calendar.MONTH) &&
+                            yearNow == expCal.get(Calendar.YEAR)
                 }
                 "YEAR" -> {
                     cal.timeInMillis = now
                     val yearNow = cal.get(Calendar.YEAR)
 
-                    cal.timeInMillis = ts
-                    yearNow == cal.get(Calendar.YEAR)
+                    val expCal = parseDateSafe(exp.date) ?: return@filter false
+                    yearNow == expCal.get(Calendar.YEAR)
                 }
                 else -> false
             }
@@ -156,25 +160,33 @@ class ChartDesign10Activity : AppCompatActivity() {
         return totals.toSortedMap()
     }
 
-    private fun calculateTopSpendingByCategory(expenses: List<Expense>): List<TopSpendingItem> {
-        val map = mutableMapOf<String, Pair<Double, Long>>() // category → (total, latestTimestamp)
-
-        expenses.forEach { exp ->
-            val cat = if (categories.contains(exp.category)) exp.category else "Others"
-            val current = map.getOrDefault(cat, 0.0 to 0L)
-            val newTotal = current.first + exp.total
-            val newTimestamp = maxOf(current.second, exp.timestamp)
-            map[cat] = newTotal to newTimestamp
-        }
-
-        return map.entries
-            .map { TopSpendingItem(it.key, it.value.first, it.value.second) }
-            .sortedByDescending { it.amount }
+    private fun calculateTopSpending(expenses: List<Expense>): List<TopSpendingItem> {
+        // Only take the top 5 expenses based on total
+        return expenses.sortedByDescending { it.total }
             .take(5)
+            .map { exp ->
+                // Convert exp.date from yyyy-MM-dd to "MMM dd, yyyy"
+                val formattedDate = try {
+                    val sdfInput = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                    val sdfOutput = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+                    val date = sdfInput.parse(exp.date)
+                    if (date != null) sdfOutput.format(date) else exp.date
+                } catch (e: Exception) {
+                    exp.date
+                }
+
+                TopSpendingItem(
+                    title = exp.title,
+                    amount = exp.total,
+                    date = formattedDate,
+                    category = if (categories.contains(exp.category)) exp.category else "Others"
+                )
+            }
     }
 
     private fun setupPieChart(pie: PieChart, categoryTotals: Map<String, Float>) {
-        val entries = categoryTotals.filter { it.value > 0 }
+        val entries = categoryTotals
+            .filter { it.value > 0 }
             .map { PieEntry(it.value, it.key) }
 
         val dataSet = PieDataSet(entries, "").apply {
@@ -201,7 +213,6 @@ class ChartDesign10Activity : AppCompatActivity() {
             setDrawHoleEnabled(true)
             holeRadius = 35f
             transparentCircleRadius = 40f
-
             legend.apply {
                 orientation = Legend.LegendOrientation.HORIZONTAL
                 horizontalAlignment = Legend.LegendHorizontalAlignment.CENTER
@@ -209,7 +220,6 @@ class ChartDesign10Activity : AppCompatActivity() {
                 isWordWrapEnabled = true
                 textSize = 12f
             }
-
             animateY(1000)
             invalidate()
         }
@@ -219,6 +229,7 @@ class ChartDesign10Activity : AppCompatActivity() {
         val entries = totals.values.mapIndexed { index, value ->
             Entry(index.toFloat(), value)
         }
+
         val labels = totals.keys.toList()
 
         val dataSet = LineDataSet(entries, "Total Expenses").apply {
@@ -233,19 +244,26 @@ class ChartDesign10Activity : AppCompatActivity() {
         chart.apply {
             data = LineData(dataSet)
             description.isEnabled = false
-
             xAxis.apply {
                 granularity = 1f
                 valueFormatter = IndexAxisValueFormatter(labels)
                 setDrawGridLines(false)
             }
-
             axisRight.isEnabled = false
             axisLeft.axisMinimum = 0f
             legend.isEnabled = false
-
             animateY(1000)
             invalidate()
+        }
+    }
+
+    private fun parseDateSafe(dateStr: String): Calendar? {
+        return try {
+            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val date = sdf.parse(dateStr) ?: return null
+            Calendar.getInstance().apply { time = date }
+        } catch (e: Exception) {
+            null
         }
     }
 }

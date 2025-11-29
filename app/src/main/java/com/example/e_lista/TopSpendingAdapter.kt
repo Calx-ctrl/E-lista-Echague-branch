@@ -5,8 +5,6 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.e_lista.databinding.ItemExpenseBinding
 import com.example.e_lista.databinding.ItemExpenseHeaderBinding
-import java.text.SimpleDateFormat
-import java.util.*
 
 class TopSpendingAdapter(private val items: List<TopSpendingItem>) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -35,15 +33,13 @@ class TopSpendingAdapter(private val items: List<TopSpendingItem>) :
         if (holder is HeaderViewHolder) {
             holder.binding.categoryNameTextView.text = "Top Spending"
         } else if (holder is ItemViewHolder) {
-            val item = items[position - 1]  // <-- uses TopSpendingItem from TopSpendingItem.kt
+            val item = items[position - 1]
 
-            holder.binding.categoryNameTextView.text = item.category
+            holder.binding.categoryNameTextView.text = item.title
             holder.binding.amountTextView.text = "₱%.2f".format(item.amount)
+            holder.binding.expenseDateTextView.text = item.date
 
             holder.binding.categoryIconImageView.setImageResource(getIconForCategory(item.category))
-
-            val sdf = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-            holder.binding.expenseDateTextView.text = sdf.format(Date(item.timestamp))
         }
     }
 
