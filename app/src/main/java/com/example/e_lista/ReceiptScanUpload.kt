@@ -47,8 +47,10 @@ class ReceiptScanUpload : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Camera capture button
+        // 👉 Show loading XML FIRST
+        setContentView(R.layout.activity_receipt_loading)
 
+        // 👉 Then continue your camera logic
         if (savedInstanceState == null) {
             if (checkCameraPermission()) {
                 dispatchTakePictureIntent()
@@ -56,15 +58,8 @@ class ReceiptScanUpload : AppCompatActivity() {
                 requestCameraPermission()
             }
         }
-
-        //  Upload from gallery
-        /*
-        findViewById<Button>(R.id.btnUpload).setOnClickListener {
-          val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-          startActivityForResult(intent, PICK_IMAGE_REQUEST)
-        }
-        */
     }
+
 
     private fun checkCameraPermission(): Boolean {
         return ContextCompat.checkSelfPermission(
