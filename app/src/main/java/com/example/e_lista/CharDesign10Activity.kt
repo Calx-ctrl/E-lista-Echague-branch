@@ -45,11 +45,10 @@ class ChartDesign10Activity : AppCompatActivity() {
         binding.filterGroup.setOnCheckedStateChangeListener { group, checkedIds ->
             val chips = group.children.toList()
             when (checkedIds.firstOrNull()) {
-                chips.getOrNull(0)?.id -> fetchAndDisplayData("DAY")
                 chips.getOrNull(1)?.id -> fetchAndDisplayData("WEEK")
                 chips.getOrNull(2)?.id -> fetchAndDisplayData("MONTH")
                 chips.getOrNull(3)?.id -> fetchAndDisplayData("YEAR")
-                else -> fetchAndDisplayData("DAY")
+                else -> fetchAndDisplayData("WEEK")
             }
         }
 
@@ -112,7 +111,6 @@ class ChartDesign10Activity : AppCompatActivity() {
             val expCal = parseDateSafe(exp.date) ?: return@filter false
 
             when (period) {
-                "DAY" -> isSameDay(exp.date, Calendar.getInstance())
                 "WEEK" -> isSameWeek(exp.date, Calendar.getInstance())
                 "MONTH" -> isSameMonth(exp.date, Calendar.getInstance())
                 "YEAR" -> expCal.get(Calendar.YEAR) == Calendar.getInstance().get(Calendar.YEAR)
@@ -177,12 +175,24 @@ class ChartDesign10Activity : AppCompatActivity() {
 
         val totals = mutableMapOf<String, Float>()
         expenses.forEach { exp ->
-            val key = formatter.format(Date(exp.timestamp))
+            val key = formatter.format(parseDateSafe(exp.date)?.time ?: Date())
             totals[key] = totals.getOrDefault(key, 0f) + exp.total.toFloat()
         }
 
-        return totals.toSortedMap()
+        return if (period == "YEAR") {
+            // Sort months in calendar order
+            val monthOrder = listOf(
+                "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+            )
+            totals.toList()
+                .sortedBy { monthOrder.indexOf(it.first) }
+                .toMap()
+        } else {
+            totals.toSortedMap()
+        }
     }
+
 
     private fun calculateTopSpending(expenses: List<Expense>): List<TopSpendingItem> {
         if (expenses.isEmpty()) return emptyList()
