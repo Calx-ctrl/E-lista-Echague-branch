@@ -204,15 +204,19 @@ class ChartDesign10Activity : AppCompatActivity() {
             .ifEmpty { listOf(PieEntry(1f, "No Data")) }
 
         val dataSet = PieDataSet(entries, "").apply {
-            colors = if (entries.first().label == "No Data") listOf(Color.LTGRAY)
-            else listOf(
-                Color.parseColor("#16a085"),
-                Color.parseColor("#27ae60"),
-                Color.parseColor("#2ecc71"),
-                Color.parseColor("#f39c12"),
-                Color.parseColor("#e74c3c"),
-                Color.parseColor("#8e44ad")
-            )
+            // Updated color palette
+            colors = if (entries.first().label == "No Data") {
+                listOf(Color.LTGRAY)
+            } else {
+                listOf(
+                    Color.parseColor("#16a085"), // teal
+                    Color.parseColor("#e67e22"), // orange
+                    Color.parseColor("#e74c3c"), // red
+                    Color.parseColor("#2980b9"), // blue
+                    Color.parseColor("#9b59b6"), // purple
+                    Color.parseColor("#f1c40f")  // yellow
+                )
+            }
             sliceSpace = 3f
             valueTextSize = 11f
             valueFormatter = PercentFormatter(pie)
@@ -233,6 +237,7 @@ class ChartDesign10Activity : AppCompatActivity() {
             invalidate()
         }
     }
+
 
     private fun setupLineChart(chart: LineChart, totals: Map<String, Float>, period: String) {
         val entries = if (totals.isEmpty()) listOf(Entry(0f, 0f)) else totals.values.mapIndexed { index, value -> Entry(index.toFloat(), value) }
