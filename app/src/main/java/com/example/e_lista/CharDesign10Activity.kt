@@ -57,11 +57,11 @@ class ChartDesign10Activity : AppCompatActivity() {
     private fun setupBottomNavigation() {
         binding.bottomNavigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {
-                R.id.nav_home -> { startActivity(Intent(this, Home9Activity::class.java)); finish(); true }
-                R.id.nav_wallet -> { startActivity(Intent(this, Expenses12Activity::class.java)); finish(); true }
-                R.id.nav_camera_placeholder -> { startActivity(Intent(this, ReceiptScanUpload::class.java)); finish(); true }
+                R.id.nav_home -> { startActivity(Intent(this, Home9Activity::class.java)); finish(); overridePendingTransition(0, 0); true  }
+                R.id.nav_wallet -> { startActivity(Intent(this, Expenses12Activity::class.java)); finish(); overridePendingTransition(0, 0); true }
+                R.id.nav_camera_placeholder -> { startActivity(Intent(this, ReceiptScanUpload::class.java)); finish(); overridePendingTransition(0, 0); true }
                 R.id.nav_stats -> true
-                R.id.nav_profile -> { startActivity(Intent(this, Profile13Activity::class.java)); finish(); true }
+                R.id.nav_profile -> { startActivity(Intent(this, Profile13Activity::class.java)); finish(); overridePendingTransition(0, 0); true }
                 else -> false
             }
         }
