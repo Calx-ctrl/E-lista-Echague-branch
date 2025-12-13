@@ -45,9 +45,9 @@ class ChartDesign10Activity : AppCompatActivity() {
         binding.filterGroup.setOnCheckedStateChangeListener { group, checkedIds ->
             val chips = group.children.toList()
             when (checkedIds.firstOrNull()) {
-                chips.getOrNull(1)?.id -> fetchAndDisplayData("WEEK")
-                chips.getOrNull(2)?.id -> fetchAndDisplayData("MONTH")
-                chips.getOrNull(3)?.id -> fetchAndDisplayData("YEAR")
+                chips.getOrNull(0)?.id -> fetchAndDisplayData("WEEK")
+                chips.getOrNull(1)?.id -> fetchAndDisplayData("MONTH")
+                chips.getOrNull(2)?.id -> fetchAndDisplayData("YEAR")
                 else -> fetchAndDisplayData("WEEK")
             }
         }
