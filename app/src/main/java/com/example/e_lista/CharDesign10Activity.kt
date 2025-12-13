@@ -42,17 +42,16 @@ class ChartDesign10Activity : AppCompatActivity() {
 
         binding.topSpendingList.layoutManager = LinearLayoutManager(this)
 
-        binding.filterGroup.setOnCheckedStateChangeListener { group, checkedIds ->
-            val chips = group.children.toList()
+        binding.filterGroup.setOnCheckedStateChangeListener { _, checkedIds ->
             when (checkedIds.firstOrNull()) {
-                chips.getOrNull(1)?.id -> fetchAndDisplayData("WEEK")
-                chips.getOrNull(2)?.id -> fetchAndDisplayData("MONTH")
-                chips.getOrNull(3)?.id -> fetchAndDisplayData("YEAR")
-                else -> fetchAndDisplayData("WEEK")
+                R.id.chipWeek -> fetchAndDisplayData("WEEK")
+                R.id.chipMonth -> fetchAndDisplayData("MONTH")
+                R.id.chipYear -> fetchAndDisplayData("YEAR")
             }
         }
 
-        binding.filterGroup.check(binding.filterGroup.children.firstOrNull()?.id ?: -1)
+        binding.filterGroup.check(R.id.chipWeek)
+
     }
 
     private fun setupBottomNavigation() {
@@ -166,32 +165,54 @@ class ChartDesign10Activity : AppCompatActivity() {
     }
 
     private fun calculateLineTotals(expenses: List<Expense>, period: String): Map<String, Float> {
-        val formatter = when (period) {
-            "DAY" -> SimpleDateFormat("HH", Locale.getDefault())
-            "WEEK", "MONTH" -> SimpleDateFormat("dd", Locale.getDefault())
-            "YEAR" -> SimpleDateFormat("MMM", Locale.getDefault())
-            else -> SimpleDateFormat("dd", Locale.getDefault())
-        }
-
         val totals = mutableMapOf<String, Float>()
-        expenses.forEach { exp ->
-            val key = formatter.format(parseDateSafe(exp.date)?.time ?: Date())
-            totals[key] = totals.getOrDefault(key, 0f) + exp.total.toFloat()
-        }
 
-        return if (period == "YEAR") {
-            // Sort months in calendar order
-            val monthOrder = listOf(
-                "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-            )
-            totals.toList()
-                .sortedBy { monthOrder.indexOf(it.first) }
-                .toMap()
-        } else {
-            totals.toSortedMap()
+        when (period) {
+            "WEEK" -> {
+                val sdf = SimpleDateFormat("EEE", Locale.getDefault()) // Mon, Tue...
+                expenses.forEach { exp ->
+                    val date = parseDateSafe(exp.date)?.time ?: Date()
+                    val key = sdf.format(date)
+                    totals[key] = totals.getOrDefault(key, 0f) + exp.total.toFloat()
+                }
+
+                // Optional: order by weekday
+                val weekdayOrder = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+                return totals.toList()
+                    .sortedBy { weekdayOrder.indexOf(it.first) }
+                    .toMap()
+            }
+
+            "MONTH" -> {
+                val sdf = SimpleDateFormat("dd", Locale.getDefault()) // Day of month
+                expenses.forEach { exp ->
+                    val date = parseDateSafe(exp.date)?.time ?: Date()
+                    val key = sdf.format(date)
+                    totals[key] = totals.getOrDefault(key, 0f) + exp.total.toFloat()
+                }
+                return totals.toSortedMap()
+            }
+
+            "YEAR" -> {
+                val sdf = SimpleDateFormat("MMM", Locale.getDefault()) // Jan, Feb...
+                expenses.forEach { exp ->
+                    val date = parseDateSafe(exp.date)?.time ?: Date()
+                    val key = sdf.format(date)
+                    totals[key] = totals.getOrDefault(key, 0f) + exp.total.toFloat()
+                }
+                val monthOrder = listOf(
+                    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+                )
+                return totals.toList()
+                    .sortedBy { monthOrder.indexOf(it.first) }
+                    .toMap()
+            }
+
+            else -> return emptyMap()
         }
     }
+
 
 
     private fun calculateTopSpending(expenses: List<Expense>): List<TopSpendingItem> {

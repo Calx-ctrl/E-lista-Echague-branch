@@ -42,25 +42,28 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:singleSelection="true">
 
-
         <com.google.android.material.chip.Chip
+            android:id="@+id/chipWeek"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Week"
             style="@style/Widget.MaterialComponents.Chip.Choice" />
 
         <com.google.android.material.chip.Chip
+            android:id="@+id/chipMonth"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Month"
             style="@style/Widget.MaterialComponents.Chip.Choice" />
 
         <com.google.android.material.chip.Chip
+            android:id="@+id/chipYear"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Year"
             style="@style/Widget.MaterialComponents.Chip.Choice" />
     </com.google.android.material.chip.ChipGroup>
+
 
     <!-- Scrollable Content -->
     <androidx.core.widget.NestedScrollView
