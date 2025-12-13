@@ -45,9 +45,9 @@ class ChartDesign10Activity : AppCompatActivity() {
         binding.filterGroup.setOnCheckedStateChangeListener { group, checkedIds ->
             val chips = group.children.toList()
             when (checkedIds.firstOrNull()) {
-                chips.getOrNull(0)?.id -> fetchAndDisplayData("WEEK")
-                chips.getOrNull(1)?.id -> fetchAndDisplayData("MONTH")
-                chips.getOrNull(2)?.id -> fetchAndDisplayData("YEAR")
+                chips.getOrNull(1)?.id -> fetchAndDisplayData("WEEK")
+                chips.getOrNull(2)?.id -> fetchAndDisplayData("MONTH")
+                chips.getOrNull(3)?.id -> fetchAndDisplayData("YEAR")
                 else -> fetchAndDisplayData("WEEK")
             }
         }
@@ -266,8 +266,13 @@ class ChartDesign10Activity : AppCompatActivity() {
             data = LineData(dataSet)
             description.isEnabled = false
             xAxis.apply {
+                position = com.github.mikephil.charting.components.XAxis.XAxisPosition.BOTTOM
                 granularity = 1f
+                setGranularityEnabled(true)
+
                 valueFormatter = IndexAxisValueFormatter(labels)
+
+                setLabelCount(labels.size, true)   // 🔥 FORCE labels
                 setDrawGridLines(false)
             }
             axisRight.isEnabled = false
