@@ -9,15 +9,18 @@ import org.json.JSONObject
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.TimeUnit
+
 object ApiClient {
 
     private val client = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(60, TimeUnit.SECONDS)
-        .writeTimeout(60, TimeUnit.SECONDS)
+        .readTimeout(120, TimeUnit.SECONDS)
+        .writeTimeout(120, TimeUnit.SECONDS)
         .build()
 
-    private const val BACKEND_URL = "https://elista-406642774905.asia-southeast1.run.app/analyze"
+    // !!! CHANGE THIS TO YOUR PC IP ADDRESS !!!
+    // Example: "http://192.168.1.112:5000/scan"
+    private const val BACKEND_URL = "http://192.168.1.112:5000/scan"
 
     fun uploadReceiptFile(file: File, callback: (ReceiptAnalysis?) -> Unit) {
         try {
@@ -25,22 +28,18 @@ object ApiClient {
             Log.d("ApiClient", "Uploading file: ${file.name}, size: $fileSize bytes")
 
             if (fileSize == 0L) {
-                Log.e("ApiClient", "File is empty or not saved properly.")
+                Log.e("ApiClient", "File is empty.")
                 callback(null)
                 return
             }
 
             val mediaType = "image/jpeg".toMediaTypeOrNull()
-            if (mediaType == null) {
-                Log.e("ApiClient", "Invalid MIME type specified.")
-                callback(null)
-                return
-            }
 
+            // 1. MATCH PYTHON: Use "file" as the key, not "image"
             val requestBody = MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
                 .addFormDataPart(
-                    "image",
+                    "file",     // <--- Changed from "image" to "file" to match server.py
                     file.name,
                     file.asRequestBody(mediaType)
                 )
@@ -53,7 +52,7 @@ object ApiClient {
 
             client.newCall(request).enqueue(object : Callback {
                 override fun onFailure(call: Call, e: IOException) {
-                    Log.e("ApiClient", "❌ Upload failed: ${e.message}", e)
+                    Log.e("ApiClient", "❌ Connection failed: ${e.message}", e)
                     callback(null)
                 }
 
@@ -61,84 +60,66 @@ object ApiClient {
                     val rawJsonResponse = response.body?.string()
                     try {
                         if (!response.isSuccessful) {
-                            Log.e("ApiClient", "❌ Server error: ${response.code}. Message: ${rawJsonResponse}")
+                            Log.e("ApiClient", "❌ Server error ${response.code}: $rawJsonResponse")
                             callback(null)
                             return
                         }
 
-                        if (rawJsonResponse.isNullOrEmpty()) {
-                            Log.e("ApiClient", "Empty response from backend")
+                        Log.d("ApiClient", "Raw JSON: $rawJsonResponse")
+                        val root = JSONObject(rawJsonResponse ?: "{}")
+
+                        // 2. CHECK SUCCESS FLAG
+                        if (!root.optBoolean("success")) {
+                            Log.e("ApiClient", "Backend reported failure: ${root.optString("error")}")
                             callback(null)
                             return
                         }
 
-                        Log.d("ApiClient", "Raw JSON response: $rawJsonResponse")
+                        // 3. PARSE NEW PYTHON DATA STRUCTURE
+                        val data = root.getJSONObject("data")
 
-                        val root = JSONObject(rawJsonResponse)
+                        // Map Python keys to your ReceiptAnalysis variables
+                        // Python: "store" -> Kotlin: vendor
+                        val vendor = data.optString("store", "Unknown Store")
 
-                        val extractedDataJson: JSONObject? = root.optJSONObject("extracted_data")
-                        if (extractedDataJson == null) {
-                            Log.e("ApiClient", "❌ Backend response missing 'extracted_data' object. Full response: $rawJsonResponse")
-                            callback(null)
-                            return
-                        }
+                        // Python: "date" -> Kotlin: date
+                        val date = data.optString("date", "Unknown Date")
 
-                        val vendor = extractedDataJson.optString("store_name", "Unknown Store")
-                        val date = extractedDataJson.optString("date_of_purchase", "Unknown Date")
-                        val totalStr = extractedDataJson.optString("total_amount", "0.00")
-                        val receiptID = extractedDataJson.optString("receipt_id", "Unknown ID")
+                        // Python: "total" -> Kotlin: total
+                        val totalStr = data.optString("total", "0.00")
 
+                        // Python: "id" -> Kotlin: receiptID
+                        val receiptID = data.optString("id", "N/A")
 
+                        // 4. PARSE ITEMS
                         val items = mutableListOf<ReceiptItem>()
+                        val productsArray = data.optJSONArray("products")
 
-                        val itemsArray: JSONArray? = extractedDataJson.optJSONArray("items")
-
-                        if (itemsArray != null) {
-                            for (i in 0 until itemsArray.length()) {
-                                val itemObj = itemsArray.getJSONObject(i)
-                                val name = itemObj.optString("name", "Unknown Item")
+                        if (productsArray != null) {
+                            for (i in 0 until productsArray.length()) {
+                                val itemObj = productsArray.getJSONObject(i)
+                                // Python: "name" -> Kotlin: name
+                                val name = itemObj.optString("name", "Item")
+                                // Python: "price" -> Kotlin: price
                                 val price = itemObj.optString("price", "0.00")
-                                items.add(ReceiptItem(name, price))
-                            }
-                        } else {
-                            // Fallback for old structure (if backend not yet updated)
-                            val productNamesArray: JSONArray? = extractedDataJson.optJSONArray("product_names")
-                            val productPricesArray: JSONArray? = extractedDataJson.optJSONArray("product_prices")
 
-                            val namesList = mutableListOf<String>()
-                            productNamesArray?.let {
-                                for (i in 0 until it.length()) {
-                                    namesList.add(it.getString(i))
-                                }
-                            }
-
-                            val pricesList = mutableListOf<String>()
-                            productPricesArray?.let {
-                                for (i in 0 until it.length()) {
-                                    pricesList.add(it.getString(i))
-                                }
-                            }
-
-                            val maxLength = maxOf(namesList.size, pricesList.size)
-                            for (i in 0 until maxLength) {
-                                val name = namesList.getOrElse(i) { "Unknown Item" }
-                                val price = pricesList.getOrElse(i) { "0.00" }
                                 items.add(ReceiptItem(name, price))
                             }
                         }
 
+                        // 5. CREATE EXISTING DATA CLASS (Database Safe)
                         val receiptAnalysis = ReceiptAnalysis(
                             vendor = vendor,
                             date = date,
                             total = totalStr,
                             items = items,
-                            receiptID = receiptID,
+                            receiptID = receiptID
                         )
 
                         callback(receiptAnalysis)
 
                     } catch (e: Exception) {
-                        Log.e("ApiClient", "❌ JSON parse error: ${e.message}. Raw JSON: ${rawJsonResponse}", e)
+                        Log.e("ApiClient", "❌ Parse Error: ${e.message}", e)
                         callback(null)
                     } finally {
                         response.body?.close()
@@ -146,7 +127,7 @@ object ApiClient {
                 }
             })
         } catch (e: Exception) {
-            Log.e("ApiClient", "❌ Unexpected error: ${e.message}", e)
+            Log.e("ApiClient", "❌ Error: ${e.message}", e)
             callback(null)
         }
     }
