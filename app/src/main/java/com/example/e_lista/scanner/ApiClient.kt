@@ -20,7 +20,7 @@ object ApiClient {
 
     // !!! CHANGE THIS TO YOUR PC IP ADDRESS !!!
     // Example: "http://192.168.1.112:5000/scan"
-    private const val BACKEND_URL = "http://192.168.1.112:5000/scan"
+    private const val BACKEND_URL = "https://elistapython.onrender.com/scan"
 
     fun uploadReceiptFile(file: File, callback: (ReceiptAnalysis?) -> Unit) {
         try {
