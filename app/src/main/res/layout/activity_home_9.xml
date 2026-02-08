@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -18,9 +19,6 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- FILTER BUTTONS -->
-
-    <!-- BALANCE CARD -->
-
     <LinearLayout
         android:id="@+id/filterGroup"
         android:layout_width="wrap_content"
@@ -28,10 +26,9 @@
         android:layout_marginTop="56dp"
         android:gravity="center"
         android:orientation="horizontal"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.495"
+        app:layout_constraintTop_toTopOf="@id/headerBackground"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/headerBackground">
+        app:layout_constraintEnd_toEndOf="parent">
 
         <Button
             android:id="@+id/filterDay"
@@ -66,9 +63,7 @@
             android:textSize="14sp" />
     </LinearLayout>
 
-
-
-
+    <!-- BALANCE CARD -->
     <androidx.cardview.widget.CardView
         android:id="@+id/balanceCard"
         android:layout_width="0dp"
@@ -89,26 +84,26 @@
             android:orientation="vertical">
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
                 android:text="Total Spent"
                 android:textColor="@android:color/white"
                 android:textSize="16sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
 
             <TextView
                 android:id="@+id/totalBalance"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
                 android:text="₱ 0.00"
                 android:textColor="@android:color/white"
                 android:textSize="28sp"
                 android:textStyle="bold"
-                android:layout_marginTop="4dp" />
+                android:layout_marginTop="4dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
-    <!-- EXPENSE HISTORY SECTION -->
+    <!-- EXPENSE HISTORY -->
     <LinearLayout
         android:id="@+id/expenseHistorySection"
         android:layout_width="0dp"
@@ -121,69 +116,95 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Expense History Title and See All Button -->
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
                 android:text="Expense History"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="#1A1A1A" />
+                android:textColor="#1A1A1A"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
 
             <Button
                 android:id="@+id/seeAll"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:text="See all"
                 android:textColor="#16a085"
-                android:textSize="14sp"
                 android:background="@android:color/transparent"
                 android:padding="0dp"
                 android:minHeight="0dp"
                 android:minWidth="0dp"
-                android:textAllCaps="false" />
+                android:textAllCaps="false"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
         </RelativeLayout>
 
-        <!-- RecyclerView for Expenses -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/expensesRecyclerView"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_marginTop="8dp"
-            android:layout_weight="1"
-            />
+            android:layout_weight="1" />
     </LinearLayout>
 
-    <!-- FLOATING ACTION BUTTON -->
+    <!-- MIC FAB (LEFT) -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabMic"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_microphone"
+        android:contentDescription="Voice Input"
+        app:backgroundTint="#16a085"
+        app:tint="@android:color/white"
+        app:layout_constraintBottom_toTopOf="@id/bottomNavigationView"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginStart="24dp"
+        android:layout_marginBottom="12dp" />
+
+
+    <!-- MAIN FAB (CENTER) -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
-        android:contentDescription="Camera"
         android:src="@drawable/ic_camera"
+        android:contentDescription="Camera"
         app:backgroundTint="#16a085"
+        app:tint="@android:color/white"
+        app:layout_constraintBottom_toTopOf="@id/bottomNavigationView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="12dp" />
+
+    <!-- SUPPORT FAB (RIGHT) -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabSupport"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_support"
+        android:contentDescription="Support"
+        app:backgroundTint="#16a085"
+        app:tint="@android:color/white"
         app:layout_constraintBottom_toTopOf="@id/bottomNavigationView"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:tint="@android:color/white" />
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="12dp" />
+
 
     <!-- BOTTOM NAVIGATION -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigationView"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="#FFFFFF"
         app:itemIconTint="@color/nav_item_selector"
         app:itemTextColor="@color/nav_item_selector"
+        app:menu="@menu/bottom_nav_menu"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:menu="@menu/bottom_nav_menu" />
+        app:layout_constraintEnd_toEndOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
