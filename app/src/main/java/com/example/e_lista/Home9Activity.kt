@@ -85,6 +85,15 @@ class Home9Activity : AppCompatActivity() {
         binding.seeAll.setOnClickListener {
             startActivity(Intent(this, Expenses12Activity::class.java))
         }
+        binding.fabMic.setOnClickListener {
+            Toast.makeText(this, "Voice input coming soon 🎤", Toast.LENGTH_SHORT).show()
+            // later: start voice recognition
+        }
+
+        binding.fabSupport.setOnClickListener {
+            Toast.makeText(this, "Support clicked 🛟", Toast.LENGTH_SHORT).show()
+            // later: open help/chat screen
+        }
     }
 
     private fun setupBottomNav() {
