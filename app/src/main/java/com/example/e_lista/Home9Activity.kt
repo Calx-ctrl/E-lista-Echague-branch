@@ -1,14 +1,18 @@
 package com.example.e_lista
 
+import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.e_lista.databinding.ActivityHome9Binding
+import com.example.e_lista.prescribe.FinancialAdvisor
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -91,11 +95,48 @@ class Home9Activity : AppCompatActivity() {
         }
 
         binding.fabSupport.setOnClickListener {
-            Toast.makeText(this, "Support clicked 🛟", Toast.LENGTH_SHORT).show()
-            // later: open help/chat screen
+            // 1. Check if we have data to analyze
+            if (expenseList.isEmpty()) {
+                Toast.makeText(this, "No expenses to analyze yet!", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            // 2. Show a "Loading..." Dialog
+            val loadingDialog = AlertDialog.Builder(this)
+                .setTitle("AI Financial Advisor")
+                .setMessage("Analyzing your spending habits... Please wait.")
+                .setCancelable(false) // Prevent user from clicking away while loading
+                .create()
+            loadingDialog.show()
+
+            // 3. Call the AI in a background thread
+            lifecycleScope.launch {
+                try {
+                    // Call your object from suggestion.kt
+                    val advice = FinancialAdvisor.getAdvice(expenseList)
+
+                    // 4. Close Loading & Show Advice
+                    loadingDialog.dismiss()
+                    showAdviceResultDialog(advice)
+
+                } catch (e: Exception) {
+                    loadingDialog.dismiss()
+                    Toast.makeText(this@Home9Activity, "AI Error: ${e.message}", Toast.LENGTH_SHORT)
+                        .show()
+                }
+            }
         }
     }
-
+    private fun showAdviceResultDialog(advice: String) {
+        AlertDialog.Builder(this)
+            .setTitle("💡 Smart Suggestions")
+            .setMessage(advice)
+            .setPositiveButton("Thanks!") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .create()
+            .show()
+    }
     private fun setupBottomNav() {
         binding.bottomNavigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {

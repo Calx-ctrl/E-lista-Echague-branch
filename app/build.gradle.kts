@@ -97,4 +97,8 @@ dependencies {
     //scanner
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("androidx.recyclerview:recyclerview:1.4.0")
+    //prescription
+    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
+    //linearregression
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 }
