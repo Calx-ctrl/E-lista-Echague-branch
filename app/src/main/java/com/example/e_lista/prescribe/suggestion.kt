@@ -6,10 +6,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 object FinancialAdvisor {
 
-    // !!! SECURITY WARNING: Restrict this key in Google AI Studio to your Android Package Name
-    private const val API_KEY = "AIzaSyAmpCfBdW6BVMoRRTPzby1KTiqtkJgyuY4"
 
-    // Use "gemini-1.5-flash" for speed/cost or "gemini-pro" for quality
+    private const val API_KEY = "KEY"
+
     private val generativeModel = GenerativeModel(
         modelName = "gemini-3-flash-preview",
         apiKey = API_KEY
