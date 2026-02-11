@@ -27,7 +27,6 @@ object FinancialAdvisor {
                 val topCategory = categoryMap.maxByOrNull { it.value }
                 val topCatName = topCategory?.key ?: "General"
                 val topCatAmount = topCategory?.value ?: 0.0
-
                 // 2. Build Prompt
                 val prompt = """
                     You are a financial advisor.
