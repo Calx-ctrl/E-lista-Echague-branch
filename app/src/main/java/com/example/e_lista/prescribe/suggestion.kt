@@ -7,7 +7,7 @@ import kotlinx.coroutines.withContext
 object FinancialAdvisor {
 
 
-    private const val API_KEY = "KEY"
+    private const val API_KEY = "KEY HERE"
 
     private val generativeModel = GenerativeModel(
         modelName = "gemini-3-flash-preview",
