@@ -17,7 +17,7 @@ import com.google.firebase.database.*
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.pow
-
+// test
 class ChartDesign10Activity : AppCompatActivity() {
 
     private lateinit var binding: ActivityChartDesign10Binding
