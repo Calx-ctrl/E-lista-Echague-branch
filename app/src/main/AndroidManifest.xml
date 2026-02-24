@@ -58,7 +58,7 @@
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="dito ung key boi" />
+            android:value="hingin kay rainier ang api key" />
 
         <activity android:name=".ScannedReceipt" />
         <activity

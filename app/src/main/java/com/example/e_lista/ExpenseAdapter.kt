@@ -100,12 +100,9 @@ class ExpenseAdapter(
                     SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(Date())
                 }
 
-                // NEW: Append location to date if it exists
-                if (expense.location.isNotEmpty()) {
-                    expenseHolder.date.text = "$dateString • ${expense.location}"
-                } else {
-                    expenseHolder.date.text = dateString
-                }
+
+                expenseHolder.date.text = dateString
+
 
                 expenseHolder.amount.text = "₱%.2f".format(expense.total)
             }

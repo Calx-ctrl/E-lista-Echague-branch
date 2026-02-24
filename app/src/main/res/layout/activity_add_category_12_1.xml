@@ -86,17 +86,6 @@
             android:ellipsize="end"/>
 
         <EditText
-            android:id="@+id/inputLocation"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginBottom="8dp"
-            android:hint="Location"
-            android:background="@drawable/rounded_input"
-            android:padding="8dp"
-            android:singleLine="true"
-            android:ellipsize="end"/>
-
-        <EditText
             android:id="@+id/inputDescription"
             android:layout_width="match_parent"
             android:layout_height="48dp"

@@ -834,43 +834,58 @@ class Expenses12Activity : AppCompatActivity() {
         val itemContainer = dialogView.findViewById<LinearLayout>(R.id.itemContainer)
         val doneButton = dialogView.findViewById<Button>(R.id.btnDone)
         val Total = dialogView.findViewById<TextView>(R.id.Total)
+// Inside showExpenseDetailsDialog(expense: Expense)
 
-        //mmap stuff
+// 1. Find the views
         val locationEditText = dialogView.findViewById<EditText>(R.id.inputLocation)
         val enableLocationSwitch = dialogView.findViewById<androidx.appcompat.widget.SwitchCompat>(R.id.enableLocation)
 
+// 2. Pre-fill data from the 'expense' object
+        if (expense.location.isNotEmpty()) {
+            locationEditText.setText(expense.location)
+            enableLocationSwitch.isChecked = true
+        } else {
+            locationEditText.setText("")
+            enableLocationSwitch.isChecked = false
+        }
+
+// 3. Set the listener AFTER setting the initial state
+// This prevents the listener from firing immediately and overwriting the saved location
         enableLocationSwitch.setOnCheckedChangeListener { _, isChecked ->
             activeLocationInput = locationEditText
             activeEnableSwitch = enableLocationSwitch
 
-            // Only fetch if switching ON manually.
-            // If it's ON because we loaded data, don't re-fetch unless user toggles off/on.
-            if (enableLocationSwitch.isPressed && isChecked) {
-                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                    fetchCurrentLocation()
-                } else {
-                    requestPermissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))
+            if (isChecked) {
+                // Only fetch location if the text is empty (user just turned it on)
+                // OR if you want to force refresh, you can remove the .isEmpty() check
+                if (locationEditText.text.toString().isEmpty()) {
+                    locationEditText.hint = "Locating..."
+                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                        fetchCurrentLocation()
+                    } else {
+                        requestPermissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+                    }
                 }
-            } else if (!isChecked) {
+            } else {
                 locationEditText.setText("")
                 locationEditText.hint = "Location"
             }
         }
 
+// 4. Map Click Listener
         locationEditText.setOnClickListener {
             activeLocationInput = locationEditText
             if (enableLocationSwitch.isChecked) {
                 val intent = Intent(this, MapPickerActivity::class.java)
-
-                // Pass the current text from the EditText to the map
-                val currentAddress = locationEditText.text.toString()
-                intent.putExtra("CURRENT_ADDRESS", currentAddress)
-
+                // Pass current text so map opens there
+                intent.putExtra("CURRENT_ADDRESS", locationEditText.text.toString())
                 mapActivityLauncher.launch(intent)
-            } else {
-                Toast.makeText(this, "Enable location to pick from map", Toast.LENGTH_SHORT).show()
             }
         }
+
+// 5. IMPORTANT: Make sure these fields start as Disabled (View Mode)
+// Add locationEditText and enableLocationSwitch to your setFieldsEditable call
+        setFieldsEditable(false, nameEditText, dateEditText, descEditText, spinnerCategory, locationEditText, enableLocationSwitch)
         // ----------------------------------------------------------
         // 1️⃣ INITIAL VALUES
         // ----------------------------------------------------------
@@ -996,7 +1011,7 @@ class Expenses12Activity : AppCompatActivity() {
 
             if (doneButton.text == "Edit") {
                 // ENABLE ALL FIELDS
-                setFieldsEditable(true, nameEditText, dateEditText, descEditText, spinnerCategory)
+                setFieldsEditable(true, nameEditText, dateEditText, descEditText, spinnerCategory, locationEditText, enableLocationSwitch)
                 setItemRowsEditable(itemContainer, true)
                 doneButton.text = "Save"
 
@@ -1073,12 +1088,14 @@ class Expenses12Activity : AppCompatActivity() {
                 // ----------------------------------------------------------
                 // 7️⃣ SAVE UPDATED EXPENSE
                 // ----------------------------------------------------------
+                val location = locationEditText.text.toString()
                 val updatedExpense = expense.copy(
                     title = nameEditText.text.toString(),
                     category = spinnerCategory.selectedItem.toString(),
                     date = dateEditText.text.toString(),
                     description = descEditText.text.toString(),
                     items = updatedItems,
+                    location = locationEditText.text.toString()
                 )
 
                 expenseDatabase.child(expense.id).setValue(updatedExpense)
@@ -1114,11 +1131,19 @@ class Expenses12Activity : AppCompatActivity() {
     }
 
     private fun setFieldsEditable(enabled: Boolean, vararg views: View) {
-        views.forEach {
-            when (it) {
-                is EditText -> it.isEnabled = enabled
-                is Spinner -> it.isEnabled = enabled
-                is androidx.appcompat.widget.SwitchCompat -> it.isEnabled = enabled
+        for (view in views) {
+            view.isEnabled = enabled
+
+            if (view is EditText) {
+                // Special check: If this is the Location box, DO NOT make it focusable
+                if (view.id == R.id.inputLocation) {
+                    view.isFocusable = false
+                    view.isClickable = enabled // It should be clickable only when editing
+                } else {
+                    // For all other inputs (Name, Description), enable focus
+                    view.isFocusable = enabled
+                    view.isFocusableInTouchMode = enabled
+                }
             }
         }
     }
