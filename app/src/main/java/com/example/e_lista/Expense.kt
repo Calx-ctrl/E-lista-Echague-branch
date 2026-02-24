@@ -16,6 +16,7 @@ data class Expense(
     var description: String? = "",
     var location: String = "",       // <-- NEW: Added Location field
     var timestamp: Long = 0L,
+    var location: String = "",
     var items: MutableList<ExpenseItem> = mutableListOf()
 
 ) {
