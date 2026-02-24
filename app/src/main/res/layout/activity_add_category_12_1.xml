@@ -130,6 +130,7 @@
                 android:layout_weight="1"
                 android:layout_marginBottom="0dp"
                 android:hint="Location"
+                android:singleLine="true"
                 android:focusable="false"
                 android:background="@drawable/rounded_input"
                 android:padding="8dp"/>
