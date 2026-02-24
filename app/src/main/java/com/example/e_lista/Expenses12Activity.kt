@@ -17,7 +17,15 @@ import com.google.firebase.database.*
 import com.google.gson.Gson
 import java.text.SimpleDateFormat
 import java.util.*
-
+import android.Manifest
+import android.content.pm.PackageManager
+import android.location.Geocoder
+import android.location.Location
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ActivityCompat
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import androidx.appcompat.widget.SwitchCompat
 
 
 class Expenses12Activity : AppCompatActivity() {
@@ -36,6 +44,35 @@ class Expenses12Activity : AppCompatActivity() {
     private var groupedDisplayedList = mutableListOf<GroupedListItem>()
     //item containers
     lateinit var itemContainer: LinearLayout
+
+    // Location Variables
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private var activeLocationInput: EditText? = null
+    private var activeEnableSwitch: SwitchCompat? = null
+
+    // 1. Result Launcher for MAP Activity
+    private val mapActivityLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val address = result.data?.getStringExtra("SELECTED_ADDRESS")
+            activeLocationInput?.setText(address)
+        }
+    }
+
+    // 2. Result Launcher for PERMISSIONS
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+            permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        ) {
+            fetchCurrentLocation()
+        } else {
+            Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show()
+            activeEnableSwitch?.isChecked = false
+        }
+    }
     var itemCount = 0
 
     // ExpensesActivity.kt
@@ -59,6 +96,9 @@ class Expenses12Activity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityExpenses12Binding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        //map
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         // If coming from camera scan
         val analysisJson = intent.getStringExtra("analysis")
@@ -201,6 +241,34 @@ class Expenses12Activity : AppCompatActivity() {
         // Update filter button UI colors
         updateFilterUI()
     }
+
+    //para sa map
+    private fun fetchCurrentLocation() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+
+        activeLocationInput?.hint = "Location"
+
+        fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
+            location?.let {
+                try {
+                    val geocoder = Geocoder(this, Locale.getDefault())
+                    val addresses = geocoder.getFromLocation(it.latitude, it.longitude, 1)
+                    if (!addresses.isNullOrEmpty()) {
+                        activeLocationInput?.setText(addresses[0].getAddressLine(0))
+                    }
+                } catch (e: Exception) {
+                    activeLocationInput?.setText("Lat: ${it.latitude}, Long: ${it.longitude}")
+                }
+            } ?: run {
+                activeLocationInput?.hint = "Location not found"
+            }
+        }
+    }
+
      private fun openDatePicker() {
         val calendar = Calendar.getInstance()
 
@@ -421,6 +489,46 @@ class Expenses12Activity : AppCompatActivity() {
         val descEditText = dialogView.findViewById<EditText>(R.id.inputDescription)
         val doneButton = dialogView.findViewById<Button>(R.id.btnDone)
 
+        //geolocation stuff
+        val locationEditText = dialogView.findViewById<EditText>(R.id.inputLocation)
+        val enableLocationSwitch = dialogView.findViewById<androidx.appcompat.widget.SwitchCompat>(R.id.enableLocation)
+
+        // 1. Switch Logic
+        enableLocationSwitch.setOnCheckedChangeListener { _, isChecked ->
+            // Update global reference so the Activity knows which views to manipulate
+            activeLocationInput = locationEditText
+            activeEnableSwitch = enableLocationSwitch
+
+            if (isChecked) {
+                // Check permissions
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                    fetchCurrentLocation()
+                } else {
+                    requestPermissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+                }
+            } else {
+                locationEditText.setText("") // Clear text
+                locationEditText.hint = "Location"
+            }
+        }
+
+        // 2. Map Click Logic
+        locationEditText.setOnClickListener {
+            // Update reference
+            activeLocationInput = locationEditText
+            if (enableLocationSwitch.isChecked) {
+                val intent = Intent(this, MapPickerActivity::class.java)
+
+                // Pass the current text from the EditText to the map
+                val currentAddress = locationEditText.text.toString()
+                intent.putExtra("CURRENT_ADDRESS", currentAddress)
+
+                mapActivityLauncher.launch(intent)
+            } else {
+                Toast.makeText(this, "Enable location to pick from map", Toast.LENGTH_SHORT).show()
+            }
+        }
+
         val categories = listOf(
             "Category...",
             "Food",
@@ -621,6 +729,7 @@ class Expenses12Activity : AppCompatActivity() {
             }
 
             val expenseId = expenseDatabase.push().key ?: return@setOnClickListener
+            val location = locationEditText.text.toString()
             val newExpense = Expense(
                 id = expenseId,
                 title = name,
@@ -628,7 +737,8 @@ class Expenses12Activity : AppCompatActivity() {
                 category = selectedCategory,
                 description = description,
                 timestamp = timestamp,
-                items = itemsList
+                items = itemsList,
+                location = location
             )
 
             expenseDatabase.child(expenseId).setValue(newExpense)
@@ -724,6 +834,43 @@ class Expenses12Activity : AppCompatActivity() {
         val itemContainer = dialogView.findViewById<LinearLayout>(R.id.itemContainer)
         val doneButton = dialogView.findViewById<Button>(R.id.btnDone)
         val Total = dialogView.findViewById<TextView>(R.id.Total)
+
+        //mmap stuff
+        val locationEditText = dialogView.findViewById<EditText>(R.id.inputLocation)
+        val enableLocationSwitch = dialogView.findViewById<androidx.appcompat.widget.SwitchCompat>(R.id.enableLocation)
+
+        enableLocationSwitch.setOnCheckedChangeListener { _, isChecked ->
+            activeLocationInput = locationEditText
+            activeEnableSwitch = enableLocationSwitch
+
+            // Only fetch if switching ON manually.
+            // If it's ON because we loaded data, don't re-fetch unless user toggles off/on.
+            if (enableLocationSwitch.isPressed && isChecked) {
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                    fetchCurrentLocation()
+                } else {
+                    requestPermissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))
+                }
+            } else if (!isChecked) {
+                locationEditText.setText("")
+                locationEditText.hint = "Location"
+            }
+        }
+
+        locationEditText.setOnClickListener {
+            activeLocationInput = locationEditText
+            if (enableLocationSwitch.isChecked) {
+                val intent = Intent(this, MapPickerActivity::class.java)
+
+                // Pass the current text from the EditText to the map
+                val currentAddress = locationEditText.text.toString()
+                intent.putExtra("CURRENT_ADDRESS", currentAddress)
+
+                mapActivityLauncher.launch(intent)
+            } else {
+                Toast.makeText(this, "Enable location to pick from map", Toast.LENGTH_SHORT).show()
+            }
+        }
         // ----------------------------------------------------------
         // 1️⃣ INITIAL VALUES
         // ----------------------------------------------------------
@@ -971,6 +1118,7 @@ class Expenses12Activity : AppCompatActivity() {
             when (it) {
                 is EditText -> it.isEnabled = enabled
                 is Spinner -> it.isEnabled = enabled
+                is androidx.appcompat.widget.SwitchCompat -> it.isEnabled = enabled
             }
         }
     }
