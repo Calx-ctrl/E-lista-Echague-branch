@@ -8,4 +8,5 @@
     <string name="facebook_app_id">1933229210572349</string>
     <string name="fb_login_protocol_scheme">fb1933229210572349</string>
     <string name="facebook_client_token">c53c8f8e6f89d155cc032075c64df5c6</string>
+    <string name="title_activity_map_picker">MapPickerActivity</string>
 </resources>

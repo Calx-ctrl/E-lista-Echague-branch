@@ -1,14 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
     <uses-permission android:name="android.permission.CAMERA" />
+
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission
+        android:name="com.google.android.gms.permission.AD_ID"
+        tools:node="remove" />
 
     <application
         android:name=".App"
@@ -19,8 +29,18 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Elista"
         tools:targetApi="31">
-        <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/facebook_app_id"/>
-        <meta-data android:name="com.facebook.sdk.ClientToken" android:value="@string/facebook_client_token"/>
+        <activity
+            android:name=".MapPickerActivity"
+            android:exported="false"
+            android:label="@string/title_activity_map_picker"
+            android:theme="@style/Theme.Elista" />
+
+        <meta-data
+            android:name="com.facebook.sdk.ApplicationId"
+            android:value="@string/facebook_app_id" />
+        <meta-data
+            android:name="com.facebook.sdk.ClientToken"
+            android:value="@string/facebook_client_token" />
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="@string/default_web_client_id" />
@@ -31,28 +51,62 @@
             android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="hingin kay rainier ang api key" />
+
         <activity android:name=".ScannedReceipt" />
-        <activity android:name=".LoginActivity" android:exported="false" />
-        <activity android:name=".Home9Activity" android:exported="false" />
-        <activity android:name=".SignupActivity" android:exported="false" />
-        <activity android:name=".WelcomeActivity" android:exported="false" />
-        <activity android:name=".Expenses12Activity" android:exported="false" />
-        <activity android:name=".EmailSentActivity" android:exported="false" />
-        <activity android:name=".AllSetActivity" android:exported="false" />
-        <activity android:name=".OtpActivity" android:exported="false" />
-        <activity android:name=".Profile13Activity" android:exported="false" />
-        <activity android:name=".AboutUsActivity" android:exported="false" />
-        <activity android:name=".PrivacyActivity" android:exported="false" />
-        <activity android:name=".TermsActivity" android:exported="false" />
-        <activity android:name=".FaqActivity" android:exported="false" />
+        <activity
+            android:name=".LoginActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Home9Activity"
+            android:exported="false" />
+        <activity
+            android:name=".SignupActivity"
+            android:exported="false" />
+        <activity
+            android:name=".WelcomeActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Expenses12Activity"
+            android:exported="false" />
+        <activity
+            android:name=".EmailSentActivity"
+            android:exported="false" />
+        <activity
+            android:name=".AllSetActivity"
+            android:exported="false" />
+        <activity
+            android:name=".OtpActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Profile13Activity"
+            android:exported="false" />
+        <activity
+            android:name=".AboutUsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".PrivacyActivity"
+            android:exported="false" />
+        <activity
+            android:name=".TermsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".FaqActivity"
+            android:exported="false" />
         <activity
             android:name=".ChartDesign10Activity"
             android:exported="false" />
+        <activity
+            android:name=".ReceiptScanUpload"
+            android:exported="false" />
 
-        <activity android:name=".ReceiptScanUpload" android:exported="false"/>
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="com.example.e_lista.fileprovider"
@@ -63,7 +117,5 @@
                 android:resource="@xml/file_paths" />
         </provider>
     </application>
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove"/>
 
 </manifest>
