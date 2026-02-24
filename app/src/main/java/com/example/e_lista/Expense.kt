@@ -16,6 +16,7 @@ data class Expense(
     val category: String = "",      // NEW
     var description: String? = "",
     var timestamp: Long = 0L,
+    var location: String = "",
     var items: MutableList<ExpenseItem> = mutableListOf()
 
 ) {
