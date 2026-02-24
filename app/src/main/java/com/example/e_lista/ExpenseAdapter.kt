@@ -9,7 +9,6 @@ import androidx.recyclerview.widget.RecyclerView
 import java.text.SimpleDateFormat
 import java.util.*
 
-// Sealed class for grouped list items
 sealed class GroupedListItem {
     data class Header(val title: String) : GroupedListItem()
     data class ExpenseItem(val expense: Expense) : GroupedListItem()
@@ -34,7 +33,6 @@ class ExpenseAdapter(
         private const val TYPE_ITEM = 1
     }
 
-    // ViewHolder for expense items
     inner class ExpenseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val icon: ImageView = itemView.findViewById(R.id.categoryIconImageView)
         val title: TextView = itemView.findViewById(R.id.categoryNameTextView)
@@ -52,7 +50,6 @@ class ExpenseAdapter(
         }
     }
 
-    // ViewHolder for headers
     inner class HeaderViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val headerTitle: TextView = itemView.findViewById(R.id.categoryNameTextView)
     }
@@ -66,12 +63,10 @@ class ExpenseAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return if (viewType == TYPE_HEADER) {
-            val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_expense_header, parent, false)
+            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_expense_header, parent, false)
             HeaderViewHolder(view)
         } else {
-            val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_expense, parent, false)
+            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_expense, parent, false)
             ExpenseViewHolder(view)
         }
     }
@@ -81,44 +76,41 @@ class ExpenseAdapter(
         when (item) {
             is GroupedListItem.Header -> {
                 val headerHolder = holder as HeaderViewHolder
-                // Format the header if it's a date
                 headerHolder.headerTitle.text = try {
                     val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                     val outputFormat = SimpleDateFormat("EEE, MMM dd", Locale.getDefault())
                     outputFormat.format(inputFormat.parse(item.title)!!)
-                } catch (e: Exception) {
-                    // Fallback to raw title
-                    item.title
-                }
+                } catch (e: Exception) { item.title }
             }
 
             is GroupedListItem.ExpenseItem -> {
                 val expenseHolder = holder as ExpenseViewHolder
                 val expense = item.expense
 
-                // Set icon
                 val iconRes = categoryIcons[expense.category] ?: R.drawable.ic_palette
                 expenseHolder.icon.setImageResource(iconRes)
-
-                // Set title
                 expenseHolder.title.text = expense.title
 
-                // Set formatted date
-                expenseHolder.date.text = try {
+                // Format Date + Location
+                val dateString = try {
                     val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                     val outputFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
                     outputFormat.format(inputFormat.parse(expense.date)!!)
                 } catch (e: Exception) {
-                    // Fallback to current date if parsing fails
                     SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(Date())
                 }
 
-                // Set amount
+                // NEW: Append location to date if it exists
+                if (expense.location.isNotEmpty()) {
+                    expenseHolder.date.text = "$dateString • ${expense.location}"
+                } else {
+                    expenseHolder.date.text = dateString
+                }
+
                 expenseHolder.amount.text = "₱%.2f".format(expense.total)
             }
         }
     }
-
 
     override fun getItemCount(): Int = itemList.size
 

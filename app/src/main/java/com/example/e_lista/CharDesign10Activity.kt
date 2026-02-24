@@ -4,20 +4,20 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.children
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.e_lista.databinding.ActivityChartDesign10Binding
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.charts.PieChart
-import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.data.*
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.formatter.PercentFormatter
+import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import java.text.SimpleDateFormat
 import java.util.*
-
+import kotlin.math.pow
+// test
 class ChartDesign10Activity : AppCompatActivity() {
 
     private lateinit var binding: ActivityChartDesign10Binding
@@ -26,6 +26,9 @@ class ChartDesign10Activity : AppCompatActivity() {
     private lateinit var expenseDatabase: DatabaseReference
 
     private val categories = listOf("Food", "Transport", "Bills", "Shopping", "Entertainment", "Others")
+
+    // NEW: Variable to track current filter state
+    private var currentPeriod = "WEEK"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,16 +45,25 @@ class ChartDesign10Activity : AppCompatActivity() {
 
         binding.topSpendingList.layoutManager = LinearLayoutManager(this)
 
+        // Updated Listener to track currentPeriod
         binding.filterGroup.setOnCheckedStateChangeListener { _, checkedIds ->
-            when (checkedIds.firstOrNull()) {
-                R.id.chipWeek -> fetchAndDisplayData("WEEK")
-                R.id.chipMonth -> fetchAndDisplayData("MONTH")
-                R.id.chipYear -> fetchAndDisplayData("YEAR")
+            currentPeriod = when (checkedIds.firstOrNull()) {
+                R.id.chipWeek -> "WEEK"
+                R.id.chipMonth -> "MONTH"
+                R.id.chipYear -> "YEAR"
+                else -> "WEEK"
             }
+            fetchAndDisplayData(currentPeriod)
         }
 
-        binding.filterGroup.check(R.id.chipWeek)
+        // NEW: Switch Listener
+        binding.switchTrend.setOnCheckedChangeListener { _, _ ->
+            // Re-fetch (or re-render) data when switch is toggled
+            fetchAndDisplayData(currentPeriod)
+        }
 
+        // Default selection
+        binding.filterGroup.check(R.id.chipWeek)
     }
 
     private fun setupBottomNavigation() {
@@ -81,7 +93,6 @@ class ChartDesign10Activity : AppCompatActivity() {
                 setupLineChart(binding.lineChart, lineTotals, period)
 
                 if (topCategories.isEmpty()) {
-                    // show placeholder if no top spending
                     binding.topSpendingList.adapter = TopSpendingAdapter(
                         listOf(
                             TopSpendingItem(
@@ -101,18 +112,16 @@ class ChartDesign10Activity : AppCompatActivity() {
         })
     }
 
+    // --- Date Filtering Logic ---
     private fun filterExpensesByPeriod(expenses: List<Expense>, period: String): List<Expense> {
         val cal = Calendar.getInstance()
-        val now = cal.timeInMillis
 
         return expenses.filter { exp ->
-            val ts = exp.timestamp
             val expCal = parseDateSafe(exp.date) ?: return@filter false
-
             when (period) {
-                "WEEK" -> isSameWeek(exp.date, Calendar.getInstance())
-                "MONTH" -> isSameMonth(exp.date, Calendar.getInstance())
-                "YEAR" -> expCal.get(Calendar.YEAR) == Calendar.getInstance().get(Calendar.YEAR)
+                "WEEK" -> isSameWeek(exp.date, cal)
+                "MONTH" -> isSameMonth(exp.date, cal)
+                "YEAR" -> expCal.get(Calendar.YEAR) == cal.get(Calendar.YEAR)
                 else -> false
             }
         }
@@ -124,12 +133,6 @@ class ChartDesign10Activity : AppCompatActivity() {
             val date = sdf.parse(dateStr) ?: return null
             Calendar.getInstance().apply { time = date }
         } catch (e: Exception) { null }
-    }
-
-    private fun isSameDay(dateStr: String, reference: Calendar): Boolean {
-        val cal = parseDateSafe(dateStr) ?: return false
-        return cal.get(Calendar.YEAR) == reference.get(Calendar.YEAR) &&
-                cal.get(Calendar.DAY_OF_YEAR) == reference.get(Calendar.DAY_OF_YEAR)
     }
 
     private fun isSameWeek(dateStr: String, reference: Calendar): Boolean {
@@ -169,22 +172,19 @@ class ChartDesign10Activity : AppCompatActivity() {
 
         when (period) {
             "WEEK" -> {
-                val sdf = SimpleDateFormat("EEE", Locale.getDefault()) // Mon, Tue...
+                val sdf = SimpleDateFormat("EEE", Locale.getDefault())
                 expenses.forEach { exp ->
                     val date = parseDateSafe(exp.date)?.time ?: Date()
                     val key = sdf.format(date)
                     totals[key] = totals.getOrDefault(key, 0f) + exp.total.toFloat()
                 }
-
-                // Optional: order by weekday
                 val weekdayOrder = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
                 return totals.toList()
                     .sortedBy { weekdayOrder.indexOf(it.first) }
                     .toMap()
             }
-
             "MONTH" -> {
-                val sdf = SimpleDateFormat("dd", Locale.getDefault()) // Day of month
+                val sdf = SimpleDateFormat("dd", Locale.getDefault())
                 expenses.forEach { exp ->
                     val date = parseDateSafe(exp.date)?.time ?: Date()
                     val key = sdf.format(date)
@@ -192,28 +192,21 @@ class ChartDesign10Activity : AppCompatActivity() {
                 }
                 return totals.toSortedMap()
             }
-
             "YEAR" -> {
-                val sdf = SimpleDateFormat("MMM", Locale.getDefault()) // Jan, Feb...
+                val sdf = SimpleDateFormat("MMM", Locale.getDefault())
                 expenses.forEach { exp ->
                     val date = parseDateSafe(exp.date)?.time ?: Date()
                     val key = sdf.format(date)
                     totals[key] = totals.getOrDefault(key, 0f) + exp.total.toFloat()
                 }
-                val monthOrder = listOf(
-                    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-                )
+                val monthOrder = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
                 return totals.toList()
                     .sortedBy { monthOrder.indexOf(it.first) }
                     .toMap()
             }
-
             else -> return emptyMap()
         }
     }
-
-
 
     private fun calculateTopSpending(expenses: List<Expense>): List<TopSpendingItem> {
         if (expenses.isEmpty()) return emptyList()
@@ -235,23 +228,21 @@ class ChartDesign10Activity : AppCompatActivity() {
             .ifEmpty { listOf(PieEntry(1f, "No Data")) }
 
         val dataSet = PieDataSet(entries, "").apply {
-            // Updated color palette
             colors = if (entries.first().label == "No Data") {
                 listOf(Color.LTGRAY)
             } else {
                 listOf(
-                    Color.parseColor("#16a085"), // teal
-                    Color.parseColor("#e67e22"), // orange
-                    Color.parseColor("#e74c3c"), // red
-                    Color.parseColor("#2980b9"), // blue
-                    Color.parseColor("#9b59b6"), // purple
-                    Color.parseColor("#f1c40f")  // yellow
+                    Color.parseColor("#16a085"),
+                    Color.parseColor("#e67e22"),
+                    Color.parseColor("#e74c3c"),
+                    Color.parseColor("#2980b9"),
+                    Color.parseColor("#9b59b6"),
+                    Color.parseColor("#f1c40f")
                 )
             }
             sliceSpace = 3f
             valueTextSize = 11f
             valueFormatter = PercentFormatter(pie)
-            setDrawValues(true)
         }
 
         pie.apply {
@@ -259,7 +250,7 @@ class ChartDesign10Activity : AppCompatActivity() {
             data = PieData(dataSet)
             description.isEnabled = false
             setDrawEntryLabels(false)
-            centerText = if (entries.first().label == "No Data") "No Data Available" else ""
+            centerText = if (entries.first().label == "No Data") "No Data" else ""
             setDrawHoleEnabled(true)
             holeRadius = 35f
             transparentCircleRadius = 40f
@@ -269,36 +260,85 @@ class ChartDesign10Activity : AppCompatActivity() {
         }
     }
 
+    private fun calculateLinearRegression(entries: List<Entry>): List<Entry> {
+        if (entries.size < 2) return emptyList()
+
+        val n = entries.size.toFloat()
+        var sumX = 0f
+        var sumY = 0f
+        var sumXY = 0f
+        var sumX2 = 0f
+
+        for (e in entries) {
+            sumX += e.x
+            sumY += e.y
+            sumXY += (e.x * e.y)
+            sumX2 += (e.x * e.x)
+        }
+
+        val denominator = (n * sumX2) - (sumX.pow(2))
+        if (denominator == 0f) return emptyList()
+
+        val slope = ((n * sumXY) - (sumX * sumY)) / denominator
+        val intercept = (sumY - (slope * sumX)) / n
+
+        val startX = entries.first().x
+        val endX = entries.last().x
+
+        val startY = (slope * startX) + intercept
+        val endY = (slope * endX) + intercept
+
+        return listOf(Entry(startX, startY), Entry(endX, endY))
+    }
 
     private fun setupLineChart(chart: LineChart, totals: Map<String, Float>, period: String) {
         val entries = if (totals.isEmpty()) listOf(Entry(0f, 0f)) else totals.values.mapIndexed { index, value -> Entry(index.toFloat(), value) }
         val labels = if (totals.isEmpty()) listOf("No Data") else totals.keys.toList()
 
-        val dataSet = LineDataSet(entries, "Total Expenses").apply {
+        val mainDataSet = LineDataSet(entries, "Expenses").apply {
             color = Color.parseColor("#16a085")
             lineWidth = 2f
             circleRadius = 4f
             setCircleColor(Color.parseColor("#16a085"))
             valueTextColor = Color.BLACK
             mode = LineDataSet.Mode.CUBIC_BEZIER
+            setDrawValues(true)
         }
 
+        val dataSets = ArrayList<ILineDataSet>()
+        dataSets.add(mainDataSet)
+
+        // NEW: Check if Switch is Enabled before adding Trend Line
+        if (binding.switchTrend.isChecked) {
+            val trendEntries = calculateLinearRegression(entries)
+            if (trendEntries.isNotEmpty()) {
+                val trendDataSet = LineDataSet(trendEntries, "Trend").apply {
+                    color = Color.RED
+                    lineWidth = 2f
+                    setDrawCircles(false)
+                    setDrawValues(false)
+                    enableDashedLine(10f, 5f, 0f)
+                }
+                dataSets.add(trendDataSet)
+            }
+        }
+
+        val lineData = LineData(dataSets)
+
         chart.apply {
-            data = LineData(dataSet)
+            data = lineData
             description.isEnabled = false
             xAxis.apply {
                 position = com.github.mikephil.charting.components.XAxis.XAxisPosition.BOTTOM
                 granularity = 1f
                 setGranularityEnabled(true)
-
                 valueFormatter = IndexAxisValueFormatter(labels)
-
-                setLabelCount(labels.size, true)   // 🔥 FORCE labels
+                setLabelCount(labels.size, true)
                 setDrawGridLines(false)
             }
             axisRight.isEnabled = false
             axisLeft.axisMinimum = 0f
-            legend.isEnabled = false
+            legend.isEnabled = true
             animateY(1000)
             invalidate()
         }
