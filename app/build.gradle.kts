@@ -44,6 +44,13 @@ android {
         viewBinding = true
         compose = true
     }
+
+    packaging {
+        resources {
+            excludes += "META-INF/AL2.0"
+            excludes += "META-INF/LGPL2.1"
+        }
+    }
 }
 
 
@@ -62,6 +69,12 @@ dependencies {
     implementation("com.google.code.gson:gson:2.11.0")
     implementation("com.google.android.gms:play-services-location:21.0.1")
     implementation("com.google.android.gms:play-services-maps:18.1.0")
+    implementation("com.alphacephei:vosk-android:0.3.45") {
+        exclude(group = "net.java.dev.jna", module = "jna")
+    }
+
+    // 2. Force load the Android-specific JNA (AAR) which works
+    implementation("net.java.dev.jna:jna:5.13.0@aar")
 
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
     implementation(libs.androidx.core.ktx)
