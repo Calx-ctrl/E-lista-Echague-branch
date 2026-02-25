@@ -1,11 +1,16 @@
 package com.example.e_lista
 
+import android.Manifest
 import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.view.MotionEvent
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.e_lista.databinding.ActivityHome9Binding
@@ -33,10 +38,41 @@ class Home9Activity : AppCompatActivity() {
     enum class FilterType { DAILY, WEEKLY, MONTHLY }
     private var currentFilter = FilterType.DAILY
 
+    private lateinit var voiceManager: VoiceCommandManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityHome9Binding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        //Initialize voice manager
+        voiceManager = VoiceCommandManager(this,
+            onStatusChange = { status ->
+                // 1. Log the status to seeing if it's "Loading..." or "Error"
+                android.util.Log.d("VoiceDebug", "Status: $status")
+
+                // 2. Show a Toast so you know what's happening
+                if (status.contains("Error") || status == "Mic Ready") {
+                    Toast.makeText(this, status, Toast.LENGTH_SHORT).show()
+                }
+
+                // 3. Update Button State
+                if (status == "Listening...") {
+                    binding.fabMic.alpha = 0.5f
+                } else {
+                    binding.fabMic.alpha = 1.0f
+                }
+            },
+            onExpenseParsed = { expense ->
+                saveVoiceExpenseToFirebase(expense)
+            }
+        )
+
+        // Load the model immediately so it is ready
+        voiceManager.init()
+
+        // Check Permissions
+        checkMicPermission()
 
         setupFirebase()
         setupRecycler()
@@ -89,10 +125,25 @@ class Home9Activity : AppCompatActivity() {
         binding.seeAll.setOnClickListener {
             startActivity(Intent(this, Expenses12Activity::class.java))
         }
-        binding.fabMic.setOnClickListener {
-            Toast.makeText(this, "Voice input coming soon 🎤", Toast.LENGTH_SHORT).show()
-            // later: start voice recognition
+        binding.fabMic.setOnTouchListener { view, motionEvent ->
+            when (motionEvent.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    // USER IS HOLDING BUTTON -> START LISTENING
+                    view.animate().scaleX(1.2f).scaleY(1.2f).setDuration(100).start()
+                    voiceManager.startListening()
+                    return@setOnTouchListener true
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    // USER RELEASED BUTTON -> STOP AND PROCESS
+                    view.animate().scaleX(1.0f).scaleY(1.0f).setDuration(100).start()
+                    voiceManager.stopListening()
+                    return@setOnTouchListener true
+                }
+            }
+            false
         }
+
+
 
         binding.fabSupport.setOnClickListener {
             // 1. Check if we have data to analyze
@@ -127,6 +178,28 @@ class Home9Activity : AppCompatActivity() {
             }
         }
     }
+
+    private fun saveVoiceExpenseToFirebase(expense: Expense) {
+        val key = expenseDatabase.push().key ?: return
+        expense.id = key
+
+        expenseDatabase.child(key).setValue(expense)
+            .addOnSuccessListener {
+                Toast.makeText(this, "🎤 Added ₱${expense.total} to ${expense.category}", Toast.LENGTH_LONG).show()
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Failed to save voice expense", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    // 5. PERMISSION CHECKER
+    private fun checkMicPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+            != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO), 101)
+        }
+    }
+
     private fun showAdviceResultDialog(advice: String) {
         AlertDialog.Builder(this)
             .setTitle("💡 Smart Suggestions")
@@ -185,6 +258,11 @@ class Home9Activity : AppCompatActivity() {
             }
         }
         expenseDatabase.addValueEventListener(expensesListener!!)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        voiceManager.destroy()
     }
 
     override fun onStop() {
