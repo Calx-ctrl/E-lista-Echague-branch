@@ -59,7 +59,7 @@
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyCknHbL6QnV3YG-qiiFNWV2DYQG0xOPKkg" />
+            android:value="hingin kay rainier and key" />
 
         <activity android:name=".ScannedReceipt" />
         <activity
