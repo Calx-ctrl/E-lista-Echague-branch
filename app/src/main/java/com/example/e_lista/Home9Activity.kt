@@ -20,6 +20,9 @@ import com.google.firebase.database.*
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import android.widget.TextView
+import android.widget.ImageView
 
 class Home9Activity : AppCompatActivity() {
 
@@ -34,6 +37,10 @@ class Home9Activity : AppCompatActivity() {
     private val groupedDisplayedList = mutableListOf<GroupedListItem>()
     private var totalBalance = 0.0
 
+    private var voiceDialog: BottomSheetDialog? = null
+    private var tvVoiceStatus: TextView? = null
+    private var tvVoiceText: TextView? = null
+
     // Home9Activity.kt
     enum class FilterType { DAILY, WEEKLY, MONTHLY }
     private var currentFilter = FilterType.DAILY
@@ -46,25 +53,25 @@ class Home9Activity : AppCompatActivity() {
         setContentView(binding.root)
 
         //Initialize voice manager
+        // Initialize voice manager
         voiceManager = VoiceCommandManager(this,
             onStatusChange = { status ->
-                // 1. Log the status to seeing if it's "Loading..." or "Error"
                 android.util.Log.d("VoiceDebug", "Status: $status")
 
-                // 2. Show a Toast so you know what's happening
-                if (status.contains("Error") || status == "Mic Ready") {
-                    Toast.makeText(this, status, Toast.LENGTH_SHORT).show()
-                }
+                // Update the BottomSheet UI if it's showing
+                tvVoiceStatus?.text = status
 
-                // 3. Update Button State
-                if (status == "Listening...") {
-                    binding.fabMic.alpha = 0.5f
-                } else {
-                    binding.fabMic.alpha = 1.0f
+                if (status.contains("Error") || status == "Finished") {
+                    binding.root.postDelayed({ voiceDialog?.dismiss() }, 1000)
                 }
+            },
+            onTextHeard = { partialText ->
+                // ✅ This updates the popup text in real-time!
+                tvVoiceText?.text = partialText
             },
             onExpenseParsed = { expense ->
                 saveVoiceExpenseToFirebase(expense)
+                voiceDialog?.dismiss()
             }
         )
 
@@ -100,21 +107,64 @@ class Home9Activity : AppCompatActivity() {
         binding.expensesRecyclerView.layoutManager = LinearLayoutManager(this)
         binding.expensesRecyclerView.adapter = adapter
     }
+    private fun updateButtonColors(activeFilter: FilterType) {
+        // Parse the colors (Change the inactive color hex if you want a different shade)
+        val activeColor = android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#0F6E52")) // Dark Green
+        val inactiveColor = android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#4DB6AC")) // Lighter Teal
 
+        // 1. Reset all buttons to the inactive color first
+        binding.filterDay.backgroundTintList = inactiveColor
+        binding.filterWeek.backgroundTintList = inactiveColor
+        binding.filterMonth.backgroundTintList = inactiveColor
+
+        // 2. Apply the active color to the selected button
+        when (activeFilter) {
+            FilterType.DAILY -> binding.filterDay.backgroundTintList = activeColor
+            FilterType.WEEKLY -> binding.filterWeek.backgroundTintList = activeColor
+            FilterType.MONTHLY -> binding.filterMonth.backgroundTintList = activeColor
+        }
+    }
     private fun setupFilters() {
+        // Set default state on load
+        updateButtonColors(FilterType.DAILY)
+
         binding.filterDay.setOnClickListener {
+            updateButtonColors(FilterType.DAILY)
             sortExpenses()
             applyGroupedFilter(FilterType.DAILY)
         }
+
         binding.filterWeek.setOnClickListener {
+            updateButtonColors(FilterType.WEEKLY)
             sortExpenses()
             applyGroupedFilter(FilterType.WEEKLY)
         }
+
         binding.filterMonth.setOnClickListener {
+            updateButtonColors(FilterType.MONTHLY)
             sortExpenses()
             applyGroupedFilter(FilterType.MONTHLY)
         }
+    }
 
+    private fun showVoiceInputDialog() {
+        voiceDialog = BottomSheetDialog(this)
+        val view = layoutInflater.inflate(R.layout.layout_voice_input, null)
+        voiceDialog?.setContentView(view)
+
+        tvVoiceStatus = view.findViewById(R.id.tvVoiceStatus)
+        tvVoiceText = view.findViewById(R.id.tvVoiceText)
+        val ivMicIndicator = view.findViewById<ImageView>(R.id.ivMicIndicator)
+
+        // Stop listening if the user swipes the dialog down to close it
+        voiceDialog?.setOnDismissListener {
+            voiceManager.stopListening()
+        }
+
+        voiceDialog?.show()
+
+        // Start listening as soon as the dialog opens
+        voiceManager.startListening()
     }
 
     private fun setupButtons() {
@@ -125,25 +175,13 @@ class Home9Activity : AppCompatActivity() {
         binding.seeAll.setOnClickListener {
             startActivity(Intent(this, Expenses12Activity::class.java))
         }
-        binding.fabMic.setOnTouchListener { view, motionEvent ->
-            when (motionEvent.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    // USER IS HOLDING BUTTON -> START LISTENING
-                    view.animate().scaleX(1.2f).scaleY(1.2f).setDuration(100).start()
-                    voiceManager.startListening()
-                    return@setOnTouchListener true
-                }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    // USER RELEASED BUTTON -> STOP AND PROCESS
-                    view.animate().scaleX(1.0f).scaleY(1.0f).setDuration(100).start()
-                    voiceManager.stopListening()
-                    return@setOnTouchListener true
-                }
-            }
-            false
+
+        // --- UPDATED MIC BUTTON LOGIC ---
+        binding.fabMic.setOnClickListener {
+            // TAP TO OPEN GOOGLE-STYLE BOTTOM SHEET
+            showVoiceInputDialog()
         }
-
-
+        // --------------------------------
 
         binding.fabSupport.setOnClickListener {
             // 1. Check if we have data to analyze

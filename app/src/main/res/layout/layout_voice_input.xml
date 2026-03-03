@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="32dp"
+    android:background="@android:color/white">
+
+    <ImageView
+        android:id="@+id/ivMicIndicator"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:padding="16dp"
+        android:background="@drawable/rounded_filter"
+        android:backgroundTint="#16a085"
+        android:src="@drawable/ic_microphone"
+        app:tint="@android:color/white" />
+
+    <TextView
+        android:id="@+id/tvVoiceStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Listening..."
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_marginTop="24dp"
+        android:textColor="#1A1A1A"/>
+
+    <TextView
+        android:id="@+id/tvVoiceText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Speak your expense..."
+        android:textSize="16sp"
+        android:gravity="center"
+        android:layout_marginTop="8dp"
+        android:textColor="#666666"/>
+
+</LinearLayout>

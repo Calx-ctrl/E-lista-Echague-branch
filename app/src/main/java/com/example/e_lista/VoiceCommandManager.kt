@@ -1,7 +1,6 @@
 package com.example.e_lista
 
 import android.content.Context
-import android.util.Log
 import android.widget.Toast
 import okio.IOException
 import org.json.JSONObject
@@ -9,13 +8,13 @@ import org.vosk.Model
 import org.vosk.Recognizer
 import org.vosk.android.RecognitionListener
 import org.vosk.android.SpeechService
-import org.vosk.android.StorageService
 import java.text.SimpleDateFormat
 import java.util.*
 
 class VoiceCommandManager(
     private val context: Context,
     private val onStatusChange: (String) -> Unit,
+    private val onTextHeard: (String) -> Unit, // ✅ NEW: Callback for real-time text
     private val onExpenseParsed: (Expense) -> Unit
 ) {
 
@@ -23,7 +22,6 @@ class VoiceCommandManager(
     private var model: Model? = null
     private var isModelLoaded = false
 
-    // We restrict words to this list for 99% accuracy
     private val grammar = "[" +
             "\"add\", \"remove\", \"delete\", " +
             "\"one\", \"two\", \"three\", \"four\", \"five\", \"six\", \"seven\", \"eight\", \"nine\", \"zero\", " +
@@ -38,13 +36,9 @@ class VoiceCommandManager(
         if (!isModelLoaded) {
             onStatusChange("Loading...")
 
-            // OLD WAY (Deleting this): StorageService.unpack(...) ❌
-
-            // NEW WAY (Robust): Direct Asset Loading ✅
             val modelPath = java.io.File(context.filesDir, "model")
 
             if (!modelPath.exists()) {
-                // If the model isn't in storage yet, copy it manually
                 try {
                     val assetManager = context.assets
                     copyAssets(assetManager, "model", modelPath.absolutePath)
@@ -54,7 +48,6 @@ class VoiceCommandManager(
                 }
             }
 
-            // Now load from the path we just verified
             try {
                 model = Model(modelPath.absolutePath)
                 isModelLoaded = true
@@ -65,7 +58,6 @@ class VoiceCommandManager(
         }
     }
 
-    // Helper function to recursively copy the asset folder
     private fun copyAssets(assetManager: android.content.res.AssetManager, assetPath: String, destPath: String) {
         val files = assetManager.list(assetPath) ?: return
         val destDir = java.io.File(destPath)
@@ -76,14 +68,12 @@ class VoiceCommandManager(
             val destFile = java.io.File(destDir, filename)
 
             if (filename.contains(".")) {
-                // It's a file, copy it
                 val inputStream = assetManager.open(fullAssetPath)
                 val outputStream = java.io.FileOutputStream(destFile)
                 inputStream.copyTo(outputStream)
                 inputStream.close()
                 outputStream.close()
             } else {
-                // It's a folder (like 'conf' or 'graph'), recurse into it
                 copyAssets(assetManager, fullAssetPath, destFile.absolutePath)
             }
         }
@@ -100,9 +90,37 @@ class VoiceCommandManager(
             val rec = Recognizer(model, 16000.0f, grammar)
             speechService = SpeechService(rec, 16000.0f)
             speechService?.startListening(object : RecognitionListener {
-                override fun onPartialResult(hypothesis: String?) {}
-                override fun onResult(hypothesis: String?) { if (hypothesis != null) parseResult(hypothesis) }
-                override fun onFinalResult(hypothesis: String?) { if (hypothesis != null) parseResult(hypothesis) }
+
+                // ✅ NEW: Catch words as the user is speaking them
+                override fun onPartialResult(hypothesis: String?) {
+                    if (hypothesis != null) {
+                        try {
+                            val jsonObject = JSONObject(hypothesis)
+                            val partialText = jsonObject.optString("partial", "")
+                            if (partialText.isNotEmpty()) {
+                                onTextHeard(partialText)
+                            }
+                        } catch (e: Exception) { e.printStackTrace() }
+                    }
+                }
+
+                override fun onResult(hypothesis: String?) {
+                    if (hypothesis != null) {
+                        // Send final recognized text to UI before closing
+                        try {
+                            val jsonObject = JSONObject(hypothesis)
+                            val text = jsonObject.optString("text", "")
+                            if (text.isNotEmpty()) onTextHeard(text)
+                        } catch (e: Exception) { e.printStackTrace() }
+
+                        parseResult(hypothesis)
+                    }
+                }
+
+                override fun onFinalResult(hypothesis: String?) {
+                    if (hypothesis != null) parseResult(hypothesis)
+                }
+
                 override fun onError(e: Exception?) { onStatusChange("Error: ${e?.message}") }
                 override fun onTimeout() {}
             })
@@ -125,6 +143,9 @@ class VoiceCommandManager(
 
             if (text.isNotEmpty() && text.contains("add")) {
                 processCommand(text)
+            } else if (text.isNotEmpty()) {
+                // If it heard something but didn't have "add", tell UI we finished but failed to parse
+                onStatusChange("Finished")
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -135,17 +156,13 @@ class VoiceCommandManager(
         val lowerCommand = command.lowercase()
         val validCategories = listOf("Food", "Transport", "Bills", "Shopping", "Entertainment", "Others")
 
-        // 1. Find Category
         val matchedCategory = validCategories.firstOrNull { lowerCommand.contains(it.lowercase()) } ?: "Others"
-
-        // 2. Find Amount (Digits or Words)
         val amount = extractAmount(lowerCommand)
 
         if (amount > 0) {
             val timestamp = System.currentTimeMillis()
             val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
-            // Construct the Expense Object
             val newExpense = Expense(
                 title = "Voice Entry",
                 date = dateFormat.format(Date(timestamp)),
@@ -155,10 +172,12 @@ class VoiceCommandManager(
                 items = mutableListOf(ExpenseItem("Item", amount))
             )
             onExpenseParsed(newExpense)
+        } else {
+            // Signal that we didn't find a valid amount
+            onStatusChange("Finished")
         }
     }
 
-    // Helper to convert "five hundred" -> 500.0
     private fun extractAmount(text: String): Double {
         val digitRegex = "(\\d+)".toRegex()
         val match = digitRegex.find(text)
