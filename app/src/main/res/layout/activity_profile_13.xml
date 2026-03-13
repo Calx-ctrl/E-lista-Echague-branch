@@ -115,6 +115,15 @@
                 android:text="• Profile"
                 android:textSize="14sp" />
 
+            <TextView
+                android:id="@+id/changePasswordItem"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="• Change Password"
+                android:textSize="14sp"
+                android:visibility="gone" />
+
             <!-- Dark Mode Switch -->
             <LinearLayout
                 android:layout_width="match_parent"

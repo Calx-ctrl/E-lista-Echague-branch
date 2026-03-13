@@ -19,12 +19,6 @@ class Profile13Activity : AppCompatActivity() {
         // 🔹 Highlight the "Profile" tab when this screen is open
         binding.bottomNavigationView.selectedItemId = R.id.nav_profile
 
-        // 📸 Floating Camera button
-        //binding.fabCamera.setOnClickListener {
-        //    val intent = Intent(this, Camera11Activity::class.java)
-        //    startActivity(intent)
-        //}
-
         binding.logoutBtn.setOnClickListener {
             FirebaseAuth.getInstance().signOut()
             val intent = Intent(this, WelcomeActivity::class.java)
@@ -34,6 +28,24 @@ class Profile13Activity : AppCompatActivity() {
         }
         val user = FirebaseAuth.getInstance().currentUser
         binding.emailText.text = user?.email ?: ""
+
+        var isEmailPasswordUser = false
+
+        user?.providerData?.forEach { profile ->
+            if (profile.providerId == "password") {
+                isEmailPasswordUser = true
+            }
+        }
+
+        if (isEmailPasswordUser) {
+            // Show the button only for Email/Password users
+            binding.changePasswordItem.visibility = android.view.View.VISIBLE
+
+            // Set click listener to show confirmation dialog
+            binding.changePasswordItem.setOnClickListener {
+                showPasswordResetDialog(user?.email)
+            }
+        }
 
         binding.faqItem.setOnClickListener { startActivity(Intent(this, FaqActivity::class.java)) }
         binding.termsItem.setOnClickListener { startActivity(Intent(this, TermsActivity::class.java)) }
@@ -99,5 +111,57 @@ class Profile13Activity : AppCompatActivity() {
             }
         }
         binding.bottomNavigationView.selectedItemId = R.id.nav_profile
+    }
+
+    private fun showPasswordResetDialog(email: String?) {
+        if (email.isNullOrEmpty()) return
+
+        // 1. Check if the cooldown period has passed (e.g., 5 minutes = 300,000 milliseconds)
+        val sharedPref = getSharedPreferences("AppPreferences", MODE_PRIVATE)
+        val lastResetTime = sharedPref.getLong("LAST_PASSWORD_RESET_TIME", 0)
+        val currentTime = System.currentTimeMillis()
+        val cooldownTime = 5 * 60 * 1000 // 5 minutes in milliseconds
+
+        if (currentTime - lastResetTime < cooldownTime) {
+            // Still in cooldown
+            val minutesLeft = ((cooldownTime - (currentTime - lastResetTime)) / 1000) / 60
+            android.widget.Toast.makeText(
+                this,
+                "Please wait $minutesLeft minute(s) before requesting another link.",
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
+            return // Stop the function here, don't show the dialog
+        }
+
+        // 2. If cooldown is over, show the confirmation dialog
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Reset Password")
+            .setMessage("Are you sure you want to send a password reset link to $email?")
+            .setPositiveButton("Send") { _, _ ->
+
+                FirebaseAuth.getInstance().sendPasswordResetEmail(email)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            // 3. Save the current time because the email sent successfully
+                            sharedPref.edit().putLong("LAST_PASSWORD_RESET_TIME", currentTime).apply()
+
+                            android.widget.Toast.makeText(
+                                this,
+                                "Reset link sent! Please check your inbox.",
+                                android.widget.Toast.LENGTH_LONG
+                            ).show()
+                        } else {
+                            android.widget.Toast.makeText(
+                                this,
+                                "Error: ${task.exception?.localizedMessage}",
+                                android.widget.Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
     }
 }
