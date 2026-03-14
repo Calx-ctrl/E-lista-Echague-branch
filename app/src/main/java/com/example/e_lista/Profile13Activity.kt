@@ -124,11 +124,14 @@ class Profile13Activity : AppCompatActivity() {
 
         if (currentTime - lastResetTime < cooldownTime) {
             // Still in cooldown
-            val minutesLeft = ((cooldownTime - (currentTime - lastResetTime)) / 1000) / 60
+            val timeLeftMillis = cooldownTime - (currentTime - lastResetTime)
+            val minutesLeft = (timeLeftMillis / 1000) / 60
+            val secondsLeft = (timeLeftMillis / 1000) % 60
+
             android.widget.Toast.makeText(
                 this,
-                "Please wait $minutesLeft minute(s) before requesting another link.",
-                android.widget.Toast.LENGTH_SHORT
+                "Please wait $minutesLeft min ${secondsLeft}s before requesting another link.",
+                android.widget.Toast.LENGTH_LONG
             ).show()
             return // Stop the function here, don't show the dialog
         }
