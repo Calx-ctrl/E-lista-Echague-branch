@@ -40,6 +40,7 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var emailEditText: EditText
 
     private lateinit var passwordEditText: EditText
+    private lateinit var forgotPasswordText: TextView
     private lateinit var loginBtn: Button
     private lateinit var signupBtn: TextView
     private lateinit var googleButton: LinearLayout
@@ -112,6 +113,21 @@ class LoginActivity : AppCompatActivity() {
         // Initialize Views
         emailEditText = findViewById(R.id.emailEditText)
         passwordEditText = findViewById(R.id.passwordEditText)
+        forgotPasswordText = findViewById(R.id.forgotPasswordText)
+
+        // Hide "Forgot Password" if they start typing again
+        emailEditText.addTextChangedListener {
+            if (resendVerificationBtn.visibility == View.VISIBLE) hideVerificationSection()
+            forgotPasswordText.visibility = View.GONE // <-- ADD THIS
+        }
+        passwordEditText.addTextChangedListener {
+            forgotPasswordText.visibility = View.GONE // <-- ADD THIS
+        }
+
+        forgotPasswordText.setOnClickListener {
+            handleForgotPassword()
+        }
+
         val passedEmail = intent.getStringExtra("USER_EMAIL")
         if (!passedEmail.isNullOrEmpty()) {
             emailEditText.setText(passedEmail)
@@ -295,6 +311,9 @@ class LoginActivity : AppCompatActivity() {
                     val exception = task.exception
                     Log.w("EmailLogin", "Sign-in failed", exception)
 
+                    //Show Forgot Password text on failed attempt
+                    forgotPasswordText.visibility = View.VISIBLE
+
                     when (exception) {
                         is FirebaseNetworkException -> {
                             Toast.makeText(this, "Network error. Please check your connection.", Toast.LENGTH_SHORT).show()
@@ -309,6 +328,102 @@ class LoginActivity : AppCompatActivity() {
                     }
                 }
             }
+    }
+
+    private fun handleForgotPassword() {
+        val email = emailEditText.text.toString().trim()
+
+        if (email.isEmpty()) {
+            emailEditText.error = "Please enter your email here first"
+            emailEditText.requestFocus()
+            return
+        }
+
+        progressDialog?.setMessage("Checking account...")
+        progressDialog?.show()
+
+        // 1. Check if the email is actually registered in Firebase
+        mAuth.fetchSignInMethodsForEmail(email)
+            .addOnCompleteListener { task ->
+                progressDialog?.dismiss()
+
+                if (task.isSuccessful) {
+                    val methods = task.result?.signInMethods ?: emptyList()
+
+                    if (methods.isEmpty()) {
+                        // ❌ No account exists
+                        Toast.makeText(this, "No account exists with this email address.", Toast.LENGTH_LONG).show()
+                    } else if (!methods.contains("password")) {
+                        // ❌ Account exists, but they used Google or Facebook
+                        Toast.makeText(this, "This email is registered using a social login (Google/Facebook).", Toast.LENGTH_LONG).show()
+                    } else {
+                        // ✅ Account exists and uses a password! Show the dialog.
+                        showPasswordResetDialog(email)
+                    }
+                } else {
+                    Toast.makeText(this, "Error checking email: ${task.exception?.localizedMessage}", Toast.LENGTH_SHORT).show()
+                }
+            }
+    }
+
+    private fun showPasswordResetDialog(email: String) {
+        // 1. Check if the cooldown period has passed (5 minutes = 300,000 milliseconds)
+        val sharedPref = getSharedPreferences("AppPreferences", MODE_PRIVATE)
+        val lastResetTime = sharedPref.getLong("LAST_PASSWORD_RESET_TIME", 0)
+        val currentTime = System.currentTimeMillis()
+        val cooldownTime = 5 * 60 * 1000 // 5 minutes in milliseconds
+
+        if (currentTime - lastResetTime < cooldownTime) {
+            // Still in cooldown
+            val timeLeftMillis = cooldownTime - (currentTime - lastResetTime)
+            val minutesLeft = (timeLeftMillis / 1000) / 60
+            val secondsLeft = (timeLeftMillis / 1000) % 60
+
+            Toast.makeText(
+                this,
+                "Please wait $minutesLeft min ${secondsLeft}s before requesting another link.",
+                Toast.LENGTH_LONG
+            ).show()
+            return // Stop the function here, don't show the dialog
+        }
+
+        // 2. If cooldown is over, show the confirmation dialog
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Reset Password")
+            .setMessage("Are you sure you want to send a password reset link to $email?")
+            .setPositiveButton("Send") { _, _ ->
+
+                progressDialog?.setMessage("Sending link...")
+                progressDialog?.show()
+
+                mAuth.sendPasswordResetEmail(email)
+                    .addOnCompleteListener { task ->
+                        progressDialog?.dismiss()
+                        if (task.isSuccessful) {
+                            // 3. Save the current time because the email sent successfully
+                            sharedPref.edit().putLong("LAST_PASSWORD_RESET_TIME", currentTime).apply()
+
+                            Toast.makeText(
+                                this,
+                                "Reset link sent! Please check your inbox.",
+                                Toast.LENGTH_LONG
+                            ).show()
+
+                            // Hide the button again after success
+                            forgotPasswordText.visibility = View.GONE
+                        } else {
+                            Toast.makeText(
+                                this,
+                                "Failed to send reset email: ${task.exception?.localizedMessage}",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
     }
 
     private fun startResendTimer(durationMillis: Long) {
