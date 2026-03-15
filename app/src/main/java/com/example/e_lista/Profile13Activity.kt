@@ -51,14 +51,7 @@ class Profile13Activity : AppCompatActivity() {
         binding.termsItem.setOnClickListener { startActivity(Intent(this, TermsActivity::class.java)) }
         binding.privacyItem.setOnClickListener { startActivity(Intent(this, PrivacyActivity::class.java)) }
         binding.aboutItem.setOnClickListener { startActivity(Intent(this, AboutUsActivity::class.java)) }
-        // 🌙 Dark Mode Toggle
-        binding.switchDarkMode.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-            } else {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-            }
-        }
+
 
         // ⚙️ Bottom Navigation
         binding.bottomNavigationView.setOnItemSelectedListener { item ->
